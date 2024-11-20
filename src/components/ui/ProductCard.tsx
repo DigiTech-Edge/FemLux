@@ -1,12 +1,15 @@
 'use client'
 
+import React from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { Button } from '@nextui-org/react'
 import { Heart, ShoppingCart, StarIcon } from 'lucide-react'
 import { Product } from '@/lib/types/products'
 import { cn } from '@/lib/utils'
 import { motion, useInView } from 'framer-motion'
 import { useRef } from 'react'
+import Carousel from './Carousel'
 
 interface ProductCardProps {
   product: Product
@@ -16,6 +19,8 @@ interface ProductCardProps {
 export default function ProductCard({ product, index }: ProductCardProps) {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true })
+
+  console.log(product.images)
 
   return (
     <motion.div
@@ -29,24 +34,39 @@ export default function ProductCard({ product, index }: ProductCardProps) {
       }}
     >
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 group">
-        <div className="relative aspect-square">
-          <Image
-            src={product.image}
-            alt={product.name}
-            fill
-            className="object-cover rounded-t-lg"
-          />
+        <div className="relative w-full">
+          <Carousel 
+            showControls 
+            showIndicators
+            slideWidth="100%"
+            className="w-full"
+          >
+            {product.images.map((image, idx) => (
+              <div key={idx} className="relative w-full flex-[0_0_100%]">
+                <div className="relative aspect-square w-full">
+                  <Image
+                    src="/image.png"
+                    alt={`${product.name} - View ${idx + 1}`}
+                    fill
+                    priority={idx === 0}
+                    className="object-cover"
+                    sizes="100vw"
+                  />
+                </div>
+              </div>
+            ))}
+          </Carousel>
           {product.isNew && (
-            <span className="absolute top-2 right-2 bg-primary text-white text-xs px-2 py-1 rounded">
+            <span className="absolute top-2 right-2 bg-primary text-white text-xs px-2 py-1 rounded z-10">
               New
             </span>
           )}
           {product.stock <= 0 && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-t-lg">
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-t-lg z-10">
               <span className="text-white font-medium">Out of Stock</span>
             </div>
           )}
-          <div className="absolute top-2 left-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute top-2 left-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
             <button className="p-2 bg-white rounded-full shadow-md hover:bg-yellow-50 transition-colors">
               <Heart className="w-4 h-4 text-yellow-500 hover:text-yellow-600" />
             </button>
@@ -100,14 +120,16 @@ export default function ProductCard({ product, index }: ProductCardProps) {
               </span>
             )}
           </div>
-          <Button
-            className="w-full"
-            color="primary"
-            variant="flat"
-            size="sm"
-          >
-            View Details
-          </Button>
+          <Link href={`/shop/${product.id}`}>
+            <Button
+              className="w-full"
+              color="primary"
+              variant="flat"
+              size="sm"
+            >
+              View Details
+            </Button>
+          </Link>
         </div>
       </div>
     </motion.div>

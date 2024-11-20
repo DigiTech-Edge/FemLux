@@ -30,7 +30,7 @@ export default function Home() {
         <SectionHeader 
           title="Featured Products"
           description="Browse through our featured products"
-          viewAllLink="/products"
+          viewAllLink="/shop"
         />
         <ProductCarousel products={featuredProducts} />
       </section>
@@ -40,7 +40,7 @@ export default function Home() {
         <SectionHeader 
           title="New Arrivals"
           description="Check out our latest products"
-          viewAllLink="/products?filter=new"
+          viewAllLink="/shop"
         />
         <ProductCarousel products={newArrivals} />
       </section>

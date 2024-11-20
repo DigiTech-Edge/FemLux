@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState, forwardRef, useImperativeHandle } from 'react'
 import useEmblaCarousel from 'embla-carousel-react'
 import Autoplay from 'embla-carousel-autoplay'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -16,9 +16,14 @@ interface CarouselProps {
   loop?: boolean
   slideWidth?: string
   autoplayDelay?: number
+  onSelect?: (index: number) => void
 }
 
-const Carousel = ({ 
+interface CarouselRef {
+  scrollTo: (index: number) => void
+}
+
+const Carousel = forwardRef<CarouselRef, CarouselProps>(({ 
   children, 
   autoplay = false, 
   className = '',
@@ -26,8 +31,9 @@ const Carousel = ({
   showIndicators = false,
   loop = false,
   slideWidth,
-  autoplayDelay = 4000
-}: CarouselProps) => {
+  autoplayDelay = 4000,
+  onSelect
+}, ref) => {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [scrollSnaps, setScrollSnaps] = useState<number[]>([])
 
@@ -62,20 +68,26 @@ const Carousel = ({
     if (emblaApi) emblaApi.scrollTo(index)
   }, [emblaApi])
 
-  const onSelect = useCallback(() => {
+  useImperativeHandle(ref, () => ({
+    scrollTo
+  }), [scrollTo])
+
+  const onSelectCallback = useCallback(() => {
     if (!emblaApi) return
-    setSelectedIndex(emblaApi.selectedScrollSnap())
-  }, [emblaApi])
+    const newIndex = emblaApi.selectedScrollSnap()
+    setSelectedIndex(newIndex)
+    onSelect?.(newIndex)
+  }, [emblaApi, onSelect])
 
   useEffect(() => {
     if (!emblaApi) return
-    onSelect()
+    onSelectCallback()
     setScrollSnaps(emblaApi.scrollSnapList())
-    emblaApi.on('select', onSelect)
+    emblaApi.on('select', onSelectCallback)
     return () => {
-      emblaApi.off('select', onSelect)
+      emblaApi.off('select', onSelectCallback)
     }
-  }, [emblaApi, onSelect])
+  }, [emblaApi, onSelectCallback])
 
   return (
     <div className="relative">
@@ -132,6 +144,6 @@ const Carousel = ({
       )}
     </div>
   )
-}
+})
 
 export default Carousel

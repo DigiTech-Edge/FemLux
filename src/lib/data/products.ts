@@ -6,7 +6,13 @@ export const products: Product[] = [
     name: "Women's Floral Summer Dress",
     description: "A beautiful floral dress perfect for summer days",
     price: 59.99,
-    image: "/image.png",
+    images: [
+      "/image.png",
+      "/image.png",
+      "/image.png",
+      "/image.png",
+      "/image.png"
+    ],
     category: "Dresses",
     rating: 4.5,
     reviews: 128,
@@ -23,7 +29,13 @@ export const products: Product[] = [
     name: "Elegant Evening Gown",
     description: "A stunning evening gown for special occasions",
     price: 199.99,
-    image: "/image.png",
+    images: [
+      "/image.png",
+      "/image.png",
+      "/image.png",
+      "/image.png",
+      "/image.png"
+    ],
     category: "Dresses",
     rating: 4.8,
     reviews: 89,
@@ -40,7 +52,13 @@ export const products: Product[] = [
     name: "Classic Denim Jeans",
     description: "High-quality denim jeans with perfect fit",
     price: 79.99,
-    image: "/image.png",
+    images: [
+      "/image.png",
+      "/image.png",
+      "/image.png",
+      "/image.png",
+      "/image.png"
+    ],
     category: "Bottoms",
     rating: 4.6,
     reviews: 256,
@@ -57,7 +75,13 @@ export const products: Product[] = [
     name: "Silk Blouse",
     description: "Luxurious silk blouse for professional settings",
     price: 89.99,
-    image: "/image.png",
+    images: [
+      "/image.png",
+      "/image.png",
+      "/image.png",
+      "/image.png",
+      "/image.png"
+    ],
     category: "Tops",
     rating: 4.4,
     reviews: 67,
@@ -74,7 +98,13 @@ export const products: Product[] = [
     name: "Leather Jacket",
     description: "Classic leather jacket with modern details",
     price: 199.99,
-    image: "/image.png",
+    images: [
+      "/image.png",
+      "/image.png",
+      "/image.png",
+      "/image.png",
+      "/image.png"
+    ],
     category: "Outerwear",
     rating: 4.7,
     reviews: 182,
@@ -91,7 +121,13 @@ export const products: Product[] = [
     name: "Summer Shorts",
     description: "Comfortable cotton shorts for casual wear",
     price: 39.99,
-    image: "/image.png",
+    images: [
+      "/image.png",
+      "/image.png",
+      "/image.png",
+      "/image.png",
+      "/image.png"
+    ],
     category: "Bottoms",
     rating: 4.3,
     reviews: 94,
@@ -108,7 +144,13 @@ export const products: Product[] = [
     name: "Workout Leggings",
     description: "High-performance leggings for active lifestyle",
     price: 49.99,
-    image: "/image.png",
+    images: [
+      "/image.png",
+      "/image.png",
+      "/image.png",
+      "/image.png",
+      "/image.png"
+    ],
     category: "Activewear",
     rating: 4.6,
     reviews: 315,
@@ -125,7 +167,13 @@ export const products: Product[] = [
     name: "Cashmere Sweater",
     description: "Luxuriously soft cashmere sweater",
     price: 149.99,
-    image: "/image.png",
+    images: [
+      "/image.png",
+      "/image.png",
+      "/image.png",
+      "/image.png",
+      "/image.png"
+    ],
     category: "Tops",
     rating: 4.9,
     reviews: 76,
