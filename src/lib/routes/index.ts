@@ -19,6 +19,6 @@ export const routes = [
   {
     name: 'Profile',
     path: '/profile',
-    icon: User
-  }
+    icon: User,
+  },
 ]
