@@ -34,13 +34,18 @@ const Footer = () => {
             <h3 className="text-xl font-semibold mb-4">About Us</h3>
             <ul className="space-y-2 text-center md:text-left">
               <li>
-                <Link href="/about" className="text-white/80 hover:text-white transition-colors">
+                <Link href="/about-us" className="text-white/80 hover:text-white transition-colors">
                   Our Story
                 </Link>
               </li>
               <li>
                 <Link href="/contact" className="text-white/80 hover:text-white transition-colors">
                   Contact Us
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms-of-use" className="text-white/80 hover:text-white transition-colors">
+                  Terms of Use
                 </Link>
               </li>
               <li>
