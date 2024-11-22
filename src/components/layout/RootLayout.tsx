@@ -1,10 +1,10 @@
 'use client'
 
 import React from 'react'
-import BottomNavbar from './BottomNavbar'
-import Footer from './Footer'
+import BottomNavbar from '../shared/BottomNavbar'
+import Footer from '../shared/Footer'
 import { Toaster } from 'react-hot-toast'
-import TopNavbar from './TopNavbar'
+import TopNavbar from '../shared/TopNavbar'
 
 interface RootLayoutProps {
   children: React.ReactNode

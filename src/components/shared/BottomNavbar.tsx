@@ -5,7 +5,6 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { routes } from '@/lib/routes'
-import { Home, ShoppingBag, Grid, Sparkles, Tag } from 'lucide-react'
 
 const BottomNavbar = () => {
   const pathname = usePathname()
@@ -31,7 +30,7 @@ const BottomNavbar = () => {
                 {isActive && (
                   <motion.div
                     layoutId="bottom-tab"
-                    className="absolute -bottom-[1px] left-0 right-0 h-0.5 bg-primary"
+                    className="absolute -bottom-[1px] left-0 right-0 h-1 bg-primary"
                     initial={false}
                     transition={{
                       type: "spring",

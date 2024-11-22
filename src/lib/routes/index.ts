@@ -1,4 +1,4 @@
-import { Home, ShoppingBag, Heart, User } from 'lucide-react'
+import { Home, ShoppingBag, Heart, User, LayoutDashboard, Package, Users, Settings, BarChart3 } from 'lucide-react'
 
 export const routes = [
   {
@@ -21,4 +21,37 @@ export const routes = [
     path: '/profile',
     icon: User,
   },
+]
+
+export const adminRoutes = [
+  {
+    name: 'Dashboard',
+    path: '/admin',
+    icon: LayoutDashboard
+  },
+  {
+    name: 'Products',
+    path: '/admin/products',
+    icon: ShoppingBag
+  },
+  {
+    name: 'Orders',
+    path: '/admin/orders',
+    icon: Package
+  },
+  {
+    name: 'Customers',
+    path: '/admin/customers',
+    icon: Users
+  },
+  {
+    name: 'Analytics',
+    path: '/admin/analytics',
+    icon: BarChart3
+  },
+  {
+    name: 'Settings',
+    path: '/admin/settings',
+    icon: Settings
+  }
 ]
