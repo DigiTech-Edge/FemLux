@@ -22,7 +22,7 @@ import {
 import { Eye } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Order } from '@/lib/types/user'
-import { cn } from '@/lib/utils'
+import { cn } from '@/helpers/utils'
 
 interface OrdersTabProps {
   orders: Order[]

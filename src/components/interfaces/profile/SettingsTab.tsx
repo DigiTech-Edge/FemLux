@@ -16,7 +16,7 @@ import {
 } from '@nextui-org/react'
 import { Shield, Eye, EyeOff } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { cn } from '@/lib/utils'
+import { cn } from '@/helpers/utils'
 
 export default function SettingsTab() {
   const { isOpen, onOpen, onClose } = useDisclosure()

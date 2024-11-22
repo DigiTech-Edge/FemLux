@@ -11,7 +11,7 @@ import {
 } from '@nextui-org/react'
 import { User, Package, Settings, Menu, X } from 'lucide-react'
 import { UserProfile } from '@/lib/types/user'
-import { cn } from '@/lib/utils'
+import { cn } from '@/helpers/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface ProfileSidebarProps {

@@ -1,6 +1,6 @@
 import { products, categories } from '@/lib/data/products'
 import ShopClient from '@/components/interfaces/shop/ShopClient'
-import { getFilteredProducts, getUniqueFilterOptions, parseSearchParamsToFilters } from '@/utils/filters'
+import { getFilteredProducts, getUniqueFilterOptions, parseSearchParamsToFilters } from '@/helpers/filters'
 
 export default async function ProductsPage({
   searchParams,

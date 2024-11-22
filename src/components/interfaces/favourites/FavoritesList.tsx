@@ -10,7 +10,7 @@ import { Product } from '@/lib/types/products'
 import { FavoriteItem } from '@/lib/types/favorites'
 import { products } from '@/lib/data/products'
 import Carousel from '@/components/ui/Carousel'
-import { cn } from '@/lib/utils'
+import { cn } from '@/helpers/utils'
 
 interface FavoritesListProps {
   favorites: FavoriteItem[]

@@ -13,7 +13,7 @@ import {
 import { Heart, Minus, Plus, ShoppingCart, Star, Truck } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { ProductDetails as ProductDetailsType } from '@/lib/types/product-details'
-import { cn } from '@/lib/utils'
+import { cn } from '@/helpers/utils'
 import { ProductCarousel } from '@/components/interfaces/home/CarouselWrapper'
 import { products } from '@/lib/data/products'
 import Carousel from '@/components/ui/Carousel'
