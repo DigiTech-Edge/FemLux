@@ -16,7 +16,7 @@ const DashboardPage = () => {
   const recentOrders = getRecentOrders();
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <p className="text-default-500">Welcome to your admin dashboard</p>

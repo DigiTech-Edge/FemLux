@@ -23,7 +23,7 @@ const AdminSidebar = () => {
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="flex justify-center items-center"
+          className="flex justify-center items-center lg:hidden"
         >
           <Tooltip
             content={
