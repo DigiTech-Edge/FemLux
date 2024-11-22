@@ -1,19 +1,19 @@
-import StatsCards from "@/components/interfaces/admin/dashboard/StatsCards";
-import SalesChart from "@/components/interfaces/admin/dashboard/SalesChart";
-import TopProducts from "@/components/interfaces/admin/dashboard/TopProducts";
-import RecentOrders from "@/components/interfaces/admin/dashboard/RecentOrders";
+import StatsCards from '@/components/interfaces/admin/dashboard/StatsCards'
+import SalesChart from '@/components/interfaces/admin/dashboard/SalesChart'
+import TopProducts from '@/components/interfaces/admin/dashboard/TopProducts'
+import RecentOrders from '@/components/interfaces/admin/dashboard/RecentOrders'
 import {
   getAdminDashboardStats,
   getSalesOverTime,
   getTopProducts,
   getRecentOrders,
-} from "@/lib/data/admin/dashboard";
+} from '@/lib/data/admin/dashboard'
 
-const DashboardPage = () => {
-  const stats = getAdminDashboardStats();
-  const salesData = getSalesOverTime();
-  const topProducts = getTopProducts();
-  const recentOrders = getRecentOrders();
+export default function DashboardPage() {
+  const stats = getAdminDashboardStats()
+  const salesData = getSalesOverTime()
+  const topProducts = getTopProducts()
+  const recentOrders = getRecentOrders()
 
   return (
     <div className="space-y-6 p-6">
@@ -35,7 +35,5 @@ const DashboardPage = () => {
 
       <RecentOrders data={recentOrders} />
     </div>
-  );
-};
-
-export default DashboardPage;
+  )
+}
