@@ -88,23 +88,38 @@ const AdminSidebar = () => {
 
       <div className="px-2 pb-4">
         <Divider className="mb-4" />
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <Link href="/" className="block">
             <Button
-              className="w-full min-w-0 h-11 md:justify-center lg:justify-start gap-3 bg-blue-500 text-white hover:bg-blue-600"
+              className={`
+                w-full min-w-0 h-11 md:justify-center lg:justify-start gap-3 
+                bg-gradient-to-r from-blue-500/10 to-blue-500/5 hover:from-blue-500/20 hover:to-blue-500/10
+                text-blue-600 dark:text-blue-400
+                transition-all duration-200
+                group
+              `}
               variant="flat"
-              startContent={<Home className="w-5 h-5 flex-shrink-0" />}
+              startContent={
+                <Home className="w-5 h-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110" />
+              }
             >
-              <span className="truncate md:hidden lg:block">Back to Site</span>
+              <span className="truncate md:hidden lg:block font-medium">Back to Site</span>
             </Button>
           </Link>
           <Button
-            className="w-full min-w-0 h-11 md:justify-center lg:justify-start gap-3 hover:bg-danger/10"
+            className={`
+              w-full min-w-0 h-11 md:justify-center lg:justify-start gap-3
+              bg-gradient-to-r from-danger/10 to-danger/5 hover:from-danger/20 hover:to-danger/10
+              text-danger dark:text-danger-400
+              transition-all duration-200
+              group
+            `}
             variant="flat"
-            color="danger"
-            startContent={<LogOut className="w-5 h-5 flex-shrink-0" />}
+            startContent={
+              <LogOut className="w-5 h-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110" />
+            }
           >
-            <span className="truncate md:hidden lg:block">Logout</span>
+            <span className="truncate md:hidden lg:block font-medium">Logout</span>
           </Button>
         </div>
       </div>
