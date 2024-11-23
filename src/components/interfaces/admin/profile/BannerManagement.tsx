@@ -36,6 +36,7 @@ export default function BannerManagement() {
   const [banners, setBanners] = useState<Banner[]>(mockBanners);
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [title, setTitle] = useState("");
+  const [message, setMessage] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [active, setActive] = useState(true);
@@ -75,11 +76,13 @@ export default function BannerManagement() {
     if (banner) {
       setEditingBanner(banner);
       setTitle(banner.title);
+      setMessage(banner.message || "");
       setImagePreview(banner.image);
       setActive(banner.active);
     } else {
       setEditingBanner(null);
       setTitle("");
+      setMessage("");
       setImagePreview("");
       setImageFile(null);
       setActive(true);
@@ -90,6 +93,7 @@ export default function BannerManagement() {
   const handleClose = () => {
     setEditingBanner(null);
     setTitle("");
+    setMessage("");
     setImagePreview("");
     setImageFile(null);
     setActive(true);
@@ -108,15 +112,13 @@ export default function BannerManagement() {
       return;
     }
 
-    // Here you would typically upload the image to your server/storage
-    // For now, we'll use the preview URL or existing image
     const imageUrl = imageFile ? imagePreview : editingBanner?.image || "";
 
     if (editingBanner) {
       setBanners(
         banners.map((b) =>
           b.id === editingBanner.id
-            ? { ...editingBanner, title, image: imageUrl, active }
+            ? { ...editingBanner, title, message: message.trim() || undefined, image: imageUrl, active }
             : b
         )
       );
@@ -124,6 +126,7 @@ export default function BannerManagement() {
       const newBanner: Banner = {
         id: Date.now().toString(),
         title,
+        message: message.trim() || undefined,
         image: imageUrl,
         active,
         createdAt: new Date().toISOString(),
@@ -195,6 +198,11 @@ export default function BannerManagement() {
                           <h3 className="text-lg font-semibold">
                             {banner.title}
                           </h3>
+                          {banner.message && (
+                            <p className="text-sm text-default-500 mt-1">
+                              {banner.message}
+                            </p>
+                          )}
                         </div>
                         <Chip
                           color={banner.active ? "success" : "default"}
@@ -267,11 +275,21 @@ export default function BannerManagement() {
                   <div className="space-y-6">
                     <div>
                       <Input
-                        label="Banner Message"
-                        placeholder="Enter banner message"
+                        label="Banner Title"
+                        placeholder="Enter banner title"
                         value={title}
                         onValueChange={setTitle}
                         isRequired
+                      />
+                    </div>
+                    
+                    <div>
+                      <Input
+                        label="Banner Message (Optional)"
+                        placeholder="Enter promotional message"
+                        value={message}
+                        onValueChange={setMessage}
+                        description="Add a catchy message to promote your content"
                       />
                     </div>
 
