@@ -12,19 +12,9 @@ const AdminSidebar = () => {
   const pathname = usePathname();
 
   return (
-    <motion.div
-      initial={{ x: -100, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      transition={{ type: "spring", stiffness: 100 }}
-      className="hidden md:flex flex-col h-screen bg-white dark:bg-black border-r border-divider fixed left-0 top-0 w-[80px] lg:w-[240px]"
-    >
+    <div className="hidden md:flex flex-col h-screen bg-white dark:bg-black border-r border-divider fixed left-0 top-0 w-[80px] lg:w-[240px]">
       <div className="p-6 flex flex-col items-center">
-        <motion.div
-          initial={{ scale: 0.5, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="flex justify-center items-center lg:hidden"
-        >
+        <div className="flex justify-center items-center lg:hidden">
           <Tooltip
             content={
               <div className="px-2 py-1">
@@ -43,7 +33,7 @@ const AdminSidebar = () => {
           >
             <Info className="w-8 h-8 text-default-400" />
           </Tooltip>
-        </motion.div>
+        </div>
 
         <div className="md:hidden lg:block">
           <Image
@@ -66,36 +56,32 @@ const AdminSidebar = () => {
         {adminRoutes.map((route) => {
           const isActive = pathname === route.path;
           return (
-            <motion.div
+            <Link
               key={route.path}
-              whileHover={{ x: 4 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full"
+              href={route.path}
+              className={`relative flex items-center h-11 ${
+                isActive ? "text-pink-500" : "text-foreground/70 hover:text-foreground"
+              }`}
             >
-              <Link href={route.path} className="block">
-                <Button
-                  className={`w-full min-w-0 h-11 md:justify-center lg:justify-start gap-3 px-3 ${
-                    isActive ? "bg-pink-500 text-white hover:bg-pink-600" : ""
-                  }`}
-                  variant={isActive ? "solid" : "light"}
-                  startContent={
-                    <route.icon
-                      className={`w-5 h-5 flex-shrink-0 ${
-                        isActive ? "text-white" : "text-default-500"
-                      }`}
-                    />
-                  }
-                >
-                  <span
-                    className={`text-base truncate md:hidden lg:block ${
-                      isActive ? "text-white" : "text-default-700"
-                    }`}
-                  >
-                    {route.name}
-                  </span>
-                </Button>
-              </Link>
-            </motion.div>
+              <div className="flex items-center w-full px-3 gap-3">
+                <route.icon className="w-5 h-5 flex-shrink-0" />
+                <span className="text-base truncate md:hidden lg:block">
+                  {route.name}
+                </span>
+                {isActive && (
+                  <motion.div
+                    layoutId="sidebar-tab"
+                    className="absolute left-0 top-0 h-full w-1 bg-pink-500"
+                    initial={false}
+                    transition={{
+                      type: "spring",
+                      stiffness: 500,
+                      damping: 30
+                    }}
+                  />
+                )}
+              </div>
+            </Link>
           );
         })}
       </nav>
@@ -122,7 +108,7 @@ const AdminSidebar = () => {
           </Button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
