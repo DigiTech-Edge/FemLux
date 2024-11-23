@@ -15,21 +15,25 @@ export const routes = [
     name: "Home",
     path: "/",
     icon: Home,
+    protected: false
   },
   {
     name: "Shop",
     path: "/shop",
     icon: ShoppingBag,
+    protected: false
   },
   {
     name: "Favourites",
     path: "/favourites",
     icon: Heart,
+    protected: true
   },
   {
     name: "Profile",
     path: "/profile",
     icon: User,
+    protected: true
   },
 ];
 

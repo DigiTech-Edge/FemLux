@@ -118,7 +118,13 @@ export default function BannerManagement() {
       setBanners(
         banners.map((b) =>
           b.id === editingBanner.id
-            ? { ...editingBanner, title, message: message.trim() || undefined, image: imageUrl, active }
+            ? {
+                ...editingBanner,
+                title,
+                message: message.trim() || undefined,
+                image: imageUrl,
+                active,
+              }
             : b
         )
       );
@@ -282,7 +288,7 @@ export default function BannerManagement() {
                         isRequired
                       />
                     </div>
-                    
+
                     <div>
                       <Input
                         label="Banner Message (Optional)"

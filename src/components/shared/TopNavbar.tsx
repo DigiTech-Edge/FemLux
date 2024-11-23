@@ -15,8 +15,20 @@ import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { routes } from '@/lib/routes'
 
-const TopNavbar = () => {
+interface TopNavbarProps {
+  isAuthenticated: boolean
+  user: {
+    name: string
+    email: string
+    avatar?: string
+  } | null
+}
+
+const TopNavbar = ({ isAuthenticated, user }: TopNavbarProps) => {
   const pathname = usePathname()
+  
+  // Filter routes based on authentication status
+  const visibleRoutes = routes.filter(route => !route.protected || isAuthenticated)
 
   return (
     <Navbar 
@@ -37,7 +49,7 @@ const TopNavbar = () => {
       </NavbarBrand>
 
       <NavbarContent className="hidden sm:flex gap-4" justify="center">
-        {routes.map((route) => (
+        {visibleRoutes.map((route) => (
           <NavbarItem key={route.path}>
             <Link
               href={route.path}
@@ -79,14 +91,25 @@ const TopNavbar = () => {
           </Button>
         </NavbarItem>
         <NavbarItem>
-          <Button
-            isIconOnly
-            color="primary"
-            variant="flat"
-            aria-label="Logout"
-          >
-            <LogOut className="w-5 h-5" />
-          </Button>
+          {isAuthenticated ? (
+            <Button
+              color="primary"
+              variant="flat"
+              aria-label="Logout"
+              startContent={<LogOut className="w-5 h-5" />}
+            >
+              <span className="hidden sm:inline">Logout</span>
+            </Button>
+          ) : (
+            <Button
+              as={Link}
+              href="/login"
+              color="primary"
+              className="font-medium"
+            >
+              Sign In
+            </Button>
+          )}
         </NavbarItem>
       </NavbarContent>
     </Navbar>
