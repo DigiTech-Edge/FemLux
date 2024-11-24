@@ -1,26 +1,24 @@
-'use client'
+"use client";
 
-import React from 'react'
-import Image from 'next/image'
-import Link from 'next/link'
-import { Button } from '@nextui-org/react'
-import { Heart, ShoppingCart, StarIcon } from 'lucide-react'
-import { Product } from '@/lib/types/products'
-import { cn } from '@/helpers/utils'
-import { motion, useInView } from 'framer-motion'
-import { useRef } from 'react'
-import Carousel from './Carousel'
+import React from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@nextui-org/react";
+import { Heart, ShoppingCart, StarIcon } from "lucide-react";
+import { Product } from "@/lib/types/products";
+import { cn } from "@/helpers/utils";
+import { motion, useInView } from "framer-motion";
+import { useRef } from "react";
+import Carousel from "./Carousel";
 
 interface ProductCardProps {
-  product: Product
-  index: number
+  product: Product;
+  index: number;
 }
 
 export default function ProductCard({ product, index }: ProductCardProps) {
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true })
-
-  console.log(product.images)
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
 
   return (
     <motion.div
@@ -35,8 +33,8 @@ export default function ProductCard({ product, index }: ProductCardProps) {
     >
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 group">
         <div className="relative w-full">
-          <Carousel 
-            showControls 
+          <Carousel
+            showControls
             showIndicators
             slideWidth="100%"
             className="w-full"
@@ -83,9 +81,13 @@ export default function ProductCard({ product, index }: ProductCardProps) {
             </span>
           </div>
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs text-gray-600 dark:text-gray-300">{product.brand}</span>
+            <span className="text-xs text-gray-600 dark:text-gray-300">
+              {product.brand}
+            </span>
             <span className="text-xs text-gray-400">•</span>
-            <span className="text-xs text-gray-600 dark:text-gray-300">{product.category}</span>
+            <span className="text-xs text-gray-600 dark:text-gray-300">
+              {product.category}
+            </span>
           </div>
           {product.rating > 0 && (
             <div className="flex items-center gap-1 mb-2">
@@ -106,7 +108,7 @@ export default function ProductCard({ product, index }: ProductCardProps) {
             </div>
           )}
           <div className="flex flex-wrap gap-1 mb-3">
-            {product.colors.slice(0, 3).map(color => (
+            {product.colors.slice(0, 3).map((color) => (
               <span
                 key={color}
                 className="inline-block px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 rounded"
@@ -121,17 +123,12 @@ export default function ProductCard({ product, index }: ProductCardProps) {
             )}
           </div>
           <Link href={`/shop/${product.id}`}>
-            <Button
-              className="w-full"
-              color="primary"
-              variant="flat"
-              size="sm"
-            >
+            <Button className="w-full" color="primary" variant="flat" size="sm">
               View Details
             </Button>
           </Link>
         </div>
       </div>
     </motion.div>
-  )
+  );
 }

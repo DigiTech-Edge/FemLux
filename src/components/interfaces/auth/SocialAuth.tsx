@@ -1,28 +1,25 @@
-'use client'
+"use client";
 
-import React from 'react'
-import { Button } from '@nextui-org/react'
-import { FaGoogle } from 'react-icons/fa'
-import { toast } from 'react-hot-toast'
-import { loginWithGoogle } from '@/services/actions/auth.actions'
+import React from "react";
+import { Button } from "@nextui-org/react";
+import { FaGoogle } from "react-icons/fa";
+import { toast } from "react-hot-toast";
+import { loginWithGoogle } from "@/services/actions/auth.actions";
 
 const SocialAuth = () => {
-  const [isLoading, setIsLoading] = React.useState(false)
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const handleGoogleLogin = async () => {
     try {
-      setIsLoading(true)
-      const response = await loginWithGoogle()
-      
-      if (response?.error) {
-        toast.error(response.error)
-      }
-    } catch (error) {
-      toast.error('Failed to login with Google')
+      setIsLoading(true);
+
+      await loginWithGoogle();
+    } catch {
+      toast.error("Failed to login with Google");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="space-y-4">
@@ -47,7 +44,7 @@ const SocialAuth = () => {
         Google
       </Button>
     </div>
-  )
-}
+  );
+};
 
-export default SocialAuth
+export default SocialAuth;

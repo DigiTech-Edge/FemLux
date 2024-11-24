@@ -5,16 +5,15 @@ import BottomNavbar from "../shared/BottomNavbar";
 import Footer from "../shared/Footer";
 import { Toaster } from "react-hot-toast";
 import TopNavbar from "../shared/TopNavbar";
+import { User } from "@supabase/supabase-js";
 
 interface RootLayoutProps {
   children: React.ReactNode;
+  isAuthenticated: boolean;
+  user: User | null;
 }
 
-const RootLayout = ({ children }: RootLayoutProps) => {
-  // Temporary mock auth state until Appwrite integration
-  const isAuthenticated = false;
-  const user = null;
-
+const RootLayout = ({ children, isAuthenticated, user }: RootLayoutProps) => {
   return (
     <div className="min-h-screen flex flex-col">
       <TopNavbar isAuthenticated={isAuthenticated} user={user} />

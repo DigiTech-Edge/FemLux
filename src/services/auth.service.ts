@@ -1,9 +1,8 @@
-import { ID, AppwriteException, type Models, OAuthProvider } from "appwrite";
-import { account } from "@/models/client/config";
-import { User } from "@/types/schema";
+import { AuthError, Provider, User } from "@supabase/supabase-js";
+import { supabase } from "@/utils/supabase";
 
 type AuthResponse = {
-  user: Models.User<Models.Preferences> | null;
+  user: User | null;
   error?: string;
 };
 
@@ -13,9 +12,14 @@ export const authService = {
    */
   getCurrentUser: async (): Promise<AuthResponse> => {
     try {
-      const session = await account.get() as Models.User<Models.Preferences>;
-      return { user: session };
-    } catch {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+      if (error) throw error;
+      return { user };
+    } catch (error) {
+      console.log(error);
       return { user: null };
     }
   },
@@ -25,11 +29,17 @@ export const authService = {
    */
   login: async (email: string, password: string): Promise<AuthResponse> => {
     try {
-      await account.createSession(email, password);
-      const session = await account.get() as Models.User<Models.Preferences>;
-      return { user: session };
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+      return { user };
     } catch (error) {
-      if (error instanceof AppwriteException) {
+      if (error instanceof AuthError) {
         return {
           user: null,
           error: error.message,
@@ -51,28 +61,22 @@ export const authService = {
     name: string
   ): Promise<AuthResponse> => {
     try {
-      // Create Appwrite account
-      await account.create(ID.unique(), email, password, name);
-
-      // Set initial preferences
-      await account.updatePrefs({
-        role: "user",
-        emailVerified: false,
-        avatar: null,
-        shippingAddress: null,
-        phoneNumber: null,
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+          },
+        },
       });
-
-      // Create email verification
-      await account.createVerification(
-        `${window.location.origin}/verify-email`
-      );
-
-      // Get the created user
-      const session = await account.get() as Models.User<Models.Preferences>;
-      return { user: session };
+      if (error) throw error;
+      return { user };
     } catch (error) {
-      if (error instanceof AppwriteException) {
+      if (error instanceof AuthError) {
         return {
           user: null,
           error: error.message,
@@ -88,36 +92,20 @@ export const authService = {
   /**
    * Login with OAuth provider
    */
-  loginWithProvider: async (provider: OAuthProvider) => {
-    try {
-      await account.createOAuth2Session(
-        provider,
-        `${window.location.origin}/auth/callback`,
-        `${window.location.origin}/login`
-      );
-    } catch (error) {
-      if (error instanceof AppwriteException) {
-        return {
-          error: error.message,
-        };
-      }
-      return {
-        error: `Failed to login with ${provider}`,
-      };
-    }
+  loginWithProvider: async (provider: Provider): Promise<void> => {
+    await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
   },
 
   /**
    * Logout current session
    */
   logout: async (): Promise<void> => {
-    try {
-      await account.deleteSession("current");
-    } catch (error) {
-      if (error instanceof AppwriteException) {
-        console.error("Logout error:", error.message);
-      }
-    }
+    await supabase.auth.signOut();
   },
 
   /**
@@ -125,108 +113,70 @@ export const authService = {
    */
   forgotPassword: async (email: string): Promise<{ error?: string }> => {
     try {
-      await account.createRecovery(
-        email,
-        `${window.location.origin}/reset-password`
-      );
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+      if (error) throw error;
       return {};
     } catch (error) {
-      if (error instanceof AppwriteException) {
-        return {
-          error: error.message,
-        };
+      if (error instanceof AuthError) {
+        return { error: error.message };
       }
-      return {
-        error: "Failed to send recovery email",
-      };
+      return { error: "Failed to send reset email" };
     }
   },
 
   /**
-   * Reset password with recovery code
+   * Reset password
    */
-  resetPassword: async (
-    userId: string,
-    secret: string,
-    password: string
-  ): Promise<{ error?: string }> => {
+  resetPassword: async (password: string): Promise<{ error?: string }> => {
     try {
-      await account.updateRecovery(userId, secret, password);
+      const { error } = await supabase.auth.updateUser({
+        password,
+      });
+      if (error) throw error;
       return {};
     } catch (error) {
-      if (error instanceof AppwriteException) {
-        return {
-          error: error.message,
-        };
+      if (error instanceof AuthError) {
+        return { error: error.message };
       }
-      return {
-        error: "Failed to reset password",
-      };
+      return { error: "Failed to reset password" };
     }
   },
 
   /**
    * Update user email
    */
-  updateEmail: async (
-    email: string,
-    password: string
-  ): Promise<{ error?: string }> => {
+  updateEmail: async (email: string): Promise<{ error?: string }> => {
     try {
-      await account.updateEmail(email, password);
+      const { error } = await supabase.auth.updateUser({
+        email,
+      });
+      if (error) throw error;
       return {};
     } catch (error) {
-      if (error instanceof AppwriteException) {
-        return {
-          error: error.message,
-        };
+      if (error instanceof AuthError) {
+        return { error: error.message };
       }
-      return {
-        error: "Failed to update email",
-      };
+      return { error: "Failed to update email" };
     }
   },
 
   /**
    * Update user password
    */
-  updatePassword: async (
-    oldPassword: string,
-    newPassword: string
-  ): Promise<{ error?: string }> => {
+  updatePassword: async (password: string): Promise<{ error?: string }> => {
     try {
-      await account.updatePassword(newPassword, oldPassword);
+      const { error } = await supabase.auth.updateUser({
+        password,
+      });
+      if (error) throw error;
       return {};
     } catch (error) {
-      if (error instanceof AppwriteException) {
-        return {
-          error: error.message,
-        };
+      if (error instanceof AuthError) {
+        return { error: error.message };
       }
-      return {
-        error: "Failed to update password",
-      };
+      return { error: "Failed to update password" };
     }
   },
-
-  /**
-   * Update user preferences
-   */
-  updatePreferences: async (
-    preferences: Partial<User>
-  ): Promise<{ error?: string }> => {
-    try {
-      await account.updatePrefs(preferences);
-      return {};
-    } catch (error) {
-      if (error instanceof AppwriteException) {
-        return {
-          error: error.message,
-        };
-      }
-      return {
-        error: "Failed to update preferences",
-      };
-    }
-  }
 };

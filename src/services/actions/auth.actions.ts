@@ -1,8 +1,7 @@
 "use server";
 
-import { OAuthProvider } from "appwrite";
+import { Provider, User } from "@supabase/supabase-js";
 import { authService } from "../auth.service";
-import { User } from "@/types/schema";
 
 export async function login(email: string, password: string) {
   return authService.login(email, password);
@@ -12,8 +11,8 @@ export async function register(email: string, password: string, name: string) {
   return authService.register(email, password, name);
 }
 
-export async function loginWithGoogle() {
-  return authService.loginWithProvider(OAuthProvider.Google);
+export async function loginWithGoogle(provider?: Provider) {
+  return authService.loginWithProvider(provider || "google");
 }
 
 export async function logout() {
@@ -31,22 +30,14 @@ export async function forgotPassword(email: string) {
   return authService.forgotPassword(email);
 }
 
-export async function resetPassword(
-  userId: string,
-  secret: string,
-  password: string
-) {
-  return authService.resetPassword(userId, secret, password);
+export async function resetPassword(password: string) {
+  return authService.resetPassword(password);
 }
 
-export async function verifyEmail(userId: string, secret: string) {
-  return authService.verifyEmail(userId, secret);
+export async function updatePassword(password: string) {
+  return authService.updatePassword(password);
 }
 
-export async function updatePassword(oldPassword: string, newPassword: string) {
-  return authService.updatePassword(oldPassword, newPassword);
-}
-
-export async function updateEmail(email: string, password: string) {
-  return authService.updateEmail(email, password);
+export async function updateEmail(email: string) {
+  return authService.updateEmail(email);
 }

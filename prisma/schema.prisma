@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Product {
+  id             String    @id @default(uuid()) @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  name           String    @db.VarChar(255)
+  description    String
+  price          Decimal   @db.Decimal(10, 2)
+  categoryId     String    @map("category_id") @db.Uuid
+  stock          Int       @default(0)
+  images         String[]  @default([])
+  featured       Boolean   @default(false)
+  specifications Json      @default("{}") @db.JsonB
+  discountPrice  Decimal?  @map("discount_price") @db.Decimal(10, 2)
+  brand          String    @db.VarChar(255)
+  
+  // Relations
+  category       Category  @relation(fields: [categoryId], references: [id])
+  reviews        Review[]
+
+  @@map("products")
+}
+
+model Category {
+  id          String     @id @default(uuid()) @db.Uuid
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  name        String     @db.VarChar(255)
+  description String?
+  parentId    String?    @map("parent_id") @db.Uuid
+  image       String?
+  
+  // Relations
+  parent      Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryToCategory")
+  products    Product[]
+
+  @@map("categories")
+}
+
+model Order {
+  id                String    @id @default(uuid()) @db.Uuid
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  userId           String    @map("user_id") @db.Uuid
+  status           OrderStatus
+  totalAmount      Decimal   @map("total_amount") @db.Decimal(10, 2)
+  shippingAddress  Json      @map("shipping_address") @db.JsonB
+  billingAddress   Json      @map("billing_address") @db.JsonB
+  paymentStatus    PaymentStatus @map("payment_status")
+  paymentMethod    String    @map("payment_method") @db.VarChar(50)
+  items            Json[]    @db.JsonB
+  trackingNumber   String?   @map("tracking_number") @db.VarChar(255)
+  estimatedDelivery DateTime? @map("estimated_delivery") @db.Timestamptz
+  giftMessage      String?   @map("gift_message")
+  
+  // Relations
+  profile          Profile   @relation(fields: [userId], references: [id])
+
+  @@map("orders")
+}
+
+model Review {
+  id               String   @id @default(uuid()) @db.Uuid
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  userId           String   @map("user_id") @db.Uuid
+  productId        String   @map("product_id") @db.Uuid
+  rating           Int
+  comment          String
+  images           String[]
+  verifiedPurchase Boolean  @default(false) @map("verified_purchase")
+  
+  // Relations
+  product          Product  @relation(fields: [productId], references: [id])
+  profile          Profile  @relation(fields: [userId], references: [id])
+
+  @@map("reviews")
+}
+
+model Profile {
+  id                    String   @id @default(uuid()) @db.Uuid
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  email                 String   @unique @db.VarChar(255)
+  fullName              String   @map("full_name") @db.VarChar(255)
+  avatarUrl             String?  @map("avatar_url")
+  phone                 String?  @db.VarChar(50)
+  defaultShippingAddress Json?    @map("default_shipping_address") @db.JsonB
+  defaultBillingAddress  Json?    @map("default_billing_address") @db.JsonB
+  
+  // Relations
+  orders               Order[]
+  reviews              Review[]
+
+  @@map("profiles")
+}
+
+enum OrderStatus {
+  pending
+  processing
+  shipped
+  delivered
+  cancelled
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  failed
+}
