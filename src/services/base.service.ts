@@ -1,21 +1,19 @@
 import { ID, Query, type Models } from 'appwrite';
-import { databases, DATABASE_ID } from '@/utils/appwrite';
+import { databases } from '@/models/client/config';
+import { NAMES } from '@/models/name';
 
 export interface BaseModel extends Models.Document {
     $id: string;
     $createdAt: string;
     $updatedAt: string;
-    $permissions: string[];
-    $collectionId: string;
-    $databaseId: string;
 }
 
-type FilterValue = string | number | boolean | string[] | number[] | null;
+type FilterValue = string | number | boolean | string[];
 
 export const createBaseService = <T extends BaseModel>(collectionId: string) => {
     const create = async (data: Omit<T, keyof BaseModel>): Promise<T> => {
         const response = await databases.createDocument(
-            DATABASE_ID,
+            NAMES.database.id,
             collectionId,
             ID.unique(),
             data as object
@@ -25,7 +23,7 @@ export const createBaseService = <T extends BaseModel>(collectionId: string) => 
 
     const update = async (id: string, data: Partial<Omit<T, keyof BaseModel>>): Promise<T> => {
         const response = await databases.updateDocument(
-            DATABASE_ID,
+            NAMES.database.id,
             collectionId,
             id,
             data as object
@@ -36,7 +34,7 @@ export const createBaseService = <T extends BaseModel>(collectionId: string) => 
     const remove = async (id: string): Promise<boolean> => {
         try {
             await databases.deleteDocument(
-                DATABASE_ID,
+                NAMES.database.id,
                 collectionId,
                 id
             );
@@ -48,7 +46,7 @@ export const createBaseService = <T extends BaseModel>(collectionId: string) => 
 
     const getById = async (id: string): Promise<T> => {
         const response = await databases.getDocument(
-            DATABASE_ID,
+            NAMES.database.id,
             collectionId,
             id
         );
@@ -57,7 +55,7 @@ export const createBaseService = <T extends BaseModel>(collectionId: string) => 
 
     const list = async (queries: string[] = []): Promise<T[]> => {
         const response = await databases.listDocuments(
-            DATABASE_ID,
+            NAMES.database.id,
             collectionId,
             queries
         );

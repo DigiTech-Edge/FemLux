@@ -1,14 +1,47 @@
 import { ID, AppwriteException, type Models, OAuthProvider } from "appwrite";
-import { account } from "@/utils/appwrite";
-import { userService } from "./user.service";
+import { account } from "@/models/client/config";
 import { User } from "@/types/schema";
 
-export type AuthResponse = {
-  user: User | null;
+type AuthResponse = {
+  user: Models.User<Models.Preferences> | null;
   error?: string;
 };
 
 export const authService = {
+  /**
+   * Get current session and user
+   */
+  getCurrentUser: async (): Promise<AuthResponse> => {
+    try {
+      const session = await account.get() as Models.User<Models.Preferences>;
+      return { user: session };
+    } catch {
+      return { user: null };
+    }
+  },
+
+  /**
+   * Login with email and password
+   */
+  login: async (email: string, password: string): Promise<AuthResponse> => {
+    try {
+      await account.createSession(email, password);
+      const session = await account.get() as Models.User<Models.Preferences>;
+      return { user: session };
+    } catch (error) {
+      if (error instanceof AppwriteException) {
+        return {
+          user: null,
+          error: error.message,
+        };
+      }
+      return {
+        user: null,
+        error: "Failed to login",
+      };
+    }
+  },
+
   /**
    * Create a new user account
    */
@@ -21,13 +54,13 @@ export const authService = {
       // Create Appwrite account
       await account.create(ID.unique(), email, password, name);
 
-      // Create user document in database
-      const user = await userService.createUser({
-        email,
-        name,
+      // Set initial preferences
+      await account.updatePrefs({
         role: "user",
         emailVerified: false,
         avatar: null,
+        shippingAddress: null,
+        phoneNumber: null,
       });
 
       // Create email verification
@@ -35,7 +68,9 @@ export const authService = {
         `${window.location.origin}/verify-email`
       );
 
-      return { user };
+      // Get the created user
+      const session = await account.get() as Models.User<Models.Preferences>;
+      return { user: session };
     } catch (error) {
       if (error instanceof AppwriteException) {
         return {
@@ -46,28 +81,6 @@ export const authService = {
       return {
         user: null,
         error: "Failed to create account",
-      };
-    }
-  },
-
-  /**
-   * Login with email and password
-   */
-  login: async (email: string, password: string): Promise<AuthResponse> => {
-    try {
-      await account.createSession(email, password);
-      const user = await userService.getUserByEmail(email);
-      return { user };
-    } catch (error) {
-      if (error instanceof AppwriteException) {
-        return {
-          user: null,
-          error: error.message,
-        };
-      }
-      return {
-        user: null,
-        error: "Failed to login",
       };
     }
   },
@@ -104,19 +117,6 @@ export const authService = {
       if (error instanceof AppwriteException) {
         console.error("Logout error:", error.message);
       }
-    }
-  },
-
-  /**
-   * Get current session and user
-   */
-  getCurrentUser: async (): Promise<AuthResponse> => {
-    try {
-      const session = (await account.get()) as Models.User<Models.Preferences>;
-      const user = await userService.getUserByEmail(session.email);
-      return { user };
-    } catch {
-      return { user: null };
     }
   },
 
@@ -166,18 +166,14 @@ export const authService = {
   },
 
   /**
-   * Verify email with verification code
+   * Update user email
    */
-  verifyEmail: async (
-    userId: string,
-    secret: string
+  updateEmail: async (
+    email: string,
+    password: string
   ): Promise<{ error?: string }> => {
     try {
-      await account.updateVerification(userId, secret);
-      // Update user document
-      await userService.updateUserProfile(userId, {
-        emailVerified: true,
-      });
+      await account.updateEmail(email, password);
       return {};
     } catch (error) {
       if (error instanceof AppwriteException) {
@@ -186,7 +182,7 @@ export const authService = {
         };
       }
       return {
-        error: "Failed to verify email",
+        error: "Failed to update email",
       };
     }
   },
@@ -214,14 +210,13 @@ export const authService = {
   },
 
   /**
-   * Update user email
+   * Update user preferences
    */
-  updateEmail: async (
-    email: string,
-    password: string
+  updatePreferences: async (
+    preferences: Partial<User>
   ): Promise<{ error?: string }> => {
     try {
-      await account.updateEmail(email, password);
+      await account.updatePrefs(preferences);
       return {};
     } catch (error) {
       if (error instanceof AppwriteException) {
@@ -230,8 +225,8 @@ export const authService = {
         };
       }
       return {
-        error: "Failed to update email",
+        error: "Failed to update preferences",
       };
     }
-  },
+  }
 };
