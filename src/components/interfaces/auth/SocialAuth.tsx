@@ -12,9 +12,10 @@ const SocialAuth = () => {
   const handleGoogleLogin = async () => {
     try {
       setIsLoading(true);
-
-      await loginWithGoogle();
-    } catch {
+      const url = await loginWithGoogle();
+      window.location.href = url;
+    } catch (error) {
+      console.error("Google login error:", error);
       toast.error("Failed to login with Google");
     } finally {
       setIsLoading(false);

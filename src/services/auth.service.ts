@@ -1,5 +1,7 @@
 import { AuthError, Provider, User } from "@supabase/supabase-js";
-import { supabase } from "@/utils/supabase";
+import { createClient } from "@/utils/supabase/client";
+import { createClient as createServerClient } from "@/utils/supabase/server";
+import { headers } from "next/headers";
 
 type AuthResponse = {
   user: User | null;
@@ -12,6 +14,7 @@ export const authService = {
    */
   getCurrentUser: async (): Promise<AuthResponse> => {
     try {
+      const supabase = createClient();
       const {
         data: { user },
         error,
@@ -19,8 +22,8 @@ export const authService = {
       if (error) throw error;
       return { user };
     } catch (error) {
-      console.log(error);
-      return { user: null };
+      console.error("Error getting current user:", error);
+      return { user: null, error: "Failed to get current user" };
     }
   },
 
@@ -29,6 +32,7 @@ export const authService = {
    */
   login: async (email: string, password: string): Promise<AuthResponse> => {
     try {
+      const supabase = await createServerClient();
       const {
         data: { user },
         error,
@@ -39,21 +43,16 @@ export const authService = {
       if (error) throw error;
       return { user };
     } catch (error) {
-      if (error instanceof AuthError) {
-        return {
-          user: null,
-          error: error.message,
-        };
-      }
+      console.error("Login error:", error);
       return {
         user: null,
-        error: "Failed to login",
+        error: error instanceof AuthError ? error.message : "Failed to login",
       };
     }
   },
 
   /**
-   * Create a new user account
+   * Register a new user
    */
   register: async (
     email: string,
@@ -61,6 +60,7 @@ export const authService = {
     name: string
   ): Promise<AuthResponse> => {
     try {
+      const supabase = await createServerClient();
       const {
         data: { user },
         error,
@@ -68,23 +68,17 @@ export const authService = {
         email,
         password,
         options: {
-          data: {
-            name,
-          },
+          data: { name },
         },
       });
       if (error) throw error;
       return { user };
     } catch (error) {
-      if (error instanceof AuthError) {
-        return {
-          user: null,
-          error: error.message,
-        };
-      }
+      console.error("Registration error:", error);
       return {
         user: null,
-        error: "Failed to create account",
+        error:
+          error instanceof AuthError ? error.message : "Failed to register",
       };
     }
   },
@@ -92,20 +86,38 @@ export const authService = {
   /**
    * Login with OAuth provider
    */
-  loginWithProvider: async (provider: Provider): Promise<void> => {
-    await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+  loginWithProvider: async (provider: Provider): Promise<string> => {
+    const origin = (await headers()).get("origin");
+    try {
+      const supabase = await createServerClient();
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${origin}/auth/callback`,
+          skipBrowserRedirect: true, // Don't auto-redirect, we'll handle it
+        },
+      });
+
+      if (error) throw error;
+
+      // Return the URL instead of redirecting
+      if (data?.url) {
+        return data.url;
+      }
+      throw new Error("No URL returned from OAuth provider");
+    } catch (error) {
+      console.error("OAuth login error:", error);
+      throw error;
+    }
   },
 
   /**
    * Logout current session
    */
   logout: async (): Promise<void> => {
-    await supabase.auth.signOut();
+    const supabase = await createServerClient();
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
   },
 
   /**
@@ -113,34 +125,40 @@ export const authService = {
    */
   forgotPassword: async (email: string): Promise<{ error?: string }> => {
     try {
+      const supabase = await createServerClient();
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/reset-password`,
       });
       if (error) throw error;
       return {};
     } catch (error) {
-      if (error instanceof AuthError) {
-        return { error: error.message };
-      }
-      return { error: "Failed to send reset email" };
+      console.error("Password reset error:", error);
+      return {
+        error:
+          error instanceof AuthError
+            ? error.message
+            : "Failed to send reset email",
+      };
     }
   },
 
   /**
-   * Reset password
+   * Reset password with new password
    */
   resetPassword: async (password: string): Promise<{ error?: string }> => {
     try {
-      const { error } = await supabase.auth.updateUser({
-        password,
-      });
+      const supabase = await createServerClient();
+      const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       return {};
     } catch (error) {
-      if (error instanceof AuthError) {
-        return { error: error.message };
-      }
-      return { error: "Failed to reset password" };
+      console.error("Password update error:", error);
+      return {
+        error:
+          error instanceof AuthError
+            ? error.message
+            : "Failed to reset password",
+      };
     }
   },
 
@@ -149,16 +167,16 @@ export const authService = {
    */
   updateEmail: async (email: string): Promise<{ error?: string }> => {
     try {
-      const { error } = await supabase.auth.updateUser({
-        email,
-      });
+      const supabase = await createServerClient();
+      const { error } = await supabase.auth.updateUser({ email });
       if (error) throw error;
       return {};
     } catch (error) {
-      if (error instanceof AuthError) {
-        return { error: error.message };
-      }
-      return { error: "Failed to update email" };
+      console.error("Email update error:", error);
+      return {
+        error:
+          error instanceof AuthError ? error.message : "Failed to update email",
+      };
     }
   },
 
@@ -167,16 +185,18 @@ export const authService = {
    */
   updatePassword: async (password: string): Promise<{ error?: string }> => {
     try {
-      const { error } = await supabase.auth.updateUser({
-        password,
-      });
+      const supabase = await createServerClient();
+      const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       return {};
     } catch (error) {
-      if (error instanceof AuthError) {
-        return { error: error.message };
-      }
-      return { error: "Failed to update password" };
+      console.error("Password update error:", error);
+      return {
+        error:
+          error instanceof AuthError
+            ? error.message
+            : "Failed to update password",
+      };
     }
   },
 };

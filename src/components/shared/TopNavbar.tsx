@@ -1,43 +1,57 @@
-'use client'
+"use client";
 
-import React from 'react'
+import React, { useState } from "react";
 import {
   Navbar,
   NavbarBrand,
   NavbarContent,
   NavbarItem,
   Button,
-} from '@nextui-org/react'
-import { LogOut, ShoppingCart } from 'lucide-react'
-import Image from 'next/image'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { motion } from 'framer-motion'
-import { routes } from '@/lib/routes'
+} from "@nextui-org/react";
+import { LogOut, ShoppingCart } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { routes } from "@/lib/routes";
+import { logout } from "@/services/actions/auth.actions";
+import toast from "react-hot-toast";
 
 interface TopNavbarProps {
-  isAuthenticated: boolean
-  user: {
-    name: string
-    email: string
-    avatar?: string
-  } | null
+  isAuthenticated: boolean;
 }
 
-const TopNavbar = ({ isAuthenticated, user }: TopNavbarProps) => {
-  const pathname = usePathname()
-  
+const TopNavbar = ({ isAuthenticated }: TopNavbarProps) => {
+  const pathname = usePathname();
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+
   // Filter routes based on authentication status
-  const visibleRoutes = routes.filter(route => !route.protected || isAuthenticated)
+  const visibleRoutes = routes.filter(
+    (route) => !route.protected || isAuthenticated
+  );
+
+  const handleLogout = async () => {
+    try {
+      setIsLoading(true);
+      await logout();
+      router.push("/");
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.error("Failed to logout");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <Navbar 
-      maxWidth="full" 
-      position="sticky" 
+    <Navbar
+      maxWidth="full"
+      position="sticky"
       className="bg-background/70 backdrop-blur-md border-b"
     >
       <NavbarBrand>
-        <Link href="/" >
+        <Link href="/">
           <Image
             src="/logo.png"
             alt="FemLux Logo"
@@ -55,8 +69,8 @@ const TopNavbar = ({ isAuthenticated, user }: TopNavbarProps) => {
               href={route.path}
               className={`relative py-2 px-1 ${
                 pathname === route.path
-                  ? 'text-primary'
-                  : 'text-foreground/70 hover:text-foreground'
+                  ? "text-primary"
+                  : "text-foreground/70 hover:text-foreground"
               }`}
             >
               {route.name}
@@ -68,7 +82,7 @@ const TopNavbar = ({ isAuthenticated, user }: TopNavbarProps) => {
                   transition={{
                     type: "spring",
                     stiffness: 500,
-                    damping: 30
+                    damping: 30,
                   }}
                 />
               )}
@@ -96,7 +110,9 @@ const TopNavbar = ({ isAuthenticated, user }: TopNavbarProps) => {
               color="primary"
               variant="flat"
               aria-label="Logout"
+              isLoading={isLoading}
               startContent={<LogOut className="w-5 h-5" />}
+              onClick={handleLogout}
             >
               <span className="hidden sm:inline">Logout</span>
             </Button>
@@ -113,7 +129,7 @@ const TopNavbar = ({ isAuthenticated, user }: TopNavbarProps) => {
         </NavbarItem>
       </NavbarContent>
     </Navbar>
-  )
-}
+  );
+};
 
-export default TopNavbar
+export default TopNavbar;
