@@ -1,5 +1,3 @@
-'use server';
-
 import { Query } from 'appwrite';
 import { createBaseService, BaseModel } from './base.service';
 import { User } from '@/types/schema';

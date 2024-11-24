@@ -1,5 +1,3 @@
-'use server';
-
 import { ID, Query, type Models } from 'appwrite';
 import { databases, DATABASE_ID } from '@/utils/appwrite';
 

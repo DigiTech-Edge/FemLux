@@ -1,32 +1,16 @@
-import { Client, Account, Databases, Storage } from 'appwrite';
+import { Client, Account, Databases, Storage } from "appwrite";
+import { COLLECTIONS, BUCKETS } from "@/lib/constants";
 
 const client = new Client()
-    .setEndpoint(process.env.APPWRITE_ENDPOINT!)
-    .setProject(process.env.APPWRITE_PROJECT_ID!);
+  .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
+  .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!);
 
 export const account = new Account(client);
 export const databases = new Databases(client);
 export const storage = new Storage(client);
 
-// Collection IDs
-export const Collections = {
-    USERS: 'users',
-    PRODUCTS: 'products',
-    ORDERS: 'orders',
-    CATEGORIES: 'categories',
-    FAVORITES: 'favorites'
-} as const;
-
-// Bucket IDs
-export const Buckets = {
-    PRODUCT_IMAGES: process.env.APPWRITE_PRODUCT_IMAGES_BUCKET!,
-    USER_IMAGES: process.env.APPWRITE_USER_IMAGES_BUCKET!,
-    CATEGORIES_BANNERS: process.env.APPWRITE_CATEGORIES_BANNERS_IMAGES_BUCKET!
-} as const;
-
-export const DATABASE_ID = process.env.APPWRITE_DATABASE_ID!;
-
-export type CollectionName = keyof typeof Collections;
-export type BucketName = keyof typeof Buckets;
+// Constants
+export const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;
+export { COLLECTIONS, BUCKETS };
 
 export default client;

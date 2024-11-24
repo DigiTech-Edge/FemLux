@@ -6,7 +6,10 @@ import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
+import { toast } from 'react-hot-toast'
+import { useRouter } from 'next/navigation'
 import SocialAuth from './SocialAuth'
+import { login } from '@/services/actions/auth.actions'
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -17,6 +20,9 @@ type LoginFormValues = z.infer<typeof loginSchema>
 
 const LoginForm = () => {
   const [isVisible, setIsVisible] = React.useState(false)
+  const [isLoading, setIsLoading] = React.useState(false)
+  const router = useRouter()
+
   const toggleVisibility = () => setIsVisible(!isVisible)
 
   const {
@@ -27,9 +33,28 @@ const LoginForm = () => {
     resolver: zodResolver(loginSchema),
   })
 
-  const onSubmit = (data: LoginFormValues) => {
-    console.log(data)
-    // Handle login logic here
+  const onSubmit = async (data: LoginFormValues) => {
+    try {
+      setIsLoading(true)
+      const response = await login(data.email, data.password)
+      
+      if (response.error) {
+        toast.error(response.error)
+        return
+      }
+
+      if (!response.user) {
+        toast.error('Something went wrong')
+        return
+      }
+
+      toast.success('Logged in successfully!')
+      router.push('/')
+    } catch (error) {
+      toast.error('Failed to login')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -43,6 +68,7 @@ const LoginForm = () => {
           placeholder="Enter your email"
           type="email"
           startContent={<Mail className="text-default-400" size={16} />}
+          isDisabled={isLoading}
         />
       </div>
 
@@ -51,8 +77,8 @@ const LoginForm = () => {
         <Input
           {...register('password')}
           errorMessage={errors.password?.message}
-          placeholder="Enter your password"
           isInvalid={!!errors.password}
+          placeholder="Enter your password"
           type={isVisible ? "text" : "password"}
           startContent={<Lock className="text-default-400" size={16} />}
           endContent={
@@ -64,21 +90,28 @@ const LoginForm = () => {
               )}
             </button>
           }
+          isDisabled={isLoading}
         />
       </div>
 
-      <div className="flex justify-between items-center">
+      <div className="flex justify-end">
         <Link href="/forgot-password" size="sm">Forgot password?</Link>
       </div>
 
-      <Button type="submit" color="primary" className="w-full" size="lg">
-        Sign In
+      <Button 
+        type="submit" 
+        color="primary" 
+        className="w-full" 
+        size="lg"
+        isLoading={isLoading}
+      >
+        Sign in
       </Button>
 
       <SocialAuth />
 
       <p className="text-center text-sm">
-        Don&apos;t have an account?{" "}
+        Don't have an account?{" "}
         <Link href="/register" size="sm">Sign up</Link>
       </p>
     </form>
