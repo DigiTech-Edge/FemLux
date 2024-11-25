@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
+import { userService } from "@/services/users.service";
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
@@ -12,26 +13,26 @@ export async function GET(request: Request) {
   try {
     const supabase = await createClient();
 
-    // Exchange the code for a session using the official method
+    // Exchange the code for a session
     const {
-      data: { session },
+      data: { user },
       error,
     } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error) {
-      throw error;
+      return NextResponse.redirect(
+        `${requestUrl.origin}/login?error=${error.message}`
+      );
     }
 
-    if (!session) {
-      throw new Error("No session found");
-    }
+    // Create/update user profile
+    await userService.upsertProfile(user!);
 
-    // Successful login, redirect to home page
     return NextResponse.redirect(requestUrl.origin);
   } catch (error) {
-    console.error("Auth callback error:", error);
+    console.error("Error in auth callback:", error);
     return NextResponse.redirect(
-      `${requestUrl.origin}/login?error=auth_callback_error`
+      `${requestUrl.origin}/login?error=Something went wrong`
     );
   }
 }

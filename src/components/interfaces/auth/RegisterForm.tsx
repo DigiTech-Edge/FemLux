@@ -49,28 +49,18 @@ const RegisterForm = () => {
   });
 
   const onSubmit = async (data: RegisterFormValues) => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      const response = await registerAction(
-        data.email,
-        data.password,
-        data.name
-      );
-
-      if (response.error) {
-        toast.error(response.error);
+      const { error } = await registerAction(data.email, data.password, data.name);
+      if (error) {
+        toast.error(error);
         return;
       }
-
-      if (!response.user) {
-        toast.error("Something went wrong");
-        return;
-      }
-
-      toast.success("Check your email to confirm your account!");
-      router.push("/login");
-    } catch {
-      toast.error("Failed to create account");
+      // Redirect to email verification page
+      router.push("/auth/verify-email");
+    } catch (error) {
+      console.error("Registration error:", error);
+      toast.error("Something went wrong during registration");
     } finally {
       setIsLoading(false);
     }

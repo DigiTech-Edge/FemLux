@@ -41,6 +41,9 @@ export const authService = {
         password,
       });
       if (error) throw error;
+
+      // Create/update profile if login successful
+
       return { user };
     } catch (error) {
       console.error("Login error:", error);
@@ -61,6 +64,10 @@ export const authService = {
   ): Promise<AuthResponse> => {
     try {
       const supabase = await createServerClient();
+
+      // Get the site URL, defaulting to localhost in development
+      const origin = (await headers()).get("origin");
+
       const {
         data: { user },
         error,
@@ -68,10 +75,14 @@ export const authService = {
         email,
         password,
         options: {
-          data: { name },
+          data: {
+            name,
+          },
+          emailRedirectTo: `${origin}/auth/callback`,
         },
       });
       if (error) throw error;
+
       return { user };
     } catch (error) {
       console.error("Registration error:", error);
