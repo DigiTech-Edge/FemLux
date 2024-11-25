@@ -253,54 +253,58 @@ export default function ProductsTable({
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 mt-4">
       <div className="flex flex-col gap-4">
         {/* Search and Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center p-4 bg-default-100 rounded-lg">
-          <div className="flex flex-1 gap-4 items-center w-full sm:w-auto">
+        <div className="bg-default-100 rounded-lg p-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <Input
               isClearable
-              className="w-full sm:max-w-[44%]"
+              className="w-full sm:max-w-[60%]"
               placeholder="Search products..."
               startContent={<Search className="w-4 h-4 text-default-400" />}
               value={filterValue}
               onClear={() => setFilterValue("")}
               onValueChange={setFilterValue}
             />
-            <Select
-              className="w-full sm:max-w-[28%]"
-              placeholder="Category"
-              selectedKeys={[selectedCategory]}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-            >
-              {categories.map((category) => (
-                <SelectItem key={category} value={category}>
-                  {category === "all" ? "All Categories" : category}
+            <div className="flex flex-col sm:flex-row gap-2 sm:w-fit">
+              <Select
+                className="w-full sm:w-[140px]"
+                size="sm"
+                placeholder="Category"
+                selectedKeys={[selectedCategory]}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+              >
+                {categories.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category === "all" ? "All Categories" : category}
+                  </SelectItem>
+                ))}
+              </Select>
+              <Select
+                className="w-full sm:w-[140px]"
+                size="sm"
+                placeholder="Status"
+                selectedKeys={[statusFilter]}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                startContent={
+                  <SlidersHorizontal className="w-4 h-4 text-default-400" />
+                }
+              >
+                <SelectItem key="all" value="all">
+                  All Status
                 </SelectItem>
-              ))}
-            </Select>
-            <Select
-              className="w-full sm:max-w-[28%]"
-              placeholder="Status"
-              selectedKeys={[statusFilter]}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              startContent={
-                <SlidersHorizontal className="w-4 h-4 text-default-400" />
-              }
-            >
-              <SelectItem key="all" value="all">
-                All Status
-              </SelectItem>
-              <SelectItem key="inStock" value="inStock">
-                In Stock
-              </SelectItem>
-              <SelectItem key="lowStock" value="lowStock">
-                Low Stock
-              </SelectItem>
-              <SelectItem key="outOfStock" value="outOfStock">
-                Out of Stock
-              </SelectItem>
-            </Select>
+                <SelectItem key="inStock" value="inStock">
+                  In Stock
+                </SelectItem>
+                <SelectItem key="lowStock" value="lowStock">
+                  Low Stock
+                </SelectItem>
+                <SelectItem key="outOfStock" value="outOfStock">
+                  Out of Stock
+                </SelectItem>
+              </Select>
+            </div>
           </div>
         </div>
 

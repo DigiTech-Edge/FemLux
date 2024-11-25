@@ -1,20 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@nextui-org/react";
+import { Button, Tabs, Tab } from "@nextui-org/react";
 import { Plus } from "lucide-react";
 import ProductStats from "@/components/interfaces/admin/products/ProductStats";
 import ProductsTable from "@/components/interfaces/admin/products/ProductsTable";
 import ProductDetailsModal from "@/components/interfaces/admin/products/ProductDetailsModal";
 import ProductFormModal from "@/components/interfaces/admin/products/ProductFormModal";
-import type { Product } from "@/lib/types/products";
+import CategoriesClient from "@/components/interfaces/admin/categories/CategoriesClient";
+import type { Product, Category } from "@/lib/types/products";
 
 interface ProductsClientProps {
   initialProducts: Product[];
+  initialCategories: Category[];
 }
 
 export default function ProductsClient({
   initialProducts,
+  initialCategories,
 }: ProductsClientProps) {
   const [products, setProducts] = useState(initialProducts);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -69,41 +72,74 @@ export default function ProductsClient({
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold">Products</h1>
-        <Button
-          color="primary"
-          startContent={<Plus className="w-4 h-4" />}
-          onPress={handleAdd}
+      <Tabs
+        aria-label="Product Management Options"
+        size="lg"
+        color="primary"
+        variant="underlined"
+        classNames={{
+          tabList:
+            "gap-6 w-full relative rounded-none p-0 border-b border-divider",
+          cursor: "w-full bg-primary",
+          tab: "max-w-fit px-0 h-12",
+          tabContent: "group-data-[selected=true]:text-primary",
+        }}
+      >
+        <Tab
+          key="products"
+          title={
+            <div className="flex items-center space-x-2">
+              <span>Products</span>
+            </div>
+          }
         >
-          Add Product
-        </Button>
-      </div>
+          <div>
+            <div className="flex justify-end mb-4">
+              <Button
+                color="primary"
+                startContent={<Plus className="w-4 h-4" />}
+                onPress={handleAdd}
+              >
+                Add Product
+              </Button>
+            </div>
+            <ProductStats stats={stats} />
 
-      <ProductStats stats={stats} />
+            <ProductsTable
+              products={products}
+              onView={handleView}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
 
-      <div className="mt-8">
-        <ProductsTable
-          products={products}
-          onView={handleView}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
-      </div>
+            <ProductDetailsModal
+              product={selectedProduct}
+              isOpen={isDetailsModalOpen}
+              onClose={() => setIsDetailsModalOpen(false)}
+            />
 
-      <ProductDetailsModal
-        product={selectedProduct}
-        isOpen={isDetailsModalOpen}
-        onClose={() => setIsDetailsModalOpen(false)}
-      />
-
-      <ProductFormModal
-        product={selectedProduct}
-        isOpen={isFormModalOpen}
-        isEditing={isEditing}
-        onClose={() => setIsFormModalOpen(false)}
-        onSave={handleSave}
-      />
+            <ProductFormModal
+              product={selectedProduct}
+              isOpen={isFormModalOpen}
+              isEditing={isEditing}
+              onClose={() => setIsFormModalOpen(false)}
+              onSave={handleSave}
+            />
+          </div>
+        </Tab>
+        <Tab
+          key="categories"
+          title={
+            <div className="flex items-center space-x-2">
+              <span>Categories</span>
+            </div>
+          }
+        >
+          <div className="mt-6">
+            <CategoriesClient initialCategories={initialCategories} />
+          </div>
+        </Tab>
+      </Tabs>
     </div>
   );
 }

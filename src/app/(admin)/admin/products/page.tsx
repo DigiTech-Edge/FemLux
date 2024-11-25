@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { getProducts } from "@/lib/data/admin/products";
+import { getCategories } from "@/lib/data/admin/categories";
 import ProductsClient from "../../../../components/interfaces/admin/products/ProductsClient";
 
 export const metadata = {
@@ -8,11 +9,14 @@ export const metadata = {
 };
 
 export default async function ProductsPage() {
-  const products = await getProducts();
+  const [products, categories] = await Promise.all([
+    getProducts(),
+    getCategories()
+  ]);
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <ProductsClient initialProducts={products} />
+      <ProductsClient initialProducts={products} initialCategories={categories} />
     </Suspense>
   );
 }

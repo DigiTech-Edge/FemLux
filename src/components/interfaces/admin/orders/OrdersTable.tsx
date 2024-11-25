@@ -43,7 +43,7 @@ const statusColorMap = {
 
 export default function OrdersTable({ orders }: OrdersTableProps) {
   const [filterValue, setFilterValue] = React.useState("");
-  const [selectedStatus, setSelectedStatus] = React.useState("all");
+  const [statusFilter, setStatusFilter] = React.useState("all");
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [selectedRowsPerPage, setSelectedRowsPerPage] = React.useState(
     new Set(["10"])
@@ -64,12 +64,12 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
       );
     }
 
-    if (selectedStatus !== "all") {
-      filtered = filtered.filter((order) => order.status === selectedStatus);
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((order) => order.status === statusFilter);
     }
 
     return filtered;
-  }, [orders, filterValue, selectedStatus]);
+  }, [orders, filterValue, statusFilter]);
 
   const pages = Math.ceil(filteredOrders.length / rowsPerPage);
   const items = React.useMemo(() => {
@@ -190,40 +190,32 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
     <div className="space-y-6">
       {/* Search and Filters */}
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center p-4 bg-default-100 rounded-lg">
-          <div className="flex flex-1 gap-4 items-center w-full sm:w-auto">
+        <div className="bg-default-100 rounded-lg p-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <Input
               isClearable
-              className="w-full sm:max-w-[44%]"
+              className="w-full sm:max-w-[60%]"
               placeholder="Search orders..."
               startContent={<Search className="w-4 h-4 text-default-400" />}
               value={filterValue}
               onClear={() => setFilterValue("")}
               onValueChange={setFilterValue}
             />
-            <Select
-              className="w-full sm:max-w-[28%]"
-              placeholder="Status"
-              selectedKeys={[selectedStatus]}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              startContent={<SlidersHorizontal className="w-4 h-4 text-default-400" />}
-            >
-              <SelectItem key="all" value="all">
-                All Status
-              </SelectItem>
-              <SelectItem key="pending" value="pending">
-                Pending
-              </SelectItem>
-              <SelectItem key="processing" value="processing">
-                Processing
-              </SelectItem>
-              <SelectItem key="delivered" value="delivered">
-                Delivered
-              </SelectItem>
-              <SelectItem key="cancelled" value="cancelled">
-                Cancelled
-              </SelectItem>
-            </Select>
+            <div className="flex flex-col sm:flex-row gap-2 sm:w-fit">
+              <Select
+                className="w-full sm:w-[140px]"
+                size="sm"
+                placeholder="Status"
+                selectedKeys={[statusFilter]}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <SelectItem key="all">All Status</SelectItem>
+                <SelectItem key="pending">Pending</SelectItem>
+                <SelectItem key="processing">Processing</SelectItem>
+                <SelectItem key="delivered">Delivered</SelectItem>
+                <SelectItem key="cancelled">Cancelled</SelectItem>
+              </Select>
+            </div>
           </div>
         </div>
 

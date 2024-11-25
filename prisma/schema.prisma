@@ -11,24 +11,35 @@ datasource db {
 }
 
 model Product {
-  id             String     @id @default(uuid()) @db.Uuid
-  createdAt      DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt      DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  name           String     @db.VarChar(255)
-  description    String
-  price          Decimal    @db.Decimal(10, 2)
-  categoryId     String     @map("category_id") @db.Uuid
-  stock          Int        @default(0)
-  images         String[]   @default([])
-  featured       Boolean    @default(false)
-  specifications Json       @default("{}")
-  discountPrice  Decimal?   @map("discount_price") @db.Decimal(10, 2)
-  brand          String     @db.VarChar(255)
-  favorites      Favorite[]
-  category       Category   @relation(fields: [categoryId], references: [id])
-  reviews        Review[]
+  id          String     @id @default(uuid()) @db.Uuid
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  name        String     @db.VarChar(255)
+  description String
+  categoryId  String     @map("category_id") @db.Uuid
+  images      String[]   @default([])
+  isNew       Boolean    @default(true) @map("is_new")
+  variants    ProductVariant[]
+  favorites   Favorite[]
+  category    Category   @relation(fields: [categoryId], references: [id])
+  reviews     Review[]
 
   @@map("products")
+  @@schema("public")
+}
+
+model ProductVariant {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  size      String
+  price     Decimal  @db.Decimal(10, 2)
+  stock     Int      @default(0)
+  productId String   @map("product_id") @db.Uuid
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, size])
+  @@map("product_variants")
   @@schema("public")
 }
 
