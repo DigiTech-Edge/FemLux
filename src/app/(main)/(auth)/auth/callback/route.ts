@@ -1,6 +1,6 @@
+import { isAdminEmail } from "@/helpers/adminEmail";
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
-import { userService } from "@/services/users.service";
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
@@ -15,8 +15,8 @@ export async function GET(request: Request) {
 
     // Exchange the code for a session
     const {
-      data: { user },
       error,
+      data: { user },
     } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error) {
@@ -25,8 +25,11 @@ export async function GET(request: Request) {
       );
     }
 
-    // Create/update user profile
-    await userService.upsertProfile(user!);
+    if (user?.email) {
+      await supabase.auth.updateUser({
+        data: { role: isAdminEmail(user.email) ? "admin" : "user" },
+      });
+    }
 
     return NextResponse.redirect(requestUrl.origin);
   } catch (error) {

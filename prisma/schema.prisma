@@ -1,122 +1,133 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
+  schemas   = ["auth", "public"]
 }
 
 model Product {
-  id             String    @id @default(uuid()) @db.Uuid
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  name           String    @db.VarChar(255)
+  id             String     @id @default(uuid()) @db.Uuid
+  createdAt      DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  name           String     @db.VarChar(255)
   description    String
-  price          Decimal   @db.Decimal(10, 2)
-  categoryId     String    @map("category_id") @db.Uuid
-  stock          Int       @default(0)
-  images         String[]  @default([])
-  featured       Boolean   @default(false)
-  specifications Json      @default("{}") @db.JsonB
-  discountPrice  Decimal?  @map("discount_price") @db.Decimal(10, 2)
-  brand          String    @db.VarChar(255)
-  
-  // Relations
-  category       Category  @relation(fields: [categoryId], references: [id])
+  price          Decimal    @db.Decimal(10, 2)
+  categoryId     String     @map("category_id") @db.Uuid
+  stock          Int        @default(0)
+  images         String[]   @default([])
+  featured       Boolean    @default(false)
+  specifications Json       @default("{}")
+  discountPrice  Decimal?   @map("discount_price") @db.Decimal(10, 2)
+  brand          String     @db.VarChar(255)
+  favorites      Favorite[]
+  category       Category   @relation(fields: [categoryId], references: [id])
   reviews        Review[]
 
   @@map("products")
+  @@schema("public")
 }
 
 model Category {
-  id          String     @id @default(uuid()) @db.Uuid
-  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  name        String     @db.VarChar(255)
+  id          String    @id @default(uuid()) @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  name        String    @db.VarChar(255)
   description String?
-  parentId    String?    @map("parent_id") @db.Uuid
   image       String?
-  
-  // Relations
-  parent      Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
-  children    Category[] @relation("CategoryToCategory")
   products    Product[]
 
   @@map("categories")
+  @@schema("public")
 }
 
 model Order {
-  id                String    @id @default(uuid()) @db.Uuid
-  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  userId           String    @map("user_id") @db.Uuid
-  status           OrderStatus
-  totalAmount      Decimal   @map("total_amount") @db.Decimal(10, 2)
-  shippingAddress  Json      @map("shipping_address") @db.JsonB
-  billingAddress   Json      @map("billing_address") @db.JsonB
-  paymentStatus    PaymentStatus @map("payment_status")
-  paymentMethod    String    @map("payment_method") @db.VarChar(50)
-  items            Json[]    @db.JsonB
-  trackingNumber   String?   @map("tracking_number") @db.VarChar(255)
-  estimatedDelivery DateTime? @map("estimated_delivery") @db.Timestamptz
-  giftMessage      String?   @map("gift_message")
-  
-  // Relations
-  profile          Profile   @relation(fields: [userId], references: [userId])
+  id                String        @id @default(uuid()) @db.Uuid
+  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  userId            String        @map("user_id") @db.Uuid
+  status            OrderStatus
+  totalAmount       Decimal       @map("total_amount") @db.Decimal(10, 2)
+  shippingAddress   Json          @map("shipping_address")
+  billingAddress    Json          @map("billing_address")
+  paymentStatus     PaymentStatus @map("payment_status")
+  paymentMethod     String        @map("payment_method") @db.VarChar(50)
+  items             Json[]
+  trackingNumber    String?       @map("tracking_number") @db.VarChar(255)
+  estimatedDelivery DateTime?     @map("estimated_delivery") @db.Timestamptz(6)
+  giftMessage       String?       @map("gift_message")
+  profile           Profile       @relation(fields: [userId], references: [userId])
 
   @@map("orders")
+  @@schema("public")
 }
 
 model Review {
-  id               String   @id @default(uuid()) @db.Uuid
-  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  userId           String   @map("user_id") @db.Uuid
-  productId        String   @map("product_id") @db.Uuid
-  rating           Int
-  comment          String
-  images           String[]
-  verifiedPurchase Boolean  @default(false) @map("verified_purchase")
-  
-  // Relations
-  product          Product  @relation(fields: [productId], references: [id])
-  profile          Profile  @relation(fields: [userId], references: [userId])
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  userId    String   @map("user_id") @db.Uuid
+  productId String   @map("product_id") @db.Uuid
+  rating    Int
+  comment   String
+  product   Product  @relation(fields: [productId], references: [id])
+  profile   Profile  @relation(fields: [userId], references: [userId])
 
   @@map("reviews")
+  @@schema("public")
 }
 
 model Profile {
-  id        String    @id @db.Uuid
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  userId    String    @unique @map("user_id") @db.Uuid
-  username  String?   @unique
-  fullName  String?   @map("full_name")
-  avatarUrl String?   @map("avatar_url")
-  email     String?
-  phone     String?
-  address   Json?     @default("{}") @db.JsonB
-  preferences Json?   @default("{}") @db.JsonB
-
-  // Relations
-  reviews   Review[]
-  orders    Order[]
+  id            String     @id @db.Uuid
+  createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?  @map("deleted_at") @db.Timestamptz(6)
+  userId        String     @unique @map("user_id") @db.Uuid
+  email         String     @unique @db.VarChar(255)
+  fullName      String?    @map("full_name")
+  avatarUrl     String?    @map("avatar_url")
+  favorites     Favorite[]
+  orders        Order[]
+  reviews       Review[]
 
   @@map("profiles")
+  @@schema("public")
+}
+
+model Favorite {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  userId    String   @map("user_id") @db.Uuid
+  productId String   @map("product_id") @db.Uuid
+  product   Product  @relation(fields: [productId], references: [id])
+  profile   Profile  @relation(fields: [userId], references: [userId])
+
+  @@unique([userId, productId])
+  @@map("favorites")
+  @@schema("public")
 }
 
 enum OrderStatus {
-  pending
-  processing
-  shipped
-  delivered
-  cancelled
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+
+  @@map("order_status")
+  @@schema("public")
 }
 
 enum PaymentStatus {
-  pending
-  paid
-  failed
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+
+  @@map("payment_status")
+  @@schema("public")
 }

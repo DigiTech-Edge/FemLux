@@ -8,6 +8,12 @@ type AuthResponse = {
   error?: string;
 };
 
+const isAdminEmail = (email: string) => {
+  // Implement logic to check if email is admin email
+  // For example:
+  return email.includes("admin");
+};
+
 export const authService = {
   /**
    * Get current session and user
@@ -76,16 +82,22 @@ export const authService = {
         password,
         options: {
           data: {
-            name,
+            full_name: name,
           },
           emailRedirectTo: `${origin}/auth/callback`,
         },
       });
-      if (error) throw error;
 
+      // Set role based on email
+      if (user) {
+        await supabase.auth.updateUser({
+          data: { role: isAdminEmail(email) ? "admin" : "user" },
+        });
+      }
+
+      if (error) throw error;
       return { user };
     } catch (error) {
-      console.error("Registration error:", error);
       return {
         user: null,
         error:
@@ -105,19 +117,17 @@ export const authService = {
         provider,
         options: {
           redirectTo: `${origin}/auth/callback`,
-          skipBrowserRedirect: true, // Don't auto-redirect, we'll handle it
+          skipBrowserRedirect: true,
         },
       });
 
       if (error) throw error;
 
-      // Return the URL instead of redirecting
       if (data?.url) {
         return data.url;
       }
       throw new Error("No URL returned from OAuth provider");
     } catch (error) {
-      console.error("OAuth login error:", error);
       throw error;
     }
   },

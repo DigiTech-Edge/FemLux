@@ -45,8 +45,14 @@ export async function middleware(request: NextRequest) {
     if (!isAuthenticated) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
-    // You might want to check admin role in a more secure way
-    // For now, we'll keep it simple
+
+    // Check for admin role in user_metadata
+    const isAdmin = user?.user_metadata?.role === "admin";
+
+    if (!isAdmin) {
+      // Redirect non-admin users to home page
+      return NextResponse.redirect(new URL("/", request.url));
+    }
   }
 
   return response;
