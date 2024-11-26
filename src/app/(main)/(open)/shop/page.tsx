@@ -1,29 +1,42 @@
-import { products, categories } from '@/lib/data/products'
-import ShopClient from '@/components/interfaces/shop/ShopClient'
-import { getFilteredProducts, getUniqueFilterOptions, parseSearchParamsToFilters } from '@/helpers/filters'
+import { productsService } from "@/services/products.service";
+import { categoriesService } from "@/services/categories.service";
+import ShopClient from "@/components/interfaces/shop/ShopClient";
+import { ProductFilters } from "@/lib/types/products";
+
+interface SearchParams {
+  search?: string;
+  category?: string;
+  minPrice?: string;
+  maxPrice?: string;
+}
 
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined }
+  searchParams: SearchParams;
 }) {
-  // Parse search params into filters
-  const filters = await parseSearchParamsToFilters(searchParams)
+  const filters: ProductFilters = {
+    search: searchParams.search,
+    categories: searchParams.category ? [searchParams.category] : undefined,
+    priceRange: searchParams.minPrice && searchParams.maxPrice
+      ? {
+          min: Number(searchParams.minPrice),
+          max: Number(searchParams.maxPrice),
+        }
+      : undefined,
+  };
 
-  // Get filtered products
-  const filteredProducts = getFilteredProducts(products, filters)
-
-  // Get unique filter options
-  const { brands, colors, sizes } = getUniqueFilterOptions(products)
+  // Get all products and categories
+  const [products, categories] = await Promise.all([
+    productsService.getAll(),
+    categoriesService.getAll(),
+  ]);
 
   return (
     <ShopClient
-      products={filteredProducts}
+      products={products}
       categories={categories}
-      brands={brands}
-      colors={colors}
-      sizes={sizes}
       initialFilters={filters}
     />
-  )
+  );
 }

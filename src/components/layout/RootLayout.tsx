@@ -14,9 +14,7 @@ const RootLayout = ({ children, isAuthenticated }: RootLayoutProps) => {
   return (
     <div className="min-h-screen flex flex-col">
       <TopNavbar isAuthenticated={isAuthenticated} />
-      <main className="flex-grow container mx-auto px-4 pb-20 sm:pb-0">
-        {children}
-      </main>
+      <main className="w-full mx-auto px-4 pb-20 sm:pb-0">{children}</main>
       <Footer />
       <BottomNavbar isAuthenticated={isAuthenticated} />
     </div>

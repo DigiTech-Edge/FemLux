@@ -1,24 +1,50 @@
 "use client";
 
-import React from "react";
+import React, { useMemo, useTransition, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@nextui-org/react";
+import { Button, Skeleton } from "@nextui-org/react";
 import { Heart, ShoppingCart, StarIcon } from "lucide-react";
-import { Product } from "@/lib/types/products";
-import { cn } from "@/helpers/utils";
+import type { ProductWithRelations } from "@/types/product";
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import Carousel from "./Carousel";
+import { formatCurrency } from "@/helpers";
+import toast from "react-hot-toast";
+import { cn } from "@/helpers/utils";
+import { useFavorite } from "@/hooks/useFavorite";
 
 interface ProductCardProps {
-  product: Product;
-  index: number;
+  product: ProductWithRelations;
+  index?: number;
 }
 
-export default function ProductCard({ product, index }: ProductCardProps) {
+export default function ProductCard({ product, index = 0 }: ProductCardProps) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
+  const [isPending, startTransition] = useTransition();
+  const { isFavorite, toggleFavoriteStatus, isLoading } = useFavorite(
+    product.id
+  );
+  const [selectedVariant, setSelectedVariant] = useState(product.variants[0]);
+
+  const handleFavoriteClick = () => {
+    startTransition(async () => {
+      try {
+        await toggleFavoriteStatus();
+      } catch {
+        toast.error("Error favoriting product");
+      }
+    });
+  };
+
+  const inStock = useMemo(() => {
+    return product.variants.some((v) => v.stock > 0);
+  }, [product.variants]);
+
+  const availableVariants = useMemo(() => {
+    return product.variants.sort((a, b) => a.size.localeCompare(b.size));
+  }, [product.variants]);
 
   return (
     <motion.div
@@ -26,12 +52,12 @@ export default function ProductCard({ product, index }: ProductCardProps) {
       initial={{ opacity: 0, y: 50 }}
       animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
       transition={{
-        duration: 0.5,
+        duration: 0.3,
         delay: index * 0.1,
-        ease: [0.21, 1.11, 0.81, 0.99],
       }}
+      className="group"
     >
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 group">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
         <div className="relative w-full">
           <Carousel
             showControls
@@ -43,7 +69,7 @@ export default function ProductCard({ product, index }: ProductCardProps) {
               <div key={idx} className="relative w-full flex-[0_0_100%]">
                 <div className="relative aspect-square w-full">
                   <Image
-                    src="/image.png"
+                    src={image}
                     alt={`${product.name} - View ${idx + 1}`}
                     fill
                     priority={idx === 0}
@@ -54,79 +80,124 @@ export default function ProductCard({ product, index }: ProductCardProps) {
               </div>
             ))}
           </Carousel>
+
+          {/* New Tag */}
           {product.isNew && (
-            <span className="absolute top-2 right-2 bg-primary text-white text-xs px-2 py-1 rounded z-10">
-              New
-            </span>
-          )}
-          {product.stock <= 0 && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-t-lg z-10">
-              <span className="text-white font-medium">Out of Stock</span>
+            <div className="absolute top-2 left-2 bg-primary text-white px-2 py-1 text-xs font-semibold rounded">
+              NEW
             </div>
           )}
-          <div className="absolute top-2 left-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-            <button className="p-2 bg-white rounded-full shadow-md hover:bg-yellow-50 transition-colors">
-              <Heart className="w-4 h-4 text-yellow-500 hover:text-yellow-600" />
-            </button>
-            <button className="p-2 bg-white rounded-full shadow-md hover:bg-pink-50 transition-colors">
-              <ShoppingCart className="w-4 h-4 text-pink-500 hover:text-pink-600" />
-            </button>
+
+          {/* Favorite Button */}
+          <div className="absolute right-2 top-2 z-10">
+            <Button
+              variant="flat"
+              size="sm"
+              isIconOnly
+              onClick={handleFavoriteClick}
+              disabled={isPending || isLoading}
+              className="bg-white/80 backdrop-blur-sm hover:bg-white"
+            >
+              {isLoading ? (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Skeleton className="h-4 w-4">
+                    <div className="h-full w-full" />
+                  </Skeleton>
+                </div>
+              ) : (
+                <Heart
+                  className={cn(
+                    "h-4 w-4 transition-colors",
+                    isFavorite ? "fill-red-500 text-red-500" : "text-red-500"
+                  )}
+                />
+              )}
+            </Button>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="absolute top-12 right-2 z-10">
+            <Button
+              isIconOnly
+              size="sm"
+              variant="flat"
+              className="bg-white/80 backdrop-blur-sm hover:bg-white"
+            >
+              <ShoppingCart className="w-4 h-4 text-primary" />
+            </Button>
           </div>
         </div>
+
         <div className="p-4">
-          <div className="flex items-start justify-between mb-2">
-            <h3 className="font-medium text-sm line-clamp-2">{product.name}</h3>
-            <span className="text-sm font-semibold text-primary">
-              ${product.price.toFixed(2)}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs text-gray-600 dark:text-gray-300">
-              {product.brand}
-            </span>
-            <span className="text-xs text-gray-400">•</span>
-            <span className="text-xs text-gray-600 dark:text-gray-300">
-              {product.category}
-            </span>
-          </div>
-          {product.rating > 0 && (
-            <div className="flex items-center gap-1 mb-2">
-              <div className="flex items-center">
-                {[...Array(5)].map((_, i) => (
-                  <StarIcon
-                    key={i}
-                    className={cn(
-                      "w-3 h-3",
-                      i < product.rating ? "text-yellow-400" : "text-gray-300"
-                    )}
-                  />
-                ))}
-              </div>
-              <span className="text-xs text-gray-600 dark:text-gray-300">
-                ({product.reviews} reviews)
-              </span>
+          {/* Top Section: Category and Price */}
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              {product.category.name}
             </div>
-          )}
-          <div className="flex flex-wrap gap-1 mb-3">
-            {product.colors.slice(0, 3).map((color) => (
-              <span
-                key={color}
-                className="inline-block px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 rounded"
-              >
-                {color}
-              </span>
-            ))}
-            {product.colors.length > 3 && (
-              <span className="inline-block px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 rounded">
-                +{product.colors.length - 3}
-              </span>
-            )}
+            <div className="text-primary font-semibold">
+              {formatCurrency(selectedVariant.price)}
+            </div>
           </div>
-          <Link href={`/shop/${product.id}`}>
-            <Button className="w-full" color="primary" variant="flat" size="sm">
-              View Details
-            </Button>
-          </Link>
+
+          {/* Middle Section: Title and Variants */}
+          <div className="flex items-start justify-between gap-4">
+            <h3 className="text-sm font-medium flex-grow line-clamp-2">
+              {product.name}
+            </h3>
+            <div className="flex flex-wrap gap-1 min-w-[80px] justify-end">
+              {availableVariants.map((variant) => (
+                <button
+                  key={variant.size}
+                  onClick={() => setSelectedVariant(variant)}
+                  disabled={variant.stock === 0}
+                  className={cn(
+                    "text-xs px-2 py-1 rounded-md transition-colors",
+                    variant.id === selectedVariant.id
+                      ? "bg-primary text-white"
+                      : variant.stock > 0
+                      ? "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  )}
+                >
+                  {variant.size}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Bottom Section: Stock, Rating, and Action */}
+          <div className="flex items-center justify-between mt-2">
+            <div className="flex items-center gap-2">
+              {/* Stock Status */}
+              <span className="text-xs text-gray-500">
+                {selectedVariant.stock > 0
+                  ? `${selectedVariant.stock} in stock`
+                  : "Out of stock"}
+              </span>
+
+              {/* Rating */}
+              {product._count.reviews > 0 && (
+                <div className="flex items-center gap-1">
+                  <StarIcon className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  <span className="text-xs text-gray-600">
+                    ({product._count.reviews})
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* View Details Button */}
+            <Link href={`/products/${product.id}`}>
+              <Button
+                size="sm"
+                color="danger"
+                variant="flat"
+                disabled={!inStock}
+              >
+                Details
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     </motion.div>

@@ -6,23 +6,20 @@ import {
   AccordionItem,
   Button,
   Checkbox,
-  RadioGroup,
-  Radio,
   Slider,
 } from '@nextui-org/react'
 import { X } from 'lucide-react'
-import { ProductFilters, FilterOption, Category } from '@/lib/types/products'
+import { ProductFilters } from '@/lib/types/products'
 import { motion, AnimatePresence } from 'framer-motion'
+import { CategoryWithCount } from '@/types/category'
 
 interface FilterDrawerProps {
   isOpen: boolean
   onClose: () => void
-  filters: ProductFilters
+  filters: Partial<ProductFilters>
   onFilterChange: (filters: ProductFilters) => void
-  categories: Category[]
-  brands: FilterOption[]
-  colors: FilterOption[]
-  sizes: FilterOption[]
+  categories: CategoryWithCount[]
+  priceRange: { min: number; max: number }
 }
 
 export default function FilterDrawer({
@@ -31,11 +28,9 @@ export default function FilterDrawer({
   filters,
   onFilterChange,
   categories,
-  brands,
-  colors,
-  sizes,
+  priceRange,
 }: FilterDrawerProps) {
-  const [localFilters, setLocalFilters] = React.useState<ProductFilters>(filters)
+  const [localFilters, setLocalFilters] = React.useState<ProductFilters>(filters as ProductFilters)
 
   const handleFilterChange = (key: keyof ProductFilters, value: ProductFilters[keyof ProductFilters]) => {
     setLocalFilters(prev => ({
@@ -56,7 +51,7 @@ export default function FilterDrawer({
   }
 
   useEffect(() => {
-    setLocalFilters(filters)
+    setLocalFilters(filters as ProductFilters)
   }, [filters])
 
   const header = (
@@ -69,7 +64,7 @@ export default function FilterDrawer({
   )
 
   const footer = (
-    <div className="flex items-center justify-between p-4">
+    <div className="flex items-center justify-between p-4 border-t">
       <Button
         variant="light"
         onPress={handleClearFilters}
@@ -126,6 +121,9 @@ export default function FilterDrawer({
                         }}
                       >
                         {category.name}
+                        <span className="text-sm text-gray-500 ml-1">
+                          ({category.count})
+                        </span>
                       </Checkbox>
                     ))}
                   </div>
@@ -133,127 +131,33 @@ export default function FilterDrawer({
 
                 {/* Price Range */}
                 <AccordionItem key="price" title="Price Range">
-                  <Slider
-                    label="Price Range"
-                    step={50}
-                    minValue={0}
-                    maxValue={1000}
-                    value={[
-                      localFilters.priceRange?.min || 0,
-                      localFilters.priceRange?.max || 1000
-                    ]}
-                    onChange={(value) => {
-                      if (Array.isArray(value)) {
-                        handleFilterChange('priceRange', {
-                          min: value[0],
-                          max: value[1]
-                        })
-                      }
-                    }}
-                    className="max-w-md"
-                  />
-                </AccordionItem>
-
-                {/* Colors */}
-                <AccordionItem key="colors" title="Colors">
-                  <div className="flex flex-wrap gap-4">
-                    {colors.map(color => (
-                      <Checkbox
-                        key={color.value}
-                        value={color.value}
-                        isSelected={localFilters.colors?.includes(color.value)}
-                        onValueChange={(isSelected) => {
-                          const currentColors = localFilters.colors || []
-                          handleFilterChange(
-                            'colors',
-                            isSelected
-                              ? [...currentColors, color.value]
-                              : currentColors.filter(c => c !== color.value)
-                          )
-                        }}
-                      >
-                        {color.label}
-                      </Checkbox>
-                    ))}
+                  <div className="px-2">
+                    <Slider
+                      label="Price Range"
+                      step={10}
+                      minValue={priceRange.min}
+                      maxValue={priceRange.max}
+                      value={[
+                        localFilters.priceRange?.min || priceRange.min,
+                        localFilters.priceRange?.max || priceRange.max
+                      ]}
+                      formatOptions={{ style: 'currency', currency: 'USD' }}
+                      onChange={(value) => {
+                        if (Array.isArray(value)) {
+                          handleFilterChange('priceRange', {
+                            min: value[0],
+                            max: value[1]
+                          })
+                        }
+                      }}
+                      className="max-w-md"
+                    />
                   </div>
-                </AccordionItem>
-
-                {/* Sizes */}
-                <AccordionItem key="sizes" title="Sizes">
-                  <div className="flex flex-wrap gap-4">
-                    {sizes.map(size => (
-                      <Checkbox
-                        key={size.value}
-                        value={size.value}
-                        isSelected={localFilters.sizes?.includes(size.value)}
-                        onValueChange={(isSelected) => {
-                          const currentSizes = localFilters.sizes || []
-                          handleFilterChange(
-                            'sizes',
-                            isSelected
-                              ? [...currentSizes, size.value]
-                              : currentSizes.filter(s => s !== size.value)
-                          )
-                        }}
-                      >
-                        {size.label}
-                      </Checkbox>
-                    ))}
-                  </div>
-                </AccordionItem>
-
-                {/* Brands */}
-                <AccordionItem key="brands" title="Brands">
-                  <div className="flex flex-wrap gap-4">
-                    {brands.map(brand => (
-                      <Checkbox
-                        key={brand.value}
-                        value={brand.value}
-                        isSelected={localFilters.brands?.includes(brand.value)}
-                        onValueChange={(isSelected) => {
-                          const currentBrands = localFilters.brands || []
-                          handleFilterChange(
-                            'brands',
-                            isSelected
-                              ? [...currentBrands, brand.value]
-                              : currentBrands.filter(b => b !== brand.value)
-                          )
-                        }}
-                      >
-                        {brand.label}
-                      </Checkbox>
-                    ))}
-                  </div>
-                </AccordionItem>
-
-                {/* Sort */}
-                <AccordionItem key="sort" title="Sort By">
-                  <RadioGroup
-                    value={localFilters.sort}
-                    onValueChange={(value) => handleFilterChange('sort', value)}
-                  >
-                    <Radio value="newest">Newest First</Radio>
-                    <Radio value="price_asc">Price: Low to High</Radio>
-                    <Radio value="price_desc">Price: High to Low</Radio>
-                    <Radio value="rating">Best Rating</Radio>
-                  </RadioGroup>
-                </AccordionItem>
-
-                {/* Stock */}
-                <AccordionItem key="stock" title="Availability">
-                  <Checkbox
-                    isSelected={localFilters.inStock}
-                    onValueChange={(isSelected) => handleFilterChange('inStock', isSelected)}
-                  >
-                    In Stock Only
-                  </Checkbox>
                 </AccordionItem>
               </Accordion>
             </div>
 
-            <div className="sticky bottom-0 mt-auto border-t bg-background">
-              {footer}
-            </div>
+            {footer}
           </motion.aside>
         </>
       )}

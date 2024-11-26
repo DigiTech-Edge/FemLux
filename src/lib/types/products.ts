@@ -37,10 +37,6 @@ export interface PriceRange {
 export interface ProductFilters {
   categories?: string[];
   priceRange?: PriceRange;
-  colors?: string[];
-  sizes?: string[];
-  brands?: string[];
-  tags?: string[];
   sort?: "price_asc" | "price_desc" | "rating" | "newest";
   inStock?: boolean;
   search?: string;

@@ -1,43 +1,56 @@
-import React from 'react'
-import HeroBanner from '@/components/interfaces/home/HeroBanner'
-import { ProductCarousel, CategoryCarousel } from '@/components/interfaces/home/CarouselWrapper'
-import SectionHeader from '@/components/interfaces/home/SectionHeader'
-import { products, categories } from '@/lib/data/products'
+import React from "react";
+import HeroBanner from "@/components/interfaces/home/HeroBanner";
+import {
+  ProductCarousel,
+  CategoryCarousel,
+} from "@/components/interfaces/home/CarouselWrapper";
+import SectionHeader from "@/components/interfaces/home/SectionHeader";
+import { getCategories } from "@/services/actions/category.actions";
+import {
+  getFilteredProducts,
+  getNewArrivals,
+} from "@/services/actions/product.actions";
 
-export default function Home() {
-  const featuredProducts = products.slice(0, 8)
-  const newArrivals = products.filter((product) => product.isNew).slice(0, 8)
-  const featuredCategories = categories.filter(cat => cat.featured)
+export default async function Home() {
+  // Fetch categories and filter featured ones
+  const categories = await getCategories();
+
+  // Fetch featured products (we'll use the first 8)
+  const featuredProducts = await getFilteredProducts();
+  const featuredProductsSlice = featuredProducts.slice(0, 8);
+
+  // Fetch new arrivals
+  const newArrivals = await getNewArrivals(8);
 
   return (
     <main className="min-h-screen pb-20">
       {/* Hero Banner */}
-      <section className='mt-4'>
+      <section className="mt-4">
         <HeroBanner />
       </section>
 
-      {/* Featured Categories */}
-      <section className=" mx-auto mt-16">
-        <SectionHeader 
-          title="Featured Categories"
-          description="Browse through our featured categories"
+      {/* Categories */}
+      <section className="mx-auto mt-16">
+        <SectionHeader
+          title="Categories"
+          description="Browse through our categories"
         />
-        <CategoryCarousel categories={featuredCategories} />
+        <CategoryCarousel categories={categories} />
       </section>
 
       {/* Featured Products */}
       <section className="mx-auto mt-16">
-        <SectionHeader 
+        <SectionHeader
           title="Featured Products"
           description="Browse through our featured products"
           viewAllLink="/shop"
         />
-        <ProductCarousel products={featuredProducts} />
+        <ProductCarousel products={featuredProductsSlice} />
       </section>
 
       {/* New Arrivals */}
       <section className="mx-auto mt-16">
-        <SectionHeader 
+        <SectionHeader
           title="New Arrivals"
           description="Check out our latest products"
           viewAllLink="/shop"
@@ -45,5 +58,5 @@ export default function Home() {
         <ProductCarousel products={newArrivals} />
       </section>
     </main>
-  )
+  );
 }
