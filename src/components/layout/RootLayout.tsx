@@ -3,7 +3,6 @@
 import React from "react";
 import BottomNavbar from "../shared/BottomNavbar";
 import Footer from "../shared/Footer";
-import { Toaster } from "react-hot-toast";
 import TopNavbar from "../shared/TopNavbar";
 
 interface RootLayoutProps {
@@ -20,7 +19,6 @@ const RootLayout = ({ children, isAuthenticated }: RootLayoutProps) => {
       </main>
       <Footer />
       <BottomNavbar isAuthenticated={isAuthenticated} />
-      <Toaster position="top-center" />
     </div>
   );
 };

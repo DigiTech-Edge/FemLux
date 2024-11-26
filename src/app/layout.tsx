@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { Providers } from "./providers";
+import { Toaster } from "react-hot-toast";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -16,7 +17,8 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: "FemLux",
-  description: "Empowering women through fashion and beauty. Your one-stop destination for all things feminine and fabulous.",
+  description:
+    "Empowering women through fashion and beauty. Your one-stop destination for all things feminine and fabulous.",
 };
 
 export default function RootLayout({
@@ -25,9 +27,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className='light'>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    <html lang="en" className="light">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
         <Providers>
+          <Toaster position="top-center" />
           {children}
         </Providers>
       </body>

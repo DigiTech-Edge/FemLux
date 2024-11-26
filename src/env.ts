@@ -8,6 +8,11 @@ const env = {
     secretRole: String(process.env.SUPABASE_SECRET_ROLE),
     jwtSecret: String(process.env.SUPABASE_JWT_SECRET),
   },
+  buckets: {
+    products: String(process.env.NEXT_PUBLIC_PRODUCT_IMAGES_BUCKET),
+    categories: String(process.env.NEXT_PUBLIC_CATEGORIES_IMAGES_BUCKET),
+    users: String(process.env.NEXT_PUBLIC_USER_AVATARS_BUCKET),
+  },
 } as const;
 
 // Type assertions to ensure all environment variables are defined
@@ -22,6 +27,9 @@ const assertEnvVar = (value: string | undefined, name: string): string => {
   assertEnvVar(env.supabase.anonKey, "SUPABASE_ANON_KEY");
   assertEnvVar(env.supabase.secretRole, "SUPABASE_SECRET_ROLE");
   assertEnvVar(env.supabase.jwtSecret, "SUPABASE_JWT_SECRET");
+  assertEnvVar(env.buckets.products, "PRODUCTS_BUCKET");
+  assertEnvVar(env.buckets.categories, "CATEGORIES_IMAGES_BUCKET");
+  assertEnvVar(env.buckets.users, "USERS_AVATARS_BUCKET");
 })();
 
 export default env;

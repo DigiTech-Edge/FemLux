@@ -1,22 +1,19 @@
-import { Suspense } from "react";
-import { getProducts } from "@/lib/data/admin/products";
-import { getCategories } from "@/lib/data/admin/categories";
-import ProductsClient from "../../../../components/interfaces/admin/products/ProductsClient";
-
-export const metadata = {
-  title: "Products | Admin Dashboard",
-  description: "Manage your products",
-};
+import { getCategories } from "@/services/actions/category.actions";
+import { getProducts } from "@/services/actions/product.actions";
+import ProductManagementClient from "@/components/interfaces/admin/categories/ProductManagementClient";
 
 export default async function ProductsPage() {
-  const [products, categories] = await Promise.all([
+  const [initialProducts, initialCategories] = await Promise.all([
     getProducts(),
-    getCategories()
+    getCategories(),
   ]);
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <ProductsClient initialProducts={products} initialCategories={categories} />
-    </Suspense>
+    <div className="mx-auto py-6">
+      <ProductManagementClient
+        initialProducts={initialProducts}
+        initialCategories={initialCategories}
+      />
+    </div>
   );
 }

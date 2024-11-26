@@ -1,12 +1,11 @@
-'use client'
+"use client";
 
-import React from 'react'
-import { Card } from '@nextui-org/react'
-import { Toaster } from 'react-hot-toast'
-import Image from 'next/image'
+import React from "react";
+import { Card } from "@nextui-org/react";
+import Image from "next/image";
 
 interface AuthLayoutProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 const AuthLayout = ({ children }: AuthLayoutProps) => {
@@ -21,13 +20,14 @@ const AuthLayout = ({ children }: AuthLayoutProps) => {
             height={40}
             className="mx-auto"
           />
-          <p className="text-sm text-default-500 mt-2">Your Fashion Destination</p>
+          <p className="text-sm text-default-500 mt-2">
+            Your Fashion Destination
+          </p>
         </div>
         {children}
       </Card>
-      <Toaster position="top-center" />
     </div>
-  )
-}
+  );
+};
 
-export default AuthLayout
+export default AuthLayout;
