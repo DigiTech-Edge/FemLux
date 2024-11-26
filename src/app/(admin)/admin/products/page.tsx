@@ -1,10 +1,10 @@
 import { getCategories } from "@/services/actions/category.actions";
-import { getProducts } from "@/services/actions/product.actions";
+import { getAllProducts } from "@/services/actions/product.actions";
 import ProductManagementClient from "@/components/interfaces/admin/categories/ProductManagementClient";
 
 export default async function ProductsPage() {
   const [initialProducts, initialCategories] = await Promise.all([
-    getProducts(),
+    getAllProducts(),
     getCategories(),
   ]);
 

@@ -14,51 +14,16 @@ import {
 } from "@nextui-org/react";
 import { Star } from "lucide-react";
 import { formatCurrency } from "@/helpers";
-import type { Product } from "@/lib/types/products";
+import type { ProductWithRelations } from "@/types/product";
 import Carousel from "@/components/ui/Carousel";
 import Image from "next/image";
 import { cn } from "@/helpers/utils";
 
 interface ProductDetailsModalProps {
-  product: Product | null;
+  product: ProductWithRelations | null;
   isOpen: boolean;
   onClose: () => void;
 }
-
-// Mock reviews data - in real app this would come from API
-interface Review {
-  id: number;
-  user: string;
-  rating: number;
-  comment: string;
-  date: string;
-}
-
-const mockReviews: Review[] = [
-  {
-    id: 1,
-    user: "Sarah Johnson",
-    rating: 5,
-    comment:
-      "Absolutely love this product! The quality is outstanding and it fits perfectly.",
-    date: "2024-01-15",
-  },
-  {
-    id: 2,
-    user: "Mike Smith",
-    rating: 4,
-    comment:
-      "Great product overall, but shipping took a bit longer than expected.",
-    date: "2024-01-10",
-  },
-  {
-    id: 3,
-    user: "Emily Davis",
-    rating: 5,
-    comment: "Exceeded my expectations! Will definitely buy again.",
-    date: "2024-01-05",
-  },
-];
 
 export default function ProductDetailsModal({
   product,
@@ -102,17 +67,13 @@ export default function ProductDetailsModal({
                     New
                   </Chip>
                 )}
-                {product.isBestSeller && (
-                  <Chip color="warning" size="sm" variant="flat">
-                    Best Seller
-                  </Chip>
-                )}
               </div>
-              <div className="flex items-center gap-2 text-default-500">
-                <Star className="w-4 h-4 fill-warning text-warning" />
-                <span>{(product.rating || 0).toFixed(1)}</span>
-                <span>({mockReviews.length.toLocaleString()} reviews)</span>
-              </div>
+              {product.reviews && product.reviews.length > 0 && (
+                <div className="flex items-center gap-2 text-default-500">
+                  <Star className="w-4 h-4 fill-warning text-warning" />
+                  <span>{product._count.reviews.toLocaleString()} reviews</span>
+                </div>
+              )}
             </ModalHeader>
             <ModalBody>
               <Tabs
@@ -120,7 +81,12 @@ export default function ProductDetailsModal({
                 onSelectionChange={(key) => setSelectedTab(key.toString())}
                 variant="underlined"
                 fullWidth
-                className="text-primary"
+                classNames={{
+                  tabList: "gap-6",
+                  cursor: "w-full bg-primary",
+                  tab: "max-w-fit px-2 h-12",
+                  tabContent: "group-data-[selected=true]:text-primary",
+                }}
               >
                 <Tab key="details" title="Details" className="px-6">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -202,146 +168,117 @@ export default function ProductDetailsModal({
                         </p>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <h4 className="text-lg font-semibold mb-2">Price</h4>
-                          <p className="text-2xl font-bold text-primary">
-                            {formatCurrency(product.price)}
-                          </p>
-                        </div>
+                      <div>
+                        <h4 className="text-lg font-semibold mb-2">Category</h4>
+                        <p className="capitalize">{product.category.name}</p>
+                      </div>
 
-                        <div>
-                          <h4 className="text-lg font-semibold mb-2">Stock</h4>
-                          <Chip
-                            className="capitalize"
-                            color={
-                              product.stock === 0
-                                ? "danger"
-                                : product.stock <= 10
-                                ? "warning"
-                                : "success"
-                            }
-                            size="sm"
-                            variant="flat"
-                          >
-                            {product.stock === 0
-                              ? "Out of Stock"
-                              : product.stock <= 10
-                              ? "Low Stock"
-                              : "In Stock"}{" "}
-                            ({product.stock})
-                          </Chip>
-                        </div>
-
-                        <div>
-                          <h4 className="text-lg font-semibold mb-2">
-                            Category
-                          </h4>
-                          <p className="capitalize">{product.category}</p>
-                        </div>
-
-                        <div>
-                          <h4 className="text-lg font-semibold mb-2">Brand</h4>
-                          <p>{product.brand}</p>
-                        </div>
-
-                        {product.colors.length > 0 && (
-                          <div>
-                            <h4 className="text-lg font-semibold mb-2">
-                              Colors
-                            </h4>
-                            <div className="flex flex-wrap gap-1">
-                              {product.colors.map((color) => (
-                                <Chip key={color} size="sm">
-                                  {color}
-                                </Chip>
+                      <div>
+                        <h4 className="text-lg font-semibold mb-2">Variants</h4>
+                        <div className="overflow-x-auto">
+                          <table className="w-full min-w-[400px]">
+                            <thead>
+                              <tr className="text-left border-b border-default-200">
+                                <th className="p-2">Size</th>
+                                <th className="p-2">Price</th>
+                                <th className="p-2">Stock</th>
+                                <th className="p-2">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {product.variants.map((variant) => (
+                                <tr
+                                  key={variant.id}
+                                  className="border-b border-default-100"
+                                >
+                                  <td className="p-2">{variant.size}</td>
+                                  <td className="p-2">
+                                    {formatCurrency(variant.price)}
+                                  </td>
+                                  <td className="p-2">{variant.stock}</td>
+                                  <td className="p-2">
+                                    <Chip
+                                      className="capitalize"
+                                      color={
+                                        variant.stock === 0
+                                          ? "danger"
+                                          : variant.stock <= 5
+                                          ? "warning"
+                                          : "success"
+                                      }
+                                      size="sm"
+                                      variant="flat"
+                                    >
+                                      {variant.stock === 0
+                                        ? "Out of Stock"
+                                        : variant.stock <= 5
+                                        ? "Low Stock"
+                                        : "In Stock"}
+                                    </Chip>
+                                  </td>
+                                </tr>
                               ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {product.sizes.length > 0 && (
-                          <div>
-                            <h4 className="text-lg font-semibold mb-2">
-                              Sizes
-                            </h4>
-                            <div className="flex flex-wrap gap-1">
-                              {product.sizes.map((size) => (
-                                <Chip key={size} size="sm">
-                                  {size}
-                                </Chip>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {product.tags.length > 0 && (
-                          <div className="col-span-2">
-                            <h4 className="text-lg font-semibold mb-2">Tags</h4>
-                            <div className="flex flex-wrap gap-1">
-                              {product.tags.map((tag) => (
-                                <Chip key={tag} size="sm" variant="flat">
-                                  {tag}
-                                </Chip>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </Tab>
                 <Tab
                   key="reviews"
-                  title={`Reviews (${mockReviews.length.toLocaleString()})`}
+                  title={`Reviews ${
+                    product._count.reviews
+                      ? `(${product._count.reviews.toLocaleString()})`
+                      : ""
+                  }`}
                   className="px-6"
                 >
                   <div className="space-y-6">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        <Star className="w-6 h-6 fill-warning text-warning" />
-                        <span className="text-2xl font-bold">
-                          {(product.rating || 0).toFixed(1)}
-                        </span>
+                    {product._count.reviews === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-12 text-default-400">
+                        <Star className="w-12 h-12 mb-4 stroke-default-200" />
+                        <p className="text-xl font-semibold mb-2">
+                          No Reviews Yet
+                        </p>
+                        <p className="text-center text-small">
+                          This product hasn&apos;t received any reviews yet. Be
+                          the first to share your experience!
+                        </p>
                       </div>
-                      <div className="text-default-500">
-                        Based on {mockReviews.length.toLocaleString()} reviews
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      {mockReviews.map((review) => (
-                        <div
-                          key={review.id}
-                          className="p-4 rounded-lg border border-default-200"
-                        >
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <h4 className="font-semibold">{review.user}</h4>
-                              <div className="flex items-center gap-2">
-                                <div className="flex">
-                                  {[...Array(5)].map((_, i) => (
-                                    <Star
-                                      key={i}
-                                      className={cn(
-                                        "w-4 h-4",
-                                        i < review.rating
-                                          ? "fill-warning text-warning"
-                                          : "fill-default-200 text-default-200"
-                                      )}
-                                    />
-                                  ))}
-                                </div>
-                                <span className="text-small text-default-500">
-                                  {new Date(review.date).toLocaleDateString()}
-                                </span>
-                              </div>
-                            </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-4">
+                          <div className="text-default-500">
+                            {product._count.reviews.toLocaleString()} reviews
                           </div>
-                          <p className="text-default-500">{review.comment}</p>
                         </div>
-                      ))}
-                    </div>
+                        <div className="space-y-4">
+                          {product.reviews?.map((review) => (
+                            <div
+                              key={review.id}
+                              className="p-4 rounded-lg border border-default-200"
+                            >
+                              <div className="flex justify-between items-start mb-2">
+                                <div>
+                                  <h4 className="font-semibold">
+                                    {review.profile.fullName || "Anonymous"}
+                                  </h4>
+                                  <span className="text-small text-default-500">
+                                    {new Date(
+                                      review.createdAt
+                                    ).toLocaleDateString()}
+                                  </span>
+                                </div>
+                              </div>
+                              <p className="text-default-500">
+                                {review.comment}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </Tab>
               </Tabs>

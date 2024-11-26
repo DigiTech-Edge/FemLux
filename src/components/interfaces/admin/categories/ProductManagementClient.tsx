@@ -4,11 +4,11 @@ import { Tabs, Tab } from "@nextui-org/react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import ProductsClient from "../products/ProductsClient";
 import CategoriesClient from "./CategoriesClient";
-import { Product } from "@/lib/types/products";
+import { ProductWithRelations } from "@/types/product";
 import { CategoryWithCount } from "@/types/category";
 
 interface ProductManagementClientProps {
-  initialProducts: Product[];
+  initialProducts: ProductWithRelations[];
   initialCategories: CategoryWithCount[];
 }
 
@@ -53,7 +53,10 @@ export default function ProductManagementClient({
           }
         >
           <div>
-            <ProductsClient initialProducts={initialProducts} />
+            <ProductsClient 
+              initialProducts={initialProducts} 
+              categories={initialCategories} 
+            />
           </div>
         </Tab>
         <Tab

@@ -1,41 +1,25 @@
 "use server";
 
 import { productsService } from "../products.service";
-import type { ProductFilters, ProductVariantCreate } from "@/types/product";
+import type { ProductFilters, ProductFormData, ProductUpdateData } from "@/types/product";
 
-export async function getProducts(filters?: ProductFilters) {
-  return productsService.getAll(filters);
+export async function getAllProducts() {
+  return productsService.getAll();
+}
+
+export async function getFilteredProducts(filters?: ProductFilters) {
+  return productsService.getFiltered(filters);
 }
 
 export async function getProductById(id: string) {
   return productsService.getById(id);
 }
 
-export async function createProduct(data: {
-  name: string;
-  description: string;
-  categoryId: string;
-  images: string[];
-  variants: ProductVariantCreate[];
-}) {
+export async function createProduct(data: ProductFormData) {
   return productsService.create(data);
 }
 
-export async function updateProduct(
-  id: string,
-  data: {
-    name?: string;
-    description?: string;
-    categoryId?: string;
-    images?: string[];
-    isNew?: boolean;
-    variants?: {
-      create?: ProductVariantCreate[];
-      update?: Array<ProductVariantCreate & { id: string }>;
-      delete?: string[];
-    };
-  }
-) {
+export async function updateProduct(id: string, data: ProductUpdateData) {
   return productsService.update(id, data);
 }
 

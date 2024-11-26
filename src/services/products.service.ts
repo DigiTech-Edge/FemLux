@@ -1,10 +1,11 @@
 import {
   ProductFilters,
-  ProductVariantCreate,
+  ProductFormData,
+  ProductUpdateData,
   ProductWithRelations,
 } from "@/types/product";
 import { prisma } from "@/utils/prisma";
-import { Prisma, Product } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 const defaultProductInclude = {
   category: true,
@@ -15,30 +16,30 @@ const defaultProductInclude = {
 } as const;
 
 export const productsService = {
-  async create(data: {
-    name: string;
-    description: string;
-    categoryId: string;
-    images: string[];
-    variants: ProductVariantCreate[];
-  }) {
+  async getAll() {
     try {
-      return await prisma.product.create({
-        data: {
-          ...data,
-          variants: {
-            create: data.variants,
-          },
-        },
+      const products = await prisma.product.findMany({
         include: defaultProductInclude,
+        orderBy: {
+          createdAt: "desc",
+        },
       });
+
+      // Convert Decimal to number for serialization
+      return products.map((product) => ({
+        ...product,
+        variants: product.variants.map((variant) => ({
+          ...variant,
+          price: Number(variant.price),
+        })),
+      }));
     } catch (error) {
-      console.error("Error creating product:", error);
+      console.error("Error fetching all products:", error);
       throw error;
     }
   },
 
-  async getAll(filters: ProductFilters = {}) {
+  async getFiltered(filters: ProductFilters = {}) {
     try {
       const where: Prisma.ProductWhereInput = {};
 
@@ -82,9 +83,16 @@ export const productsService = {
         },
       });
 
-      return products;
+      // Convert Decimal to number for serialization
+      return products.map((product) => ({
+        ...product,
+        variants: product.variants.map((variant) => ({
+          ...variant,
+          price: Number(variant.price),
+        })),
+      }));
     } catch (error) {
-      console.error("Error fetching products:", error);
+      console.error("Error fetching filtered products:", error);
       throw error;
     }
   },
@@ -105,38 +113,107 @@ export const productsService = {
           },
         },
       });
-      return product;
+
+      if (!product) return null;
+
+      // Convert Decimal to number for serialization
+      return {
+        ...product,
+        variants: product.variants.map((variant) => ({
+          ...variant,
+          price: Number(variant.price),
+        })),
+      };
     } catch (error) {
-      console.error("Error fetching product:", error);
+      console.error("Error fetching product by id:", error);
       throw error;
     }
   },
 
-  async update(
-    id: string,
-    data: Partial<Product> & {
-      variants?: {
-        create?: ProductVariantCreate[];
-        update?: Array<{
-          where: { id: string };
-          data: ProductVariantCreate;
-        }>;
-        deleteMany?: {
-          id: { in: string[] };
-        };
-      };
-    }
-  ) {
+  async create(data: ProductFormData) {
     try {
-      const product = await prisma.product.update({
-        where: { id },
+      // Convert number to Prisma.Decimal for database
+      const result = await prisma.product.create({
         data: {
-          ...data,
-          variants: data.variants,
+          name: data.name,
+          description: data.description,
+          categoryId: data.categoryId,
+          images: data.images,
+          isNew: data.isNew,
+          variants: {
+            create: data.variants.map((variant) => ({
+              size: variant.size,
+              price: new Prisma.Decimal(variant.price),
+              stock: variant.stock,
+            })),
+          },
         },
         include: defaultProductInclude,
       });
-      return product;
+
+      // Convert Decimal back to number for response
+      return {
+        ...result,
+        variants: result.variants.map((variant) => ({
+          ...variant,
+          price: Number(variant.price),
+        })),
+      };
+    } catch (error) {
+      console.error("Error creating product:", error);
+      throw error;
+    }
+  },
+
+  async update(id: string, data: ProductUpdateData) {
+    try {
+      const updateData: Prisma.ProductUpdateInput = {
+        ...(data.name && { name: data.name }),
+        ...(data.description && { description: data.description }),
+        ...(data.categoryId && { categoryId: data.categoryId }),
+        ...(data.images && { images: data.images }),
+        ...(data.isNew !== undefined && { isNew: data.isNew }),
+      };
+
+      if (data.variants) {
+        updateData.variants = {
+          ...(data.variants.create && {
+            create: data.variants.create.map((variant) => ({
+              size: variant.size,
+              price: new Prisma.Decimal(variant.price),
+              stock: variant.stock,
+            })),
+          }),
+          ...(data.variants.update && {
+            update: data.variants.update.map((variant) => ({
+              where: { id: variant.id },
+              data: {
+                size: variant.size,
+                price: new Prisma.Decimal(variant.price),
+                stock: variant.stock,
+              },
+            })),
+          }),
+          ...(data.variants.delete && {
+            delete: data.variants.delete.map((id) => ({ id })),
+          }),
+        };
+      }
+
+      const result = await prisma.product.update({
+        where: { id },
+        data: updateData,
+        include: defaultProductInclude,
+      });
+
+      // Convert Decimal back to number for response
+      return {
+        ...result,
+        variants: result.variants.map((variant) => ({
+          ...variant,
+          price: Number(variant.price),
+        })),
+      };
     } catch (error) {
       console.error("Error updating product:", error);
       throw error;
@@ -156,7 +233,7 @@ export const productsService = {
 
   async getNewArrivals(limit: number = 4) {
     try {
-      return await prisma.product.findMany({
+      const products = await prisma.product.findMany({
         where: {
           isNew: true,
         },
@@ -166,6 +243,15 @@ export const productsService = {
           createdAt: "desc",
         },
       });
+
+      // Convert Decimal to number for serialization
+      return products.map((product) => ({
+        ...product,
+        variants: product.variants.map((variant) => ({
+          ...variant,
+          price: Number(variant.price),
+        })),
+      }));
     } catch (error) {
       console.error("Error fetching new arrivals:", error);
       throw error;

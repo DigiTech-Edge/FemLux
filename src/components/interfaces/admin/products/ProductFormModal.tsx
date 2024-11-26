@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import React, { useRef, useState, useEffect } from "react";
 import {
   Modal,
   ModalContent,
@@ -11,168 +10,207 @@ import {
   Button,
   Input,
   Textarea,
-  Switch,
   Select,
   SelectItem,
+  Switch,
 } from "@nextui-org/react";
-import type { Product } from "@/lib/types/products";
-import { X, Upload, Image as ImageIcon } from "lucide-react";
-import Carousel from "@/components/ui/Carousel";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import type { ProductWithRelations, ProductFormData } from "@/types/product";
+import type { CategoryWithCount } from "@/types/category";
+import ImageUpload from "@/components/ui/ImageUpload";
+import DeleteConfirmationModal from "@/components/ui/DeleteConfirmationModal";
+import { Plus, X } from "lucide-react";
+import { toast } from "react-hot-toast";
+import env from "@/env";
 import Image from "next/image";
+import Carousel from "@/components/ui/Carousel";
 import { cn } from "@/helpers/utils";
+import { deleteImage } from "@/utils/supabase/storage";
 
 interface ProductFormModalProps {
-  product: Product | null;
+  product: ProductWithRelations | null;
+  categories: CategoryWithCount[];
   isOpen: boolean;
   isEditing: boolean;
   onClose: () => void;
-  onSave: (product: Product) => void;
+  onSubmit: (data: ProductFormData) => void;
 }
 
-const defaultProduct: Product = {
-  id: 0,
-  name: "",
-  description: "",
-  price: 0,
-  images: [],
-  category: "",
-  rating: 0,
-  reviews: 0,
-  isNew: false,
-  isBestSeller: false,
-  colors: [],
-  sizes: [],
-  stock: 0,
-  brand: "",
-  tags: [],
-};
+const variantSchema = z.object({
+  size: z.string().min(1, "Size is required"),
+  price: z.number().min(0, "Price must be greater than 0"),
+  stock: z.number().min(0, "Stock must be greater than or equal to 0"),
+});
 
-const categories = [
-  "Dresses",
-  "Tops",
-  "Bottoms",
-  "Outerwear",
-  "Accessories",
-  "Shoes",
-  "Bags",
-  "Jewelry",
-];
-
-const availableSizes = ["XS", "S", "M", "L", "XL", "XXL"];
-
-const availableColors = [
-  "Black",
-  "White",
-  "Red",
-  "Blue",
-  "Green",
-  "Yellow",
-  "Pink",
-  "Purple",
-  "Brown",
-  "Gray",
-];
+const productSchema = z.object({
+  name: z.string().min(1, "Product name is required"),
+  description: z.string().min(1, "Product description is required"),
+  categoryId: z.string().min(1, "Category is required"),
+  images: z.array(z.string()).min(1, "At least one image is required"),
+  variants: z.array(variantSchema).min(1, "At least one variant is required"),
+  isNew: z.boolean(),
+});
 
 export default function ProductFormModal({
   product,
+  categories,
   isOpen,
   isEditing,
   onClose,
-  onSave,
+  onSubmit: onSubmitProp,
 }: ProductFormModalProps) {
-  const [images, setImages] = useState<string[]>([]);
-  const [selectedImageIndex, setSelectedImageIndex] = React.useState(0);
-  const mainCarouselRef = React.useRef<{
-    scrollTo: (index: number) => void;
-  } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { control, handleSubmit, reset, setValue, watch } = useForm<Product>({
-    defaultValues: defaultProduct,
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [deleteImageState, setDeleteImageState] = useState({
+    isOpen: false,
+    url: "",
+    loading: false,
+  });
+  const mainCarouselRef = useRef<{ scrollTo: (index: number) => void } | null>(
+    null
+  );
+
+  const form = useForm<ProductFormData>({
+    resolver: zodResolver(productSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      categoryId: "",
+      images: [],
+      variants: [{ size: "", price: 0, stock: 0 }],
+      isNew: false,
+    },
   });
 
-  const selectedColors = watch("colors") || [];
-  const selectedSizes = watch("sizes") || [];
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "variants",
+  });
 
-  useEffect(() => {
-    if (product && isEditing) {
-      reset(product);
-      setImages(product.images);
-    } else {
-      reset(defaultProduct);
-      setImages([]);
-    }
-  }, [product, isEditing, reset]);
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files) {
-      const newImages = Array.from(files).map((file) =>
-        URL.createObjectURL(file)
-      );
-      setImages((prev) => [...prev, ...newImages]);
-      setValue("images", [...images, ...newImages]);
-    }
-  };
-
-  const removeImage = (index: number) => {
-    const newImages = images.filter((_, i) => i !== index);
-    setImages(newImages);
-    setValue("images", newImages);
-    if (selectedImageIndex >= newImages.length) {
-      setSelectedImageIndex(Math.max(0, newImages.length - 1));
-    }
-  };
+  const images = form.watch("images");
 
   const handleThumbnailClick = (index: number) => {
     setSelectedImageIndex(index);
     mainCarouselRef.current?.scrollTo(index);
   };
 
-  const onSubmit = (data: Product) => {
-    // Ensure arrays are not null
-    data.images = images;
-    data.colors = data.colors || [];
-    data.sizes = data.sizes || [];
-
-    // Handle tags conversion
-    const tagsInput = watch('tags') as string | string[] | undefined;
-    data.tags = Array.isArray(tagsInput) 
-      ? tagsInput 
-      : (typeof tagsInput === 'string' && tagsInput)
-        ? tagsInput.split(',').map((tag: string) => tag.trim())
-        : [];
-
-    // Convert numeric fields
-    data.price = Number(data.price);
-    data.stock = Number(data.stock);
-    data.rating = Number(data.rating);
-    data.reviews = Number(data.reviews);
-
-    onSave(data);
+  const handleClose = () => {
+    form.reset();
     onClose();
   };
+
+  const handleFormSubmit = async (data: ProductFormData) => {
+    try {
+      setIsLoading(true);
+      // Convert variant prices to numbers and ensure proper type handling
+      const formattedData = {
+        ...data,
+        variants: data.variants.map((variant) => ({
+          ...variant,
+          price: Number(variant.price),
+          stock: Number(variant.stock),
+        })),
+      };
+
+      await onSubmitProp(formattedData);
+      handleClose();
+      toast.success(
+        isEditing
+          ? "Product updated successfully"
+          : "Product created successfully",
+        { id: "product-modal" }
+      );
+    } catch (error) {
+      console.error("Error submitting product:", error);
+      toast.error("Failed to save product");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleImageRemove = async (url: string) => {
+    setDeleteImageState({
+      isOpen: true,
+      url,
+      loading: false,
+    });
+  };
+
+  const handleImageDelete = async () => {
+    if (!deleteImageState.url) return;
+
+    try {
+      setDeleteImageState((prev) => ({ ...prev, loading: true }));
+      const result = await deleteImage(deleteImageState.url);
+      if (result.success) {
+        const newImages = form
+          .getValues("images")
+          .filter((image) => image !== deleteImageState.url);
+        form.setValue("images", newImages);
+        toast.success("Image deleted successfully");
+      } else {
+        toast.error("Failed to delete image");
+      }
+    } catch (error) {
+      console.error("Error deleting image:", error);
+      toast.error("Failed to delete image");
+    } finally {
+      setDeleteImageState({
+        isOpen: false,
+        url: "",
+        loading: false,
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (product && isEditing) {
+      form.reset({
+        name: product.name,
+        description: product.description || "",
+        categoryId: product.categoryId,
+        images: product.images || [],
+        variants: product.variants.map((variant) => ({
+          size: variant.size,
+          price: Number(variant.price),
+          stock: variant.stock,
+        })) || [{ size: "", price: 0, stock: 0 }],
+        isNew: product.isNew || false,
+      });
+      if (product.images?.length > 0) {
+        setSelectedImageIndex(0);
+      }
+    } else {
+      form.reset({
+        name: "",
+        description: "",
+        categoryId: "",
+        images: [],
+        variants: [{ size: "", price: 0, stock: 0 }],
+        isNew: false,
+      });
+    }
+  }, [product, isEditing, form]);
 
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       size="4xl"
-      scrollBehavior="inside"
-      classNames={{
-        base: "max-h-[95vh]",
-        body: "p-0 overflow-hidden",
-      }}
+      scrollBehavior="outside"
     >
       <ModalContent>
-        {(onClose) => (
-          <form onSubmit={handleSubmit(onSubmit)} className="h-full">
+        {() => (
+          <form onSubmit={form.handleSubmit(handleFormSubmit)}>
             <ModalHeader className="flex flex-col gap-1">
               <h3 className="text-xl font-semibold">
-                {isEditing ? "Edit Product" : "Add New Product"}
+                {isEditing ? "Edit Product" : "Create Product"}
               </h3>
             </ModalHeader>
-            <ModalBody>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6 max-h-[calc(95vh-12rem)] overflow-y-auto">
+            <ModalBody className="gap-4 p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Left Column - Images */}
                 <div className="space-y-4">
                   <div className="relative w-full">
@@ -205,7 +243,7 @@ export default function ProductFormModal({
                                   />
                                   <button
                                     type="button"
-                                    onClick={() => removeImage(idx)}
+                                    onClick={() => handleImageRemove(image)}
                                     className="absolute top-2 right-2 p-1 bg-danger rounded-full text-white hover:bg-danger-400 transition-colors"
                                   >
                                     <X className="w-4 h-4" />
@@ -231,14 +269,21 @@ export default function ProductFormModal({
                                 className="relative w-full flex-[0_0_20%] px-1"
                               >
                                 {image === "upload" ? (
-                                  <div
-                                    onClick={() =>
-                                      fileInputRef.current?.click()
+                                  <ImageUpload
+                                    value={images}
+                                    onChange={(urls) =>
+                                      form.setValue("images", urls)
                                     }
-                                    className="relative aspect-square w-full cursor-pointer rounded-md border-2 border-dashed border-default-300 flex items-center justify-center hover:border-primary transition-colors"
-                                  >
-                                    <Upload className="w-6 h-6 text-default-400" />
-                                  </div>
+                                    onRemove={(url) => {
+                                      form.setValue(
+                                        "images",
+                                        images.filter((img) => img !== url)
+                                      );
+                                    }}
+                                    bucket={env.buckets.products}
+                                    className="h-full"
+                                    compact
+                                  />
                                 ) : (
                                   <div
                                     className={cn(
@@ -264,97 +309,145 @@ export default function ProductFormModal({
                         </div>
                       </>
                     ) : (
-                      <div
-                        onClick={() => fileInputRef.current?.click()}
-                        className="w-full aspect-square rounded-lg border-2 border-dashed border-default-300 flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors"
-                      >
-                        <ImageIcon className="w-12 h-12 text-default-400 mb-2" />
-                        <p className="text-default-600 font-medium">
-                          Add Product Images
-                        </p>
-                        <p className="text-default-400 text-sm">
-                          Click to upload or drag and drop
-                        </p>
-                        <p className="text-default-400 text-xs mt-1">
-                          PNG, JPG, WEBP up to 10MB
-                        </p>
-                      </div>
+                      <ImageUpload
+                        value={form.watch("images")}
+                        onChange={(urls) => form.setValue("images", urls)}
+                        onRemove={handleImageRemove}
+                        bucket={env.buckets.products}
+                        className="w-full aspect-square"
+                      />
                     )}
                   </div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
+                  {form.formState.errors.images && (
+                    <p className="text-danger text-sm">
+                      {form.formState.errors.images.message}
+                    </p>
+                  )}
                 </div>
 
-                {/* Right Column - Product Details */}
-                <div className="space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <Controller
-                      name="name"
-                      control={control}
-                      rules={{ required: true }}
-                      render={({ field }) => (
+                {/* Right Column - Basic Info */}
+                <div className="space-y-4">
+                  <Input
+                    label="Name"
+                    placeholder="Enter product name"
+                    {...form.register("name")}
+                    errorMessage={form.formState.errors.name?.message}
+                    isInvalid={!!form.formState.errors.name}
+                    isRequired
+                    labelPlacement="outside"
+                    classNames={{
+                      label:
+                        "text-sm font-medium text-gray-700 dark:text-gray-300",
+                    }}
+                  />
+                  <div>
+                    <Textarea
+                      label="Description"
+                      placeholder="Enter product description"
+                      {...form.register("description")}
+                      errorMessage={form.formState.errors.description?.message}
+                      isInvalid={!!form.formState.errors.description}
+                      isRequired
+                      labelPlacement="outside"
+                      classNames={{
+                        label:
+                          "text-sm font-medium text-gray-700 dark:text-gray-300",
+                        input: "bg-white dark:bg-gray-800",
+                        base: "min-h-[120px]",
+                      }}
+                    />
+                  </div>
+
+                  <Select
+                    label="Category"
+                    placeholder="Select a category"
+                    {...form.register("categoryId")}
+                    errorMessage={form.formState.errors.categoryId?.message}
+                    isInvalid={!!form.formState.errors.categoryId}
+                    isRequired
+                    labelPlacement="outside"
+                    classNames={{
+                      label:
+                        "text-sm font-medium text-gray-700 dark:text-gray-300",
+                    }}
+                  >
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} textValue={category.name}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </Select>
+
+                  <div>
+                    <Switch
+                      isSelected={form.watch("isNew")}
+                      onValueChange={(value) => form.setValue("isNew", value)}
+                      classNames={{
+                        label:
+                          "text-sm font-medium text-gray-700 dark:text-gray-300",
+                      }}
+                    >
+                      Mark as New Product
+                    </Switch>
+                  </div>
+                </div>
+
+                {/* Variants Section */}
+                <div className="col-span-full space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">Product Variants</h3>
+                    <Button
+                      variant="flat"
+                      color="primary"
+                      startContent={<Plus className="w-4 h-4" />}
+                      onPress={() => append({ size: "", price: 0, stock: 0 })}
+                    >
+                      Add Variant
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    {fields.map((field, index) => (
+                      <div
+                        key={field.id}
+                        className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start p-4 rounded-lg border border-gray-200 dark:border-gray-700 relative"
+                      >
+                        {index > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => remove(index)}
+                            className="absolute -top-2 -right-2 p-1 rounded-full bg-danger text-white hover:bg-danger-400 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
                         <Input
-                          {...field}
-                          label="Product Name"
-                          placeholder="Enter product name"
-                          isRequired
-                          className="col-span-2"
+                          label="Size"
+                          placeholder="e.g., S, M, L"
+                          {...form.register(`variants.${index}.size`)}
+                          errorMessage={
+                            form.formState.errors.variants?.[index]?.size
+                              ?.message
+                          }
+                          isInvalid={
+                            !!form.formState.errors.variants?.[index]?.size
+                          }
+                          className="flex-1"
                         />
-                      )}
-                    />
-
-                    <Controller
-                      name="brand"
-                      control={control}
-                      rules={{ required: true }}
-                      render={({ field }) => (
                         <Input
-                          {...field}
-                          label="Brand"
-                          placeholder="Enter brand name"
-                          isRequired
-                        />
-                      )}
-                    />
-
-                    <Controller
-                      name="category"
-                      control={control}
-                      rules={{ required: true }}
-                      render={({ field }) => (
-                        <Select
-                          {...field}
-                          label="Category"
-                          placeholder="Select category"
-                          selectedKeys={field.value ? [field.value] : []}
-                          isRequired
-                        >
-                          {categories.map((category) => (
-                            <SelectItem key={category} value={category}>
-                              {category}
-                            </SelectItem>
-                          ))}
-                        </Select>
-                      )}
-                    />
-
-                    <Controller
-                      name="price"
-                      control={control}
-                      rules={{ required: true, min: 0 }}
-                      render={({ field: { value, ...fieldProps } }) => (
-                        <Input
-                          {...fieldProps}
                           type="number"
                           label="Price"
-                          placeholder="Enter price"
-                          value={value?.toString() || ''}
+                          placeholder="0.00"
+                          {...form.register(`variants.${index}.price`, {
+                            valueAsNumber: true,
+                          })}
+                          errorMessage={
+                            form.formState.errors.variants?.[index]?.price
+                              ?.message
+                          }
+                          isInvalid={
+                            !!form.formState.errors.variants?.[index]?.price
+                          }
+                          className="flex-1"
                           startContent={
                             <div className="pointer-events-none flex items-center">
                               <span className="text-default-400 text-small">
@@ -362,129 +455,61 @@ export default function ProductFormModal({
                               </span>
                             </div>
                           }
-                          isRequired
                         />
-                      )}
-                    />
-
-                    <Controller
-                      name="stock"
-                      control={control}
-                      rules={{ required: true, min: 0 }}
-                      render={({ field: { value, ...fieldProps } }) => (
                         <Input
-                          {...fieldProps}
                           type="number"
                           label="Stock"
-                          placeholder="Enter stock quantity"
-                          value={value?.toString() || ''}
-                          isRequired
+                          placeholder="0"
+                          {...form.register(`variants.${index}.stock`, {
+                            valueAsNumber: true,
+                          })}
+                          errorMessage={
+                            form.formState.errors.variants?.[index]?.stock
+                              ?.message
+                          }
+                          isInvalid={
+                            !!form.formState.errors.variants?.[index]?.stock
+                          }
+                          className="flex-1"
                         />
-                      )}
-                    />
-
-                    <Controller
-                      name="description"
-                      control={control}
-                      rules={{ required: true }}
-                      render={({ field }) => (
-                        <Textarea
-                          {...field}
-                          label="Description"
-                          placeholder="Enter product description"
-                          isRequired
-                          className="col-span-2"
-                          minRows={3}
-                        />
-                      )}
-                    />
-
-                    <Controller
-                      name="colors"
-                      control={control}
-                      render={({ field }) => (
-                        <Select
-                          {...field}
-                          label="Colors"
-                          placeholder="Select colors"
-                          selectionMode="multiple"
-                          selectedKeys={selectedColors}
-                          className="col-span-2"
-                        >
-                          {availableColors.map((color) => (
-                            <SelectItem key={color} value={color}>
-                              {color}
-                            </SelectItem>
-                          ))}
-                        </Select>
-                      )}
-                    />
-
-                    <Controller
-                      name="sizes"
-                      control={control}
-                      render={({ field }) => (
-                        <Select
-                          {...field}
-                          label="Sizes"
-                          placeholder="Select sizes"
-                          selectionMode="multiple"
-                          selectedKeys={selectedSizes}
-                          className="col-span-2"
-                        >
-                          {availableSizes.map((size) => (
-                            <SelectItem key={size} value={size}>
-                              {size}
-                            </SelectItem>
-                          ))}
-                        </Select>
-                      )}
-                    />
-
-                    <Controller
-                      name="tags"
-                      control={control}
-                      render={({ field: { value, ...fieldProps } }) => (
-                        <Input
-                          {...fieldProps}
-                          label="Tags"
-                          placeholder="Enter tags (comma-separated)"
-                          value={Array.isArray(value) ? value.join(', ') : value || ''}
-                          className="col-span-2"
-                        />
-                      )}
-                    />
-
-                    <div className="col-span-2">
-                      <Controller
-                        name="isNew"
-                        control={control}
-                        render={({ field: { value, onChange } }) => (
-                          <Switch
-                            isSelected={value}
-                            onValueChange={onChange}
-                            aria-label="New Product"
-                          >
-                            New Product
-                          </Switch>
-                        )}
-                      />
-                    </div>
+                      </div>
+                    ))}
+                    {form.formState.errors.variants && (
+                      <p className="text-danger text-sm">
+                        {form.formState.errors.variants.message}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
             </ModalBody>
-            <ModalFooter>
-              <Button color="danger" variant="light" onPress={onClose}>
+            <ModalFooter className="border-t border-gray-200">
+              <Button
+                color="danger"
+                variant="light"
+                onPress={handleClose}
+                isDisabled={isLoading}
+              >
                 Cancel
               </Button>
-              <Button color="primary" type="submit">
-                {isEditing ? "Save Changes" : "Add Product"}
+              <Button color="primary" type="submit" isLoading={isLoading}>
+                {isEditing ? "Save" : "Create"}
               </Button>
             </ModalFooter>
           </form>
         )}
       </ModalContent>
+
+      <DeleteConfirmationModal
+        title="Delete Image"
+        description="Are you sure you want to delete this image? This action cannot be undone."
+        isOpen={deleteImageState.isOpen}
+        loading={deleteImageState.loading}
+        onClose={() =>
+          setDeleteImageState({ isOpen: false, url: "", loading: false })
+        }
+        onConfirm={handleImageDelete}
+      />
     </Modal>
   );
 }

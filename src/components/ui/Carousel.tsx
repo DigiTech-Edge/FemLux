@@ -146,4 +146,6 @@ const Carousel = forwardRef<CarouselRef, CarouselProps>(({
   )
 })
 
+Carousel.displayName = 'Carousel'
+
 export default Carousel

@@ -7,7 +7,6 @@ import {
   DollarSign,
   PackageCheck,
   PackageX,
-  Star,
   Sparkles,
 } from "lucide-react";
 import { formatCurrency } from "@/helpers";
@@ -18,7 +17,6 @@ interface ProductStats {
   outOfStock: number;
   lowStock: number;
   totalValue: number;
-  bestSellers: number;
   newProducts: number;
 }
 
@@ -57,12 +55,6 @@ const ProductStats = ({ stats }: ProductStatsProps) => {
       value: formatCurrency(stats.totalValue),
       icon: DollarSign,
       color: "text-pink-500",
-    },
-    {
-      title: "Best Sellers",
-      value: stats.bestSellers,
-      icon: Star,
-      color: "text-yellow-500",
     },
     {
       title: "New Products",
