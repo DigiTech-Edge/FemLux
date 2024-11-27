@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import {
   Table,
   TableHeader,
@@ -10,23 +10,25 @@ import {
   TableCell,
   User,
   Chip,
-  Tooltip,
   Button,
   Pagination,
   Select,
   SelectItem,
   Input,
+  DropdownTrigger,
+  Dropdown,
+  DropdownMenu,
+  DropdownItem,
 } from "@nextui-org/react";
-import {
-  Eye,
-  PackageCheck,
-  Search,
-  SlidersHorizontal,
-  Truck,
-} from "lucide-react";
+import { Eye, Search, MoreVertical } from "lucide-react";
 import { formatCurrency } from "@/helpers";
-import type { Order } from "@/lib/types/orders";
+import type { Order } from "@/types/orders";
 import OrderDetailsModal from "./OrderDetailsModal";
+import { updateOrderStatus } from "@/services/actions/orders.actions";
+import { toast } from "react-hot-toast";
+import { ShoppingBag } from "lucide-react";
+import { getStatusActions, StatusAction } from "@/helpers/orderStatusActions";
+import { OrderStatus } from "@prisma/client";
 
 interface OrdersTableProps {
   orders: Order[];
@@ -35,276 +37,314 @@ interface OrdersTableProps {
 const rowsPerPageOptions = [5, 10, 15, 20, 25, 30];
 
 const statusColorMap = {
-  pending: "warning",
-  processing: "primary",
-  delivered: "success",
-  cancelled: "danger",
+  PENDING: "warning",
+  PROCESSING: "primary",
+  DELIVERED: "success",
+  SHIPPED: "secondary",
+  CANCELLED: "danger",
 } as const;
+
+type ActionItem =
+  | StatusAction
+  | {
+      key: "view";
+      label: string;
+      icon: typeof Eye;
+      color: "default";
+    };
 
 export default function OrdersTable({ orders }: OrdersTableProps) {
   const [filterValue, setFilterValue] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
-  const [selectedRowsPerPage, setSelectedRowsPerPage] = React.useState(
-    new Set(["10"])
-  );
   const [page, setPage] = React.useState(1);
   const [selectedOrder, setSelectedOrder] = React.useState<Order | null>(null);
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
 
-  // Filter orders
-  const filteredOrders = React.useMemo(() => {
-    let filtered = [...orders];
+  const hasSearchFilter = Boolean(filterValue);
 
-    if (filterValue) {
-      filtered = filtered.filter(
+  const filteredOrders = useMemo(() => {
+    let filteredData = [...orders];
+
+    if (hasSearchFilter) {
+      filteredData = filteredData.filter(
         (order) =>
-          order.customer.name.toLowerCase().includes(filterValue.toLowerCase()) ||
-          order.customer.email.toLowerCase().includes(filterValue.toLowerCase()) ||
-          order.id.toLowerCase().includes(filterValue.toLowerCase())
+          order.orderNumber
+            ?.toLowerCase()
+            .includes(filterValue.toLowerCase()) ||
+          order.user?.name?.toLowerCase().includes(filterValue.toLowerCase()) ||
+          order.user?.email?.toLowerCase().includes(filterValue.toLowerCase())
       );
     }
 
     if (statusFilter !== "all") {
-      filtered = filtered.filter((order) => order.status === statusFilter);
+      filteredData = filteredData.filter(
+        (order) => order.status === statusFilter
+      );
     }
 
-    return filtered;
+    return filteredData;
   }, [orders, filterValue, statusFilter]);
 
   const pages = Math.ceil(filteredOrders.length / rowsPerPage);
-  const items = React.useMemo(() => {
+  const items = useMemo(() => {
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
 
     return filteredOrders.slice(start, end);
   }, [page, filteredOrders, rowsPerPage]);
 
-  const columns = [
-    { name: "ORDER", uid: "order" },
-    { name: "CUSTOMER", uid: "customer" },
-    { name: "DATE", uid: "date" },
-    { name: "STATUS", uid: "status" },
-    { name: "TOTAL", uid: "total" },
-    { name: "ACTIONS", uid: "actions" },
-  ];
+  const onRowsPerPageChange = React.useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      setRowsPerPage(Number(e.target.value));
+      setPage(1);
+    },
+    []
+  );
 
-  const renderCell = React.useCallback((order: Order, columnKey: React.Key) => {
-    switch (columnKey) {
-      case "order":
-        return (
-          <div className="flex flex-col">
-            <p className="text-bold">{order.id}</p>
-            <p className="text-tiny text-default-500">
-              {order.items.length} item{order.items.length > 1 ? "s" : ""}
-            </p>
-          </div>
-        );
-      case "customer":
-        return (
-          <User
-            name={order.customer.name}
-            description={order.customer.email}
-            avatarProps={{
-              src: order.customer.avatar,
-              size: "sm",
-            }}
-          />
-        );
-      case "date":
-        return (
-          <div className="flex flex-col">
-            <p className="text-bold">
-              {new Date(order.date).toLocaleDateString()}
-            </p>
-            <p className="text-tiny text-default-500">
-              {new Date(order.date).toLocaleTimeString()}
-            </p>
-          </div>
-        );
-      case "status":
-        return (
-          <Chip
-            className="capitalize"
-            color={statusColorMap[order.status]}
-            size="sm"
-            variant="flat"
-          >
-            {order.status}
-          </Chip>
-        );
-      case "total":
-        return (
-          <p className="text-bold">{formatCurrency(order.total)}</p>
-        );
-      case "actions":
-        return (
-          <div className="flex items-center gap-2">
-            <Tooltip content="View details">
-              <Button
-                isIconOnly
-                size="sm"
-                variant="light"
-                onPress={() => setSelectedOrder(order)}
-              >
-                <Eye className="w-4 h-4" />
-              </Button>
-            </Tooltip>
-            {order.status === "pending" && (
-              <Tooltip content="Process order">
-                <Button
-                  isIconOnly
-                  size="sm"
-                  variant="light"
-                  color="primary"
-                  onPress={() => {
-                    // Handle process order
-                  }}
-                >
-                  <PackageCheck className="w-4 h-4" />
-                </Button>
-              </Tooltip>
-            )}
-            {order.status === "processing" && (
-              <Tooltip content="Mark as delivered">
-                <Button
-                  isIconOnly
-                  size="sm"
-                  variant="light"
-                  color="success"
-                  onPress={() => {
-                    // Handle mark as delivered
-                  }}
-                >
-                  <Truck className="w-4 h-4" />
-                </Button>
-              </Tooltip>
-            )}
-          </div>
-        );
-      default:
-        return null;
+  const onSearchChange = React.useCallback((value?: string) => {
+    if (value) {
+      setFilterValue(value);
+      setPage(1);
+    } else {
+      setFilterValue("");
     }
   }, []);
 
-  return (
-    <div className="space-y-6">
-      {/* Search and Filters */}
-      <div className="flex flex-col gap-4">
-        <div className="bg-default-100 rounded-lg p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Input
-              isClearable
-              className="w-full sm:max-w-[60%]"
-              placeholder="Search orders..."
-              startContent={<Search className="w-4 h-4 text-default-400" />}
-              value={filterValue}
-              onClear={() => setFilterValue("")}
-              onValueChange={setFilterValue}
-            />
-            <div className="flex flex-col sm:flex-row gap-2 sm:w-fit">
-              <Select
-                className="w-full sm:w-[140px]"
-                size="sm"
-                placeholder="Status"
-                selectedKeys={[statusFilter]}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <SelectItem key="all">All Status</SelectItem>
-                <SelectItem key="pending">Pending</SelectItem>
-                <SelectItem key="processing">Processing</SelectItem>
-                <SelectItem key="delivered">Delivered</SelectItem>
-                <SelectItem key="cancelled">Cancelled</SelectItem>
-              </Select>
-            </div>
+  const onStatusFilterChange = React.useCallback((value: string) => {
+    setStatusFilter(value);
+    setPage(1);
+  }, []);
+
+  const onClear = React.useCallback(() => {
+    setFilterValue("");
+    setPage(1);
+  }, []);
+
+  const handleViewOrder = (order: Order) => {
+    setSelectedOrder(order);
+    setIsModalOpen(true);
+  };
+
+  const handleStatusUpdate = async (
+    orderId: string,
+    newStatus: OrderStatus
+  ) => {
+    toast.loading("Updating order status...");
+    const response = await updateOrderStatus(orderId, newStatus);
+    toast.dismiss();
+    if (response.success) {
+      toast.success("Order status updated successfully");
+    } else {
+      toast.error(response.error || "Failed to update order status");
+    }
+  };
+
+  const topContent = React.useMemo(
+    () => (
+      <div className="space-y-4">
+        <div className="flex flex-col items-center sm:flex-row gap-4">
+          <Input
+            isClearable
+            className="w-full sm:max-w-[44%]"
+            placeholder="Search by order number or customer..."
+            startContent={<Search className="text-default-300" size={20} />}
+            value={filterValue}
+            onClear={() => onClear()}
+            onValueChange={onSearchChange}
+          />
+          <div className="flex flex-1 gap-4 items-center justify-end">
+            <Select
+              label="Status"
+              placeholder="Select status"
+              selectedKeys={[statusFilter]}
+              className="max-w-xs"
+              onChange={(e) => onStatusFilterChange(e.target.value)}
+            >
+              <SelectItem key="all" value="all">
+                All Status
+              </SelectItem>
+              <SelectItem key="PENDING" value="PENDING">
+                Pending
+              </SelectItem>
+              <SelectItem key="PROCESSING" value="PROCESSING">
+                Processing
+              </SelectItem>
+              <SelectItem key="DELIVERED" value="DELIVERED">
+                Delivered
+              </SelectItem>
+              <SelectItem key="CANCELLED" value="CANCELLED">
+                Cancelled
+              </SelectItem>
+            </Select>
           </div>
         </div>
-
-        {/* Table */}
-        <Table
-          aria-label="Orders table"
-          bottomContent={
-            pages > 1 ? (
-              <div className="flex flex-col sm:flex-row w-full justify-between items-center gap-4">
-                <div className="flex flex-wrap items-center gap-4">
-                  <span className="text-small text-default-400 whitespace-nowrap">
-                    Rows per page:
-                  </span>
-                  <Select
-                    size="sm"
-                    selectedKeys={selectedRowsPerPage}
-                    onSelectionChange={(keys) => {
-                      setSelectedRowsPerPage(keys as Set<string>);
-                      const selectedValue = Array.from(keys)[0];
-                      setRowsPerPage(Number(selectedValue));
-                    }}
-                    className="w-20"
-                    aria-label="Rows per page"
-                  >
-                    {rowsPerPageOptions.map((value) => (
-                      <SelectItem
-                        key={value.toString()}
-                        value={value.toString()}
-                        className="text-small"
-                      >
-                        {value}
-                      </SelectItem>
-                    ))}
-                  </Select>
-                </div>
-                <div className="flex justify-center sm:justify-end">
-                  <Pagination
-                    isCompact
-                    showControls
-                    showShadow
-                    color="primary"
-                    page={page}
-                    total={pages}
-                    onChange={setPage}
-                  />
-                </div>
-                <div className="hidden sm:block" />
-              </div>
-            ) : null
-          }
-        >
-          <TableHeader columns={columns}>
-            {(column) => (
-              <TableColumn
-                key={column.uid}
-                align={column.uid === "actions" ? "center" : "start"}
-              >
-                {column.name}
-              </TableColumn>
-            )}
-          </TableHeader>
-          <TableBody
-            items={items}
-            emptyContent={
-              <div className="flex flex-col items-center justify-center h-48 text-default-400">
-                <div className="text-3xl mb-2">📦</div>
-                <div className="text-lg font-semibold">No orders found</div>
-                <div className="text-sm">
-                  Try adjusting your search or filters
-                </div>
-              </div>
-            }
-          >
-            {(item) => (
-              <TableRow key={item.id}>
-                {(columnKey) => (
-                  <TableCell>{renderCell(item, columnKey)}</TableCell>
-                )}
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
       </div>
+    ),
+    [filterValue, onSearchChange, statusFilter]
+  );
+
+  const bottomContent = React.useMemo(() => {
+    return (
+      <div className="flex w-full md:flex-row flex-col-reverse gap-4 justify-between items-center">
+        <div className="flex flex-col items-center gap-2">
+          <Select
+            label="Rows per page"
+            size="sm"
+            className="w-32"
+            selectedKeys={[rowsPerPage.toString()]}
+            onChange={onRowsPerPageChange}
+          >
+            {rowsPerPageOptions.map((value) => (
+              <SelectItem key={value} textValue={value.toString()}>
+                {value}
+              </SelectItem>
+            ))}
+          </Select>
+        </div>
+        {pages > 0 && (
+          <Pagination
+            isCompact
+            showControls
+            showShadow
+            color="primary"
+            page={page}
+            total={pages}
+            onChange={setPage}
+          />
+        )}
+        <div className="max-md:hidden" />
+      </div>
+    );
+  }, [page, pages, rowsPerPage]);
+
+  return (
+    <>
+      <Table
+        aria-label="Orders table"
+        isHeaderSticky
+        bottomContent={bottomContent}
+        classNames={{
+          wrapper: "max-h-[600px]",
+        }}
+        topContent={topContent}
+        topContentPlacement="outside"
+      >
+        <TableHeader>
+          <TableColumn>ORDER</TableColumn>
+          <TableColumn>CUSTOMER</TableColumn>
+          <TableColumn>STATUS</TableColumn>
+          <TableColumn>ITEMS</TableColumn>
+          <TableColumn>TOTAL</TableColumn>
+          <TableColumn>DATE</TableColumn>
+          <TableColumn>ACTIONS</TableColumn>
+        </TableHeader>
+        <TableBody
+          emptyContent={
+            <div className="flex flex-col items-center justify-center py-12">
+              <ShoppingBag className="w-12 h-12 text-default-300 mb-4" />
+              <p className="text-default-300 text-lg">No Orders found</p>
+              <p className="text-default-300 text-sm">
+                Your orders will appear here.
+              </p>
+            </div>
+          }
+          items={items}
+        >
+          {(item) => (
+            <TableRow key={item.id}>
+              <TableCell>
+                <div className="flex flex-col">
+                  <p className="text-bold">{item.orderNumber}</p>
+                </div>
+              </TableCell>
+              <TableCell>
+                <User
+                  name={item.user?.name}
+                  description={item.user?.email}
+                  avatarProps={{
+                    src: item.user?.image || undefined,
+                    showFallback: true,
+                  }}
+                />
+              </TableCell>
+              <TableCell>
+                <Chip
+                  className="capitalize"
+                  color={statusColorMap[item.status]}
+                  size="sm"
+                  variant="flat"
+                >
+                  {item.status.toLowerCase()}
+                </Chip>
+              </TableCell>
+              <TableCell>
+                <div className="flex flex-col">
+                  <p className="text-bold">{item.items.length} items</p>
+                  <p className="text-tiny text-default-500">
+                    {formatCurrency(item.totalAmount)}
+                  </p>
+                </div>
+              </TableCell>
+              <TableCell>{formatCurrency(item.totalAmount)}</TableCell>
+              <TableCell>
+                {new Date(item.createdAt).toLocaleDateString()}
+              </TableCell>
+              <TableCell>
+                <div className="relative flex justify-center items-center gap-2">
+                  <Dropdown>
+                    <DropdownTrigger>
+                      <Button isIconOnly size="sm" variant="light">
+                        <MoreVertical className="w-6 h-6" />
+                      </Button>
+                    </DropdownTrigger>
+                    <DropdownMenu
+                      aria-label="Order Actions"
+                      variant="flat"
+                      onAction={async (key) => {
+                        if (key === "view") {
+                          handleViewOrder(item);
+                        } else {
+                          await handleStatusUpdate(item.id, key as OrderStatus);
+                        }
+                      }}
+                      items={[
+                        {
+                          key: "view",
+                          label: "View Details",
+                          icon: Eye,
+                          color: "default",
+                        } as ActionItem,
+                        ...getStatusActions(item.status),
+                      ]}
+                    >
+                      {(action) => (
+                        <DropdownItem
+                          key={action.key}
+                          startContent={<action.icon className="w-4 h-4" />}
+                          className={`text-${action.color}`}
+                          color={action.color}
+                        >
+                          {action.label}
+                        </DropdownItem>
+                      )}
+                    </DropdownMenu>
+                  </Dropdown>
+                </div>
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
 
       <OrderDetailsModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedOrder(null);
+        }}
         order={selectedOrder}
-        isOpen={!!selectedOrder}
-        onClose={() => setSelectedOrder(null)}
       />
-    </div>
+    </>
   );
 }

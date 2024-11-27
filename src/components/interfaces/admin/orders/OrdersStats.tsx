@@ -1,48 +1,40 @@
 "use client";
 
 import { Card, CardBody } from "@nextui-org/react";
-import { ShoppingBag, PackageCheck, Clock, CreditCard } from "lucide-react";
-import { formatCurrency } from "@/helpers";
+import { ShoppingBag, PackageCheck, Clock, Truck } from "lucide-react";
+import { OrdersStats as OrdersStatsType } from "@/types/orders";
 
 interface OrdersStatsProps {
-  totalOrders: number;
-  deliveredOrders: number;
-  pendingOrders: number;
-  totalRevenue: number;
+  stats: OrdersStatsType;
 }
 
-export default function OrdersStats({
-  totalOrders,
-  deliveredOrders,
-  pendingOrders,
-  totalRevenue,
-}: OrdersStatsProps) {
-  const stats = [
+export default function OrdersStats({ stats }: OrdersStatsProps) {
+  const statsConfig = [
     {
       title: "Total Orders",
-      value: totalOrders,
+      value: stats.totalOrders,
       icon: ShoppingBag,
       color: "text-primary",
       bgColor: "bg-primary/10",
     },
     {
       title: "Delivered Orders",
-      value: deliveredOrders,
+      value: stats.deliveredOrders,
       icon: PackageCheck,
       color: "text-success",
       bgColor: "bg-success/10",
     },
     {
       title: "Pending Orders",
-      value: pendingOrders,
+      value: stats.pendingOrders,
       icon: Clock,
       color: "text-warning",
       bgColor: "bg-warning/10",
     },
     {
-      title: "Total Revenue",
-      value: formatCurrency(totalRevenue),
-      icon: CreditCard,
+      title: "Shipped Orders",
+      value: stats.shippedOrders,
+      icon: Truck,
       color: "text-primary",
       bgColor: "bg-primary/10",
     },
@@ -50,7 +42,7 @@ export default function OrdersStats({
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {stats.map((stat) => (
+      {statsConfig.map((stat) => (
         <Card key={stat.title}>
           <CardBody className="flex flex-row items-center gap-4">
             <div className={`p-2 rounded-lg ${stat.bgColor}`}>

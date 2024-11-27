@@ -10,25 +10,30 @@ import {
   Button,
   Chip,
   Divider,
-  Avatar,
   Card,
   CardBody,
   Tabs,
   Tab,
   ScrollShadow,
+  Image,
+  Avatar,
 } from "@nextui-org/react";
 import { formatCurrency } from "@/helpers";
-import type { Order } from "@/lib/types/orders";
+import { getStatusActions } from "@/helpers/orderStatusActions";
+import type { Order } from "@/types/orders";
 import {
   MapPin,
-  CreditCard,
   Package,
-  Mail,
   Phone,
   Truck,
   ShoppingBag,
   Clock,
   Calendar,
+  CheckCircle2,
+  XCircle,
+  Mail,
+  RefreshCw,
+  Settings,
   User,
 } from "lucide-react";
 
@@ -39,10 +44,19 @@ interface OrderDetailsModalProps {
 }
 
 const statusColorMap = {
-  pending: "warning",
-  processing: "primary",
-  delivered: "success",
-  cancelled: "danger",
+  PENDING: "warning",
+  PROCESSING: "primary",
+  DELIVERED: "success",
+  SHIPPED: "secondary",
+  CANCELLED: "danger",
+} as const;
+
+const statusIconMap = {
+  PENDING: Clock,
+  PROCESSING: Package,
+  DELIVERED: CheckCircle2,
+  SHIPPED: Truck,
+  CANCELLED: XCircle,
 } as const;
 
 export default function OrderDetailsModal({
@@ -50,51 +64,40 @@ export default function OrderDetailsModal({
   isOpen,
   onClose,
 }: OrderDetailsModalProps) {
-  const [selectedTab, setSelectedTab] = React.useState("details");
+  if (!order) return null;
 
-  if (!order) {
-    return null;
-  }
+  const StatusIcon = statusIconMap[order.status];
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      size="4xl"
-      scrollBehavior="outside"
-    >
+    <Modal isOpen={isOpen} onClose={onClose} size="3xl" scrollBehavior="inside">
       <ModalContent>
-        {() => (
+        {(onClose) => (
           <>
             <ModalHeader className="flex flex-col gap-1">
-              <div className="flex items-center justify-between">
-                <span>Order {order.id}</span>
+              <div className="flex items-center gap-4">
                 <Chip
-                  className="capitalize"
+                  startContent={<StatusIcon className="w-4 h-4" />}
                   color={statusColorMap[order.status]}
-                  size="sm"
                   variant="flat"
                 >
                   {order.status}
                 </Chip>
-              </div>
-              <div className="flex items-center gap-2 text-small text-default-500">
-                <Calendar className="w-4 h-4" />
-                <span>
-                  {new Date(order.date).toLocaleDateString()}{" "}
-                  {new Date(order.date).toLocaleTimeString()}
+                <span className="text-default-500">
+                  Order #{order.orderNumber}
                 </span>
               </div>
             </ModalHeader>
-
             <Divider />
-
-            <div className="px-6 mt-4">
+            <ModalBody>
               <Tabs
-                selectedKey={selectedTab}
-                onSelectionChange={(key) => setSelectedTab(key.toString())}
                 variant="underlined"
-                fullWidth
+                color="primary"
+                aria-label="Order details tabs"
+                classNames={{
+                  tabList: "gap-6",
+                  cursor: "w-full bg-primary",
+                  tab: "max-w-fit px-2 h-12",
+                }}
               >
                 <Tab
                   key="details"
@@ -104,246 +107,180 @@ export default function OrderDetailsModal({
                       <span>Order Details</span>
                     </div>
                   }
-                />
-                <Tab
-                  key="customer"
-                  title={
-                    <div className="flex items-center gap-2">
-                      <User className="w-4 h-4" />
-                      <span>Customer Info</span>
+                >
+                  <div className="mt-4 space-y-6">
+                    {/* Customer Information */}
+                    <div className="bg-default-50 p-4 rounded-lg">
+                      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <User className="w-5 h-5" />
+                        Customer Information
+                      </h3>
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Avatar
+                              src={order.user?.image || ""}
+                              className="w-4 h-4"
+                            />
+                            <span>{order.user?.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Phone className="w-4 h-4 text-default-400" />
+                            <span>{order.phoneNumber}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Mail className="w-4 h-4 text-default-400" />
+                            <span>{order.user?.email}</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  }
-                />
-                <Tab
-                  key="shipping"
-                  title={
-                    <div className="flex items-center gap-2">
-                      <Truck className="w-4 h-4" />
-                      <span>Shipping & Payment</span>
-                    </div>
-                  }
-                />
-              </Tabs>
-            </div>
 
-            <ModalBody>
-              <ScrollShadow className="max-h-[calc(100vh-250px)]">
-                {selectedTab === "details" && (
-                  <div className="space-y-6">
-                    <Card>
-                      <CardBody>
-                        <div className="space-y-6">
-                          <h4 className="text-lg font-semibold">Order Items</h4>
-                          <div className="space-y-4">
-                            {order.items.map((item) => (
-                              <div
-                                key={item.id}
-                                className="flex items-center justify-between p-4 rounded-lg border border-default-200"
-                              >
-                                <div className="flex items-center gap-4">
-                                  <div className="p-2 bg-default-100 rounded-lg">
-                                    <Package className="w-6 h-6 text-default-500" />
-                                  </div>
+                    {/* Shipping Information */}
+                    <div className="bg-default-50 p-4 rounded-lg">
+                      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <Truck className="w-5 h-5" />
+                        Shipping Information
+                      </h3>
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-2">
+                          <MapPin className="w-4 h-4 text-default-400 mt-1" />
+                          <div>
+                            <p className="font-medium">
+                              {order.shippingAddress}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Order Timeline */}
+                    <div className="bg-default-50 p-4 rounded-lg">
+                      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <Clock className="w-5 h-5" />
+                        Order Timeline
+                      </h3>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-default-400" />
+                          <span>
+                            Created:{" "}
+                            {new Date(order.createdAt).toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <RefreshCw className="w-4 h-4 text-default-400" />
+                          <span>
+                            Last Update:{" "}
+                            {new Date(order.updatedAt).toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Status Management */}
+                    <div className="bg-default-50 p-4 rounded-lg">
+                      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <Settings className="w-5 h-5" />
+                        Order Management
+                      </h3>
+                      <div className="flex flex-wrap gap-3">
+                        {getStatusActions(order.status).map((action, index) => (
+                          <Button
+                            key={index}
+                            color={action.color}
+                            variant="flat"
+                            startContent={<action.icon className="w-4 h-4" />}
+                          >
+                            {action.label}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </Tab>
+                <Tab
+                  key="items"
+                  title={
+                    <div className="flex items-center gap-2">
+                      <ShoppingBag className="w-4 h-4" />
+                      <span>Order Items</span>
+                    </div>
+                  }
+                >
+                  <ScrollShadow className="max-h-[600px]">
+                    <div className="space-y-4 mt-4">
+                      {order.items.map((item, index) => (
+                        <Card key={index} className="shadow-none border-1">
+                          <CardBody className="p-3">
+                            <div className="flex gap-4">
+                              <Image
+                                alt={item.productName}
+                                className="object-cover rounded-lg"
+                                src={item.productImage}
+                                width={100}
+                                height={100}
+                              />
+                              <div className="flex-grow space-y-2">
+                                <div className="flex justify-between items-start">
                                   <div>
-                                    <p className="font-medium">{item.name}</p>
-                                    <p className="text-small text-default-500">
-                                      Qty: {item.quantity} x{" "}
-                                      {formatCurrency(item.price)}
+                                    <h4 className="font-semibold">
+                                      {item.productName}
+                                    </h4>
+                                    <div className="flex flex-wrap gap-3 text-small text-default-500">
+                                      <div>Size: {item.size}</div>
+                                      <div>Quantity: {item.quantity}</div>
+                                      <div>
+                                        Price: {formatCurrency(item.price)}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="font-semibold">
+                                      Total:{" "}
+                                      {formatCurrency(
+                                        item.price * item.quantity
+                                      )}
                                     </p>
                                   </div>
                                 </div>
-                                <p className="font-medium">
-                                  {formatCurrency(item.price * item.quantity)}
-                                </p>
                               </div>
-                            ))}
-                          </div>
-                          <Divider />
-                          <div className="flex justify-between items-center text-lg font-semibold">
-                            <span>Total</span>
-                            <span>{formatCurrency(order.total)}</span>
-                          </div>
-                        </div>
-                      </CardBody>
-                    </Card>
-                  </div>
-                )}
+                            </div>
+                          </CardBody>
+                        </Card>
+                      ))}
+                    </div>
+                  </ScrollShadow>
 
-                {selectedTab === "customer" && (
-                  <div className="space-y-6">
-                    <Card>
-                      <CardBody>
-                        <h4 className="text-lg font-semibold mb-4">
-                          Customer Information
-                        </h4>
-                        <div className="flex items-center gap-6">
-                          <Avatar
-                            src={order.customer.avatar}
-                            className="w-20 h-20"
-                          />
-                          <div className="space-y-2">
-                            <p className="text-xl font-semibold">
-                              {order.customer.name}
-                            </p>
-                            <div className="flex items-center gap-2 text-default-500">
-                              <Mail className="w-4 h-4" />
-                              <span>{order.customer.email}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-default-500">
-                              <Phone className="w-4 h-4" />
-                              <span>+1 234-567-8900</span>
-                            </div>
-                          </div>
-                        </div>
-                      </CardBody>
-                    </Card>
+                  <Divider className="my-4" />
 
-                    <Card>
-                      <CardBody>
-                        <h4 className="text-lg font-semibold mb-4">
-                          Order History
-                        </h4>
-                        <div className="space-y-4">
-                          <div className="flex items-center gap-4">
-                            <div className="p-2 bg-success/10 rounded-full">
-                              <ShoppingBag className="w-5 h-5 text-success" />
-                            </div>
-                            <div>
-                              <p className="font-medium">Order Placed</p>
-                              <p className="text-small text-default-500">
-                                {new Date(order.date).toLocaleString()}
-                              </p>
-                            </div>
-                          </div>
-                          {order.status !== "pending" && (
-                            <div className="flex items-center gap-4">
-                              <div className="p-2 bg-primary/10 rounded-full">
-                                <Clock className="w-5 h-5 text-primary" />
-                              </div>
-                              <div>
-                                <p className="font-medium">Order Processing</p>
-                                <p className="text-small text-default-500">
-                                  {new Date(
-                                    new Date(order.date).getTime() +
-                                      24 * 60 * 60 * 1000
-                                  ).toLocaleString()}
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                          {order.status === "delivered" && (
-                            <div className="flex items-center gap-4">
-                              <div className="p-2 bg-success/10 rounded-full">
-                                <Truck className="w-5 h-5 text-success" />
-                              </div>
-                              <div>
-                                <p className="font-medium">Order Delivered</p>
-                                <p className="text-small text-default-500">
-                                  {new Date(
-                                    new Date(order.date).getTime() +
-                                      72 * 60 * 60 * 1000
-                                  ).toLocaleString()}
-                                </p>
-                              </div>
-                            </div>
-                          )}
+                  <Card className="shadow-none border-1 bg-default-50">
+                    <CardBody className="p-4">
+                      <div className="flex justify-between items-center">
+                        <h3 className="text-lg font-semibold">Order Summary</h3>
+                        <div className="text-right">
+                          <p className="text-small text-default-500">
+                            {order.items.length} items,{" "}
+                            {order.items.reduce(
+                              (acc, item) => acc + item.quantity,
+                              0
+                            )}{" "}
+                            units
+                          </p>
+                          <p className="text-xl font-bold mt-1">
+                            Total: {formatCurrency(order.totalAmount)}
+                          </p>
                         </div>
-                      </CardBody>
-                    </Card>
-                  </div>
-                )}
-
-                {selectedTab === "shipping" && (
-                  <div className="space-y-6">
-                    <Card>
-                      <CardBody>
-                        <h4 className="text-lg font-semibold mb-4">
-                          Shipping Information
-                        </h4>
-                        <div className="space-y-6">
-                          <div className="flex items-start gap-4">
-                            <div className="p-2 bg-default-100 rounded-lg">
-                              <MapPin className="w-5 h-5 text-default-500" />
-                            </div>
-                            <div>
-                              <p className="font-medium">Delivery Address</p>
-                              <p className="text-default-500">
-                                {order.shippingAddress.street}
-                                <br />
-                                {order.shippingAddress.city},{" "}
-                                {order.shippingAddress.state}{" "}
-                                {order.shippingAddress.zipCode}
-                                <br />
-                                {order.shippingAddress.country}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <div className="p-2 bg-default-100 rounded-lg">
-                              <Truck className="w-5 h-5 text-default-500" />
-                            </div>
-                            <div>
-                              <p className="font-medium">Tracking Number</p>
-                              <p className="text-default-500">
-                                {order.trackingNumber || "Not available yet"}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </CardBody>
-                    </Card>
-
-                    <Card>
-                      <CardBody>
-                        <h4 className="text-lg font-semibold mb-4">
-                          Payment Information
-                        </h4>
-                        <div className="flex items-center gap-4">
-                          <div className="p-2 bg-default-100 rounded-lg">
-                            <CreditCard className="w-5 h-5 text-default-500" />
-                          </div>
-                          <div>
-                            <p className="font-medium">Payment Method</p>
-                            <p className="text-default-500">
-                              {order.paymentMethod}
-                            </p>
-                          </div>
-                        </div>
-                      </CardBody>
-                    </Card>
-                  </div>
-                )}
-              </ScrollShadow>
+                      </div>
+                    </CardBody>
+                  </Card>
+                </Tab>
+              </Tabs>
             </ModalBody>
-
-            <Divider />
-
             <ModalFooter>
-              <Button variant="light" onPress={onClose}>
+              <Button color="danger" variant="light" onPress={onClose}>
                 Close
               </Button>
-              {order.status === "pending" && (
-                <Button
-                  color="primary"
-                  onPress={() => {
-                    // Handle process order
-                    onClose();
-                  }}
-                >
-                  Process Order
-                </Button>
-              )}
-              {order.status === "processing" && (
-                <Button
-                  color="success"
-                  onPress={() => {
-                    // Handle mark as delivered
-                    onClose();
-                  }}
-                >
-                  Mark as Delivered
-                </Button>
-              )}
             </ModalFooter>
           </>
         )}

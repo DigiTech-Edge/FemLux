@@ -3,6 +3,8 @@
 import { ordersService } from "../orders.service";
 import { CartItem } from "@/store/cart";
 import { createClient } from "@/utils/supabase/server";
+import { OrderStatus } from "@/types/orders";
+import { revalidatePath } from "next/cache";
 
 interface InitiatePaymentParams {
   email: string;
@@ -47,15 +49,64 @@ export async function initiatePayment({
 
 export async function verifyPayment(reference: string) {
   try {
-    const { paymentVerified, order } = await ordersService.verifyPayment(reference);
-    
+    const { paymentVerified, order } = await ordersService.verifyPayment(
+      reference
+    );
+
     if (!paymentVerified || !order) {
-      return { success: false, error: 'Payment verification failed' };
+      return { success: false, error: "Payment verification failed" };
     }
 
     return { success: true, data: order };
   } catch (error) {
     console.error("Error verifying payment:", error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+export async function getOrders() {
+  try {
+    const orders = await ordersService.getOrders();
+    return { success: true, data: orders };
+  } catch (error) {
+    console.error("Error getting orders:", error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+export async function getOrderStats() {
+  try {
+    const stats = await ordersService.getOrderStats();
+    return { success: true, data: stats };
+  } catch (error) {
+    console.error("Error getting order stats:", error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+export async function updateOrderStatus(orderId: string, status: OrderStatus) {
+  try {
+    const order = await ordersService.updateOrderStatus(orderId, status);
+    revalidatePath("/admin/orders");
+    return { success: true, data: order };
+  } catch (error) {
+    console.error("Error updating order status:", error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+export async function updateOrderTracking(
+  orderId: string,
+  trackingNumber: string
+) {
+  try {
+    const order = await ordersService.updateOrderTracking(
+      orderId,
+      trackingNumber
+    );
+    return { success: true, data: order };
+  } catch (error) {
+    console.error("Error updating order tracking:", error);
     return { success: false, error: (error as Error).message };
   }
 }
