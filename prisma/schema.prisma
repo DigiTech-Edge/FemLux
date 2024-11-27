@@ -1,13 +1,11 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["multiSchema"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
-  schemas   = ["auth", "public"]
 }
 
 model Product {
@@ -15,17 +13,17 @@ model Product {
   createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   name        String     @db.VarChar(255)
-  description String
+  description String     @db.Text
+  images      String[]   @db.Text
   categoryId  String     @map("category_id") @db.Uuid
-  images      String[]   @default([])
   isNew       Boolean    @default(true) @map("is_new")
   variants    ProductVariant[]
   favorites   Favorite[]
   category    Category   @relation(fields: [categoryId], references: [id])
   reviews     Review[]
+  orderItems  OrderItem[]
 
   @@map("products")
-  @@schema("public")
 }
 
 model ProductVariant {
@@ -37,10 +35,10 @@ model ProductVariant {
   stock     Int      @default(0)
   productId String   @map("product_id") @db.Uuid
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
 
   @@unique([productId, size])
   @@map("product_variants")
-  @@schema("public")
 }
 
 model Category {
@@ -48,33 +46,46 @@ model Category {
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   name        String    @db.VarChar(255)
-  description String?
-  image       String?
+  image       String?   @db.Text
+  description String?   @db.Text
   products    Product[]
 
   @@map("categories")
-  @@schema("public")
 }
 
 model Order {
-  id                String        @id @default(uuid()) @db.Uuid
-  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt         DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  userId            String        @map("user_id") @db.Uuid
-  status            OrderStatus
-  totalAmount       Decimal       @map("total_amount") @db.Decimal(10, 2)
-  shippingAddress   Json          @map("shipping_address")
-  billingAddress    Json          @map("billing_address")
-  paymentStatus     PaymentStatus @map("payment_status")
-  paymentMethod     String        @map("payment_method") @db.VarChar(50)
-  items             Json[]
-  trackingNumber    String?       @map("tracking_number") @db.VarChar(255)
-  estimatedDelivery DateTime?     @map("estimated_delivery") @db.Timestamptz(6)
-  giftMessage       String?       @map("gift_message")
-  profile           Profile       @relation(fields: [userId], references: [userId])
+  id              String      @id @default(uuid()) @db.Uuid
+  createdAt       DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  userId          String      @map("user_id") @db.Uuid
+  status          OrderStatus @default(PENDING)
+  totalAmount     Decimal     @map("total_amount") @db.Decimal(10, 2)
+  shippingAddress Json        @map("shipping_address")
+  phoneNumber     String      @map("phone_number") @db.VarChar(20)
+  items           OrderItem[]
+  trackingNumber  String?     @map("tracking_number") @db.VarChar(255)
+  profile         Profile     @relation(fields: [userId], references: [userId])
 
   @@map("orders")
-  @@schema("public")
+}
+
+model OrderItem {
+  id          String   @id @default(uuid()) @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  orderId     String   @map("order_id") @db.Uuid
+  productId   String   @map("product_id") @db.Uuid
+  variantId   String   @map("variant_id") @db.Uuid
+  quantity    Int
+  price       Decimal  @db.Decimal(10, 2)
+  size        String   @db.VarChar(10)
+  productName String   @map("product_name") @db.VarChar(255)
+  productImage String  @map("product_image") @db.Text
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id])
+  variant     ProductVariant @relation(fields: [variantId], references: [id])
+
+  @@map("order_items")
 }
 
 model Review {
@@ -83,30 +94,28 @@ model Review {
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   userId    String   @map("user_id") @db.Uuid
   productId String   @map("product_id") @db.Uuid
-  rating    Int
-  comment   String
-  product   Product  @relation(fields: [productId], references: [id])
+  rating    Int      @db.Integer
+  comment   String   @db.Text
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   profile   Profile  @relation(fields: [userId], references: [userId])
 
   @@map("reviews")
-  @@schema("public")
 }
 
 model Profile {
-  id            String     @id @db.Uuid
-  createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt     DateTime?  @map("deleted_at") @db.Timestamptz(6)
-  userId        String     @unique @map("user_id") @db.Uuid
-  email         String     @unique @db.VarChar(255)
-  fullName      String?    @map("full_name")
-  avatarUrl     String?    @map("avatar_url")
-  favorites     Favorite[]
-  orders        Order[]
-  reviews       Review[]
+  id          String    @id @default(uuid()) @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6)
+  userId      String    @unique @map("user_id") @db.Uuid
+  email       String    @unique @db.VarChar(255)
+  fullName    String?   @map("full_name")
+  avatarUrl   String?   @map("avatar_url")
+  favorites   Favorite[]
+  orders      Order[]
+  reviews     Review[]
 
   @@map("profiles")
-  @@schema("public")
 }
 
 model Favorite {
@@ -114,12 +123,11 @@ model Favorite {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   userId    String   @map("user_id") @db.Uuid
   productId String   @map("product_id") @db.Uuid
-  product   Product  @relation(fields: [productId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   profile   Profile  @relation(fields: [userId], references: [userId])
 
   @@unique([userId, productId])
   @@map("favorites")
-  @@schema("public")
 }
 
 enum OrderStatus {
@@ -130,7 +138,6 @@ enum OrderStatus {
   CANCELLED
 
   @@map("order_status")
-  @@schema("public")
 }
 
 enum PaymentStatus {
@@ -140,5 +147,4 @@ enum PaymentStatus {
   REFUNDED
 
   @@map("payment_status")
-  @@schema("public")
 }
