@@ -25,11 +25,18 @@ import {
 } from "@/lib/validations/checkout";
 import { useState, useEffect } from "react";
 import { useCartStore } from "@/store/cart";
+import { initiatePayment } from "@/services/actions/orders.actions";
+import { toast } from "react-hot-toast";
 
 export default function CartSummary() {
   const [isOpen, setIsOpen] = useState(false);
-  const { total } = useCartStore();
-  const { data, error, isLoading } = useSWR("profile", async () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const { items, total } = useCartStore();
+  const {
+    data,
+    error,
+    isLoading: isLoadingProfile,
+  } = useSWR("profile", async () => {
     try {
       const result = await getProfile();
       return result.profile;
@@ -86,10 +93,34 @@ export default function CartSummary() {
     </div>
   );
 
-  const onSubmit = handleSubmit((data) => {
-    console.log(data);
-    setIsOpen(false);
-  });
+  const onSubmit = async (formData: CheckoutFormValues) => {
+    try {
+      setIsLoading(true);
+      if (!items) {
+        throw new Error("No items in cart");
+      }
+
+      const result = await initiatePayment({
+        email: formData.email,
+        amount: grandTotal,
+        items: items,
+        shippingAddress: formData.shippingAddress,
+        phoneNumber: formData.phoneNumber,
+      });
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      // Redirect to Paystack payment page
+      window.location.href = result.data.authorization_url;
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast.error("Failed to initiate payment. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <>
@@ -111,30 +142,33 @@ export default function CartSummary() {
               <SummaryRow label="Shipping" value={shipping} />
               {shipping > 0 && (
                 <p className="text-xs text-pink-600">
-                  Add {formatCurrency(grandTotal - total)} more for free
-                  shipping!
+                  Add {formatCurrency(100 - total)} more for free shipping!
                 </p>
               )}
               <Divider />
-              <SummaryRow label="Total" value={total} isTotal />
+              <SummaryRow label="Total" value={grandTotal} isTotal />
             </div>
             <Button
               color="primary"
               size="lg"
               startContent={<CreditCard className="h-5 w-5" />}
               className="w-full"
-              onClick={() => !isLoading && !error && setIsOpen(true)}
-              isDisabled={isLoading || error}
+              onClick={() => !isLoadingProfile && !error && setIsOpen(true)}
+              isDisabled={
+                isLoadingProfile || error || !items || items.length === 0
+              }
             >
-              {isLoading ? (
+              {isLoadingProfile ? (
                 "Loading..."
               ) : error ? (
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5" />
                   <span>Login to Checkout</span>
                 </div>
+              ) : !items || items.length === 0 ? (
+                "Cart is Empty"
               ) : (
-                `Checkout (${formatCurrency(total)})`
+                `Checkout (${formatCurrency(grandTotal)})`
               )}
             </Button>
             <div className="flex items-center justify-center gap-2 text-xs text-default-400">
@@ -147,7 +181,7 @@ export default function CartSummary() {
 
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} size="lg">
         <ModalContent>
-          <form onSubmit={onSubmit}>
+          <form onSubmit={handleSubmit(onSubmit)}>
             <ModalHeader>Checkout Details</ModalHeader>
             <ModalBody className="gap-4">
               <Input
@@ -188,7 +222,7 @@ export default function CartSummary() {
               >
                 Cancel
               </Button>
-              <Button color="primary" type="submit">
+              <Button color="primary" type="submit" isLoading={isLoading}>
                 Continue to Payment
               </Button>
             </ModalFooter>

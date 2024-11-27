@@ -14,8 +14,8 @@ const env = {
     users: String(process.env.NEXT_PUBLIC_USER_AVATARS_BUCKET),
   },
   paystack: {
-    publicKey: String(process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY),
-    secretKey: String(process.env.NEXT_PUBLIC_PAYSTACK_SECRET_KEY),
+    publicKey: String(process.env.PAYSTACK_PUBLIC_KEY),
+    secretKey: String(process.env.PAYSTACK_SECRET_KEY),
   },
 } as const;
 
