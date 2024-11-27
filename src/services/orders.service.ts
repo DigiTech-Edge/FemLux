@@ -3,6 +3,7 @@ import { CartItem } from "@/store/cart";
 import env from "@/env";
 import { OrderStatus } from "@prisma/client";
 import { headers } from "next/headers";
+import { generateOrderNumber } from "@/helpers/orderNumber";
 
 interface CreatePaymentLinkParams {
   email: string;
@@ -75,8 +76,10 @@ const verifyPayment = async (reference: string) => {
     }
 
     // Create order in database
+    const orderNumber = await generateOrderNumber();
     const order = await prisma.order.create({
       data: {
+        orderNumber,
         userId: metadata.userId,
         totalAmount: amount / 100,
         shippingAddress: metadata.shippingAddress,
