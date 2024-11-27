@@ -87,7 +87,7 @@ export default function ShopClient({
         categories: { value: filters.categories, joinWith: ',' },
         minPrice: { value: filters.priceRange?.min },
         maxPrice: { value: filters.priceRange?.max },
-        isNew: { value: filters.isNew?.toString() },
+        isNew: { value: filters.isNew === undefined ? undefined : filters.isNew.toString() },
       },
       clearAll,
     });

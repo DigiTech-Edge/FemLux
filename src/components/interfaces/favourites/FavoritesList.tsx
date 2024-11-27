@@ -197,7 +197,7 @@ export default function FavoritesList({ favorites }: FavoritesListProps) {
                   </div>
 
                   {/* View Details Button */}
-                  <Link href={`/products/${favorite.productId}`}>
+                  <Link href={`/shop/${favorite.productId}`}>
                     <Button
                       size="sm"
                       color="danger"

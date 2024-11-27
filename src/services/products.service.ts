@@ -13,6 +13,19 @@ const defaultProductInclude = {
   _count: {
     select: { reviews: true },
   },
+  reviews: {
+    include: {
+      profile: {
+        select: {
+          fullName: true,
+          avatarUrl: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  },
 } as const;
 
 export const productsService = {
@@ -101,17 +114,7 @@ export const productsService = {
     try {
       const product = await prisma.product.findUnique({
         where: { id },
-        include: {
-          ...defaultProductInclude,
-          reviews: {
-            include: {
-              profile: true,
-            },
-            orderBy: {
-              createdAt: "desc",
-            },
-          },
-        },
+        include: defaultProductInclude,
       });
 
       if (!product) return null;
@@ -254,6 +257,45 @@ export const productsService = {
       }));
     } catch (error) {
       console.error("Error fetching new arrivals:", error);
+      throw error;
+    }
+  },
+
+  async addReview(data: {
+    productId: string;
+    rating: number;
+    comment: string;
+    userId: string;
+  }) {
+    try {
+      const profile = await prisma.profile.findUnique({
+        where: { userId: data.userId },
+      });
+
+      if (!profile) {
+        throw new Error("Profile not found");
+      }
+
+      const review = await prisma.review.create({
+        data: {
+          productId: data.productId,
+          userId: profile.id,
+          rating: data.rating,
+          comment: data.comment,
+        },
+        include: {
+          profile: {
+            select: {
+              fullName: true,
+              avatarUrl: true,
+            },
+          },
+        },
+      });
+
+      return review;
+    } catch (error) {
+      console.error("Error adding review:", error);
       throw error;
     }
   },

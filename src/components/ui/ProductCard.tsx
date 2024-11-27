@@ -4,7 +4,7 @@ import React, { useMemo, useTransition, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button, Skeleton } from "@nextui-org/react";
-import { Heart, ShoppingCart, StarIcon } from "lucide-react";
+import { Heart, ShoppingCart, Star, StarHalf } from "lucide-react";
 import type { ProductWithRelations } from "@/types/product";
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
@@ -13,6 +13,7 @@ import { formatCurrency } from "@/helpers";
 import toast from "react-hot-toast";
 import { cn } from "@/helpers/utils";
 import { useFavorite } from "@/hooks/useFavorite";
+import { calculateAverageRating, calculateStars } from "@/helpers/rating";
 
 interface ProductCardProps {
   product: ProductWithRelations;
@@ -45,6 +46,9 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
   const availableVariants = useMemo(() => {
     return product.variants.sort((a, b) => a.size.localeCompare(b.size));
   }, [product.variants]);
+
+  const rating = useMemo(() => calculateAverageRating(product.reviews), [product.reviews]);
+  const stars = useMemo(() => calculateStars(rating), [rating]);
 
   return (
     <motion.div
@@ -141,9 +145,25 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
 
           {/* Middle Section: Title and Variants */}
           <div className="flex items-start justify-between gap-4">
-            <h3 className="text-sm font-medium flex-grow line-clamp-2">
-              {product.name}
-            </h3>
+            <div className="space-y-2">
+              <h3 className="font-semibold text-foreground/90">
+                {product.name}
+              </h3>
+
+              {/* Rating */}
+              <div className="flex items-center gap-1">
+                {[...Array(5)].map((_, i) => {
+                  if (i < stars.full) {
+                    return <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />;
+                  } else if (i === stars.full && stars.half) {
+                    return <StarHalf key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />;
+                  }
+                  return <Star key={i} className="w-3 h-3 text-gray-300" />;
+                })}
+                <span className="text-sm font-medium ml-1">({rating || "N/A"})</span>
+              </div>
+            </div>
+
             <div className="flex flex-wrap gap-1 min-w-[80px] justify-end">
               {availableVariants.map((variant) => (
                 <button
@@ -174,20 +194,10 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
                   ? `${selectedVariant.stock} in stock`
                   : "Out of stock"}
               </span>
-
-              {/* Rating */}
-              {product._count.reviews > 0 && (
-                <div className="flex items-center gap-1">
-                  <StarIcon className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  <span className="text-xs text-gray-600">
-                    ({product._count.reviews})
-                  </span>
-                </div>
-              )}
             </div>
 
             {/* View Details Button */}
-            <Link href={`/products/${product.id}`}>
+            <Link href={`/shop/${product.id}`}>
               <Button
                 size="sm"
                 color="danger"

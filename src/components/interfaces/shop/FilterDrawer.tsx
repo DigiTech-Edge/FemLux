@@ -169,13 +169,16 @@ export default function FilterDrawer({
                   }}
                 >
                   <RadioGroup
-                    value={localFilters.isNew?.toString() || "false"}
+                    value={localFilters.isNew === undefined ? "all" : localFilters.isNew?.toString()}
                     onValueChange={(value) =>
-                      handleFilterChange("isNew", value === "true")
+                      handleFilterChange(
+                        "isNew",
+                        value === "all" ? undefined : value === "true"
+                      )
                     }
                   >
+                    <Radio value="all">All Products</Radio>
                     <Radio value="true">New Arrivals</Radio>
-                    <Radio value="false">Regular Products</Radio>
                   </RadioGroup>
                 </AccordionItem>
               </Accordion>
