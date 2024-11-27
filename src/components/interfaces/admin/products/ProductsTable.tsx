@@ -21,6 +21,7 @@ import { formatCurrency } from "@/helpers";
 import type { ProductWithRelations } from "@/types/product";
 import type { CategoryWithCount } from "@/types/category";
 import Image from "next/image";
+import { calculateAverageRating } from "@/helpers/rating";
 
 interface ProductsTableProps {
   products: ProductWithRelations[] | undefined;
@@ -187,10 +188,8 @@ export default function ProductsTable({
       label: "Ratings",
       render: (product: ProductWithRelations) => {
         const reviews = product.reviews || [];
-        const avgRating = reviews.length > 0
-          ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1)
-          : "N/A";
-        
+        const avgRating = calculateAverageRating(reviews);
+
         return (
           <div className="flex items-center gap-2">
             <span className="text-lg">⭐</span>

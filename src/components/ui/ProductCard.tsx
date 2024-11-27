@@ -14,6 +14,7 @@ import toast from "react-hot-toast";
 import { cn } from "@/helpers/utils";
 import { useFavorite } from "@/hooks/useFavorite";
 import { calculateAverageRating, calculateStars } from "@/helpers/rating";
+import { useCartStore } from "@/store/cart";
 
 interface ProductCardProps {
   product: ProductWithRelations;
@@ -32,13 +33,12 @@ export default function ProductCard({
 }: ProductCardProps) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const { isFavorite, toggleFavoriteStatus, isLoading } = useFavorite(
     product.id
   );
   const [selectedVariant, setSelectedVariant] = useState(product.variants[0]);
-
-  console.log(isPending);
+  const addItem = useCartStore((state) => state.addItem);
 
   const handleFavoriteClick = () => {
     startTransition(async () => {
@@ -48,6 +48,30 @@ export default function ProductCard({
         toast.error("Error favoriting product");
       }
     });
+  };
+
+  const handleAddToCart = () => {
+    if (!selectedVariant) {
+      toast.error("Please select a variant");
+      return;
+    }
+
+    addItem(
+      {
+        id: product.id,
+        name: product.name,
+        images: product.images,
+        variants: product.variants
+      },
+      {
+        id: selectedVariant.id,
+        size: selectedVariant.size,
+        price: selectedVariant.price,
+        stock: selectedVariant.stock,
+      },
+      1
+    );
+    toast.success("Added to cart");
   };
 
   const inStock = useMemo(() => {
@@ -130,8 +154,10 @@ export default function ProductCard({
           <div className="absolute top-12 right-2 z-10">
             <Button
               isIconOnly
-              size="sm"
               variant="flat"
+              size="sm"
+              onClick={handleAddToCart}
+              isDisabled={!selectedVariant}
               className="bg-white/80 backdrop-blur-sm hover:bg-white"
             >
               <ShoppingCart className="w-4 h-4 text-primary" />

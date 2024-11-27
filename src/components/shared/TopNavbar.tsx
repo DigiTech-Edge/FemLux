@@ -7,6 +7,7 @@ import {
   NavbarContent,
   NavbarItem,
   Button,
+  Badge,
 } from "@nextui-org/react";
 import { LogOut, ShoppingCart } from "lucide-react";
 import Image from "next/image";
@@ -16,6 +17,7 @@ import { motion } from "framer-motion";
 import { routes } from "@/lib/routes";
 import { logout } from "@/services/actions/auth.actions";
 import toast from "react-hot-toast";
+import { useCartStore } from "@/store/cart";
 
 interface TopNavbarProps {
   isAuthenticated: boolean;
@@ -25,6 +27,7 @@ const TopNavbar = ({ isAuthenticated }: TopNavbarProps) => {
   const pathname = usePathname();
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const items = useCartStore((state) => state.items);
 
   // Filter routes based on authentication status
   const visibleRoutes = routes.filter(
@@ -93,16 +96,18 @@ const TopNavbar = ({ isAuthenticated }: TopNavbarProps) => {
 
       <NavbarContent justify="end" className="gap-2">
         <NavbarItem>
-          <Button
-            as={Link}
-            href="/cart"
-            isIconOnly
-            variant="light"
-            aria-label="Cart"
-            className="text-foreground/70 hover:text-foreground"
-          >
-            <ShoppingCart className="w-5 h-5" />
-          </Button>
+          <Link href="/cart">
+            <Badge
+              content={items.length}
+              color="primary"
+              shape="circle"
+              size="sm"
+              showOutline={false}
+              isInvisible={items.length === 0}
+            >
+              <ShoppingCart className="h-6 w-6" />
+            </Badge>
+          </Link>
         </NavbarItem>
         <NavbarItem>
           {isAuthenticated ? (

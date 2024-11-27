@@ -1,27 +1,43 @@
-'use client'
+"use client";
 
-import React from 'react'
-import { motion } from 'framer-motion'
-import { Card, CardBody, Button, Divider } from '@nextui-org/react'
-import { ShoppingBag, CreditCard } from 'lucide-react'
-import { CartItem } from '@/lib/types/cart'
+import React from "react";
+import { motion } from "framer-motion";
+import { Card, CardBody, Button, Divider } from "@nextui-org/react";
+import { ShoppingBag, CreditCard } from "lucide-react";
+import { CartItem as CartItemType } from "@/store/cart";
+import { formatCurrency } from "../../../helpers/currency";
 
 interface CartSummaryProps {
-  items: CartItem[]
-  onCheckout: () => void
+  items: CartItemType[];
+  onCheckout: () => void;
 }
 
 export default function CartSummary({ items, onCheckout }: CartSummaryProps) {
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const shipping = subtotal > 100 ? 0 : 10
-  const total = subtotal + shipping
+  const subtotal = items.reduce(
+    (sum, item) => sum + item.variant.price * item.quantity,
+    0
+  );
+  const shipping = subtotal > 100 ? 0 : 10;
+  const total = subtotal + shipping;
 
-  const SummaryRow = ({ label, value, isTotal = false }: { label: string; value: number; isTotal?: boolean }) => (
-    <div className={`flex justify-between items-center ${isTotal ? 'font-semibold text-lg' : ''}`}>
+  const SummaryRow = ({
+    label,
+    value,
+    isTotal = false,
+  }: {
+    label: string;
+    value: number;
+    isTotal?: boolean;
+  }) => (
+    <div
+      className={`flex justify-between items-center ${
+        isTotal ? "font-semibold text-lg" : ""
+      }`}
+    >
       <span>{label}</span>
       <span>${value.toFixed(2)}</span>
     </div>
-  )
+  );
 
   return (
     <motion.div
@@ -43,7 +59,7 @@ export default function CartSummary({ items, onCheckout }: CartSummaryProps) {
             <SummaryRow label="Shipping" value={shipping} />
             {shipping > 0 && (
               <p className="text-xs text-pink-600">
-                Add ${(100 - subtotal).toFixed(2)} more for free shipping!
+                Add {formatCurrency(100 - subtotal)} more for free shipping!
               </p>
             )}
             <Divider className="my-3" />
@@ -56,7 +72,7 @@ export default function CartSummary({ items, onCheckout }: CartSummaryProps) {
             className="w-full bg-gradient-to-r from-pink-600 to-pink-400 text-white shadow-lg"
             startContent={<CreditCard className="w-4 h-4" />}
           >
-            Checkout (${total.toFixed(2)})
+            Checkout ({formatCurrency(total)})
           </Button>
 
           <div className="flex items-center justify-center gap-2 text-xs text-default-400">
@@ -66,5 +82,5 @@ export default function CartSummary({ items, onCheckout }: CartSummaryProps) {
         </CardBody>
       </Card>
     </motion.div>
-  )
+  );
 }

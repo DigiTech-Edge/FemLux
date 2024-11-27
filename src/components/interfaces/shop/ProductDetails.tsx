@@ -20,6 +20,7 @@ import { calculateAverageRating, calculateStars } from "@/helpers/rating";
 import ReviewsSection from "@/components/ui/ReviewsSection";
 import { useFavorite } from "@/hooks/useFavorite";
 import Carousel from "@/components/ui/Carousel";
+import { useCartStore } from "@/store/cart";
 
 interface ProductDetailsProps {
   product: ProductWithRelations;
@@ -28,10 +29,9 @@ interface ProductDetailsProps {
 export default function ProductDetails({ product }: ProductDetailsProps) {
   const [selectedSize, setSelectedSize] = useState(product.variants[0].size);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
-  const [isLoading, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const { isFavorite, toggleFavoriteStatus } = useFavorite(product.id);
-
-  console.log(isLoading);
+  const addItem = useCartStore((state) => state.addItem);
 
   const rating = useMemo(
     () => calculateAverageRating(product.reviews),
@@ -45,7 +45,26 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
   );
 
   const handleAddToCart = () => {
-    // TODO: Implement add to cart functionality
+    if (!selectedVariant) {
+      toast.error("Please select a size");
+      return;
+    }
+
+    addItem(
+      {
+        id: product.id,
+        name: product.name,
+        images: product.images,
+        variants: product.variants,
+      },
+      {
+        id: selectedVariant.id,
+        size: selectedVariant.size,
+        price: selectedVariant.price,
+        stock: selectedVariant.stock,
+      },
+      selectedQuantity
+    );
     toast.success("Added to cart");
   };
 
@@ -207,35 +226,42 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center border rounded-lg">
-                    <Button
-                      isIconOnly
-                      variant="light"
-                      onPress={() =>
-                        setSelectedQuantity((prev) => Math.max(1, prev - 1))
-                      }
-                      isDisabled={selectedQuantity <= 1}
-                    >
-                      <Minus className="w-4 h-4" />
-                    </Button>
-                    <span className="w-12 text-center">{selectedQuantity}</span>
-                    <Button
-                      isIconOnly
-                      variant="light"
-                      onPress={() =>
-                        setSelectedQuantity((prev) =>
-                          Math.min(prev + 1, selectedVariant.stock)
-                        )
-                      }
-                      isDisabled={selectedQuantity >= selectedVariant.stock}
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <p className="text-sm text-gray-600">
+                <div className="space-y-4">
+                  <label className="text-sm font-medium mb-2 block">
+                    Quantity
+                  </label>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center border rounded-lg">
+                      <Button
+                        isIconOnly
+                        variant="light"
+                        onPress={() =>
+                          setSelectedQuantity((prev) => Math.max(1, prev - 1))
+                        }
+                        isDisabled={selectedQuantity <= 1}
+                      >
+                        <Minus className="w-4 h-4" />
+                      </Button>
+                      <span className="w-12 text-center">
+                        {selectedQuantity}
+                      </span>
+                      <Button
+                        isIconOnly
+                        variant="light"
+                        onPress={() =>
+                          setSelectedQuantity((prev) =>
+                            Math.min(prev + 1, selectedVariant.stock)
+                          )
+                        }
+                        isDisabled={selectedQuantity >= selectedVariant.stock}
+                      >
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    {/* <p className="text-sm text-gray-600">
                     {selectedVariant.stock} items available
-                  </p>
+                  </p> */}
+                  </div>
                 </div>
 
                 <div className="flex gap-4">
@@ -254,12 +280,13 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
                     variant="bordered"
                     aria-label="Add to wishlist"
                     onPress={handleFavoriteClick}
+                    className="bg-white/80 backdrop-blur-sm hover:bg-white"
                   >
                     <Heart
-                      className={cn(
-                        "w-4 h-4",
-                        isFavorite ? "fill-red-500" : "text-gray-500"
-                      )}
+                      className={cn("w-6 h-6", {
+                        "fill-danger text-danger": isFavorite,
+                        "text-default-500": !isFavorite,
+                      })}
                     />
                   </Button>
                 </div>
