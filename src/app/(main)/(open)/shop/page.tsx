@@ -39,7 +39,7 @@ export default async function ProductsPage({
             max: Number(resolvedSearchParams.maxPrice),
           }
         : undefined,
-    isNew: resolvedSearchParams?.isNew === 'true',
+    isNew: resolvedSearchParams?.isNew === 'true' ? true : undefined,
   };
 
   return (

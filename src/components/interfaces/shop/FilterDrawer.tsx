@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import React, { useEffect } from 'react'
+import React, { useEffect } from "react";
 import {
   Accordion,
   AccordionItem,
@@ -9,19 +9,19 @@ import {
   Radio,
   RadioGroup,
   Slider,
-} from '@nextui-org/react'
-import { X } from 'lucide-react'
-import { ProductFilters } from '@/lib/types/products'
-import { motion, AnimatePresence } from 'framer-motion'
-import { CategoryWithCount } from '@/types/category'
+} from "@nextui-org/react";
+import { X } from "lucide-react";
+import { ProductFilters } from "@/lib/types/products";
+import { motion, AnimatePresence } from "framer-motion";
+import { CategoryWithCount } from "@/types/category";
 
 interface FilterDrawerProps {
-  isOpen: boolean
-  onClose: () => void
-  filters: Partial<ProductFilters>
-  onFilterChange: (filters: ProductFilters, clearAll?: boolean) => void
-  categories: CategoryWithCount[]
-  priceRange: { min: number; max: number }
+  isOpen: boolean;
+  onClose: () => void;
+  filters: Partial<ProductFilters>;
+  onFilterChange: (filters: ProductFilters, clearAll?: boolean) => void;
+  categories: CategoryWithCount[];
+  priceRange: { min: number; max: number };
 }
 
 export default function FilterDrawer({
@@ -32,30 +32,35 @@ export default function FilterDrawer({
   categories,
   priceRange,
 }: FilterDrawerProps) {
-  const [localFilters, setLocalFilters] = React.useState<ProductFilters>(filters as ProductFilters)
+  const [localFilters, setLocalFilters] = React.useState<ProductFilters>(
+    filters as ProductFilters
+  );
 
-  const handleFilterChange = (key: keyof ProductFilters, value: ProductFilters[keyof ProductFilters]) => {
-    setLocalFilters(prev => ({
+  const handleFilterChange = (
+    key: keyof ProductFilters,
+    value: ProductFilters[keyof ProductFilters]
+  ) => {
+    setLocalFilters((prev) => ({
       ...prev,
-      [key]: value
-    }))
-  }
+      [key]: value,
+    }));
+  };
 
   const handleApplyFilters = () => {
-    onFilterChange(localFilters)
-    onClose()
-  }
+    onFilterChange(localFilters);
+    onClose();
+  };
 
   const handleClearFilters = () => {
-    const emptyFilters: ProductFilters = {}
-    setLocalFilters(emptyFilters)
-    onFilterChange(emptyFilters, true)
-    onClose()
-  }
+    const emptyFilters: ProductFilters = {};
+    setLocalFilters(emptyFilters);
+    onFilterChange(emptyFilters, true);
+    onClose();
+  };
 
   useEffect(() => {
-    setLocalFilters(filters as ProductFilters)
-  }, [filters])
+    setLocalFilters(filters as ProductFilters);
+  }, [filters]);
 
   const header = (
     <div className="flex items-center justify-between p-4 border-b">
@@ -64,7 +69,7 @@ export default function FilterDrawer({
         <X className="w-4 h-4" />
       </Button>
     </div>
-  )
+  );
 
   const footer = (
     <div className="flex items-center justify-between p-4 border-t">
@@ -73,16 +78,13 @@ export default function FilterDrawer({
         onPress={handleClearFilters}
         startContent={<X className="w-4 h-4" />}
       >
-        Clear All
+        Clear Filters
       </Button>
-      <Button
-        color="primary"
-        onPress={handleApplyFilters}
-      >
+      <Button color="primary" onPress={handleApplyFilters}>
         Apply Filters
       </Button>
     </div>
-  )
+  );
 
   return (
     <AnimatePresence>
@@ -96,37 +98,42 @@ export default function FilterDrawer({
             onClick={onClose}
           />
           <motion.aside
-            initial={{ x: '-100%' }}
+            initial={{ x: "-100%" }}
             animate={{ x: 0 }}
-            exit={{ x: '-100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            exit={{ x: "-100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
             className="fixed left-0 top-0 h-[calc(100vh-4rem)] sm:h-screen w-full max-w-sm bg-background z-50 shadow-xl flex flex-col"
           >
             {header}
-            
+
             <div className="flex-1 overflow-y-auto p-4">
               <Accordion>
                 {/* Categories */}
                 <AccordionItem key="categories" title="Categories">
                   <div className="flex flex-wrap gap-4">
-                    {categories.map(category => (
+                    {categories.map((category) => (
                       <Checkbox
                         key={category.id}
                         value={category.name}
-                        isSelected={localFilters.categories?.includes(category.name)}
+                        isSelected={localFilters.categories?.includes(
+                          category.name
+                        )}
                         onValueChange={(isSelected) => {
-                          const currentCategories = localFilters.categories || []
+                          const currentCategories =
+                            localFilters.categories || [];
                           handleFilterChange(
-                            'categories',
+                            "categories",
                             isSelected
                               ? [...currentCategories, category.name]
-                              : currentCategories.filter(c => c !== category.name)
-                          )
+                              : currentCategories.filter(
+                                  (c) => c !== category.name
+                                )
+                          );
                         }}
                       >
                         {category.name}
                         <span className="text-sm text-gray-500 ml-1">
-                          ({category.count})
+                          ({category._count.products})
                         </span>
                       </Checkbox>
                     ))}
@@ -143,15 +150,15 @@ export default function FilterDrawer({
                       maxValue={priceRange.max}
                       value={[
                         localFilters.priceRange?.min || priceRange.min,
-                        localFilters.priceRange?.max || priceRange.max
+                        localFilters.priceRange?.max || priceRange.max,
                       ]}
-                      formatOptions={{ style: 'currency', currency: 'USD' }}
+                      formatOptions={{ style: "currency", currency: "USD" }}
                       onChange={(value) => {
                         if (Array.isArray(value)) {
-                          handleFilterChange('priceRange', {
+                          handleFilterChange("priceRange", {
                             min: value[0],
-                            max: value[1]
-                          })
+                            max: value[1],
+                          });
                         }
                       }}
                       className="max-w-md"
@@ -169,7 +176,11 @@ export default function FilterDrawer({
                   }}
                 >
                   <RadioGroup
-                    value={localFilters.isNew === undefined ? "all" : localFilters.isNew?.toString()}
+                    value={
+                      localFilters.isNew === undefined
+                        ? "all"
+                        : localFilters.isNew?.toString()
+                    }
                     onValueChange={(value) =>
                       handleFilterChange(
                         "isNew",
@@ -189,5 +200,5 @@ export default function FilterDrawer({
         </>
       )}
     </AnimatePresence>
-  )
+  );
 }

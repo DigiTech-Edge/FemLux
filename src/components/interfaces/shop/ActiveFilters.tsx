@@ -1,20 +1,17 @@
 "use client";
 
 import React from "react";
-import { Button, Chip } from "@nextui-org/react";
+import { Chip } from "@nextui-org/react";
 import { ProductFilters } from "@/lib/types/products";
-import { X } from "lucide-react";
 
 interface ActiveFiltersProps {
   filters: ProductFilters;
   onRemove: (key: keyof ProductFilters, value?: string) => void;
-  onClearAll: () => void;
 }
 
 export default function ActiveFilters({
   filters,
   onRemove,
-  onClearAll,
 }: ActiveFiltersProps) {
   if (!Object.keys(filters).length) return null;
 
@@ -66,7 +63,7 @@ export default function ActiveFilters({
           </Chip>
         )}
 
-        {filters.isNew !== undefined && (
+        {filters.isNew === true && (
           <Chip
             key="new"
             onClose={() => onRemove("isNew")}
@@ -77,18 +74,9 @@ export default function ActiveFilters({
               content: "px-2",
             }}
           >
-            {filters.isNew ? "New Arrivals" : "Regular Products"}
+            New Arrivals
           </Chip>
         )}
-
-        <Button
-          size="sm"
-          variant="light"
-          startContent={<X className="w-4 h-4" />}
-          onPress={onClearAll}
-        >
-          Clear All
-        </Button>
       </div>
     </div>
   );

@@ -84,10 +84,13 @@ export default function ShopClient({
       url: "/shop",
       params: {
         search: { value: filters.search },
-        categories: { value: filters.categories, joinWith: ',' },
+        categories: { value: filters.categories, joinWith: "," },
         minPrice: { value: filters.priceRange?.min },
         maxPrice: { value: filters.priceRange?.max },
-        isNew: { value: filters.isNew === undefined ? undefined : filters.isNew.toString() },
+        isNew: {
+          value:
+            filters.isNew === undefined ? undefined : filters.isNew.toString(),
+        },
       },
       clearAll,
     });
@@ -100,10 +103,12 @@ export default function ShopClient({
     updateURL(newFilters);
   };
 
-  const handleFilterChange = (newFilters: ProductFilters) => {
-    setCurrentFilters(newFilters);
-    setSearchTerm(newFilters.search || "");
-    updateURL(newFilters);
+  const handleFilterChange = (filters: ProductFilters, clearAll?: boolean) => {
+    setCurrentFilters(filters);
+    if (filters.search !== undefined) {
+      setSearchTerm(filters.search);
+    }
+    updateURL(filters, clearAll);
   };
 
   const handleRemoveFilter = (key: keyof ProductFilters, value?: string) => {
@@ -129,9 +134,9 @@ export default function ShopClient({
   };
 
   const handleClearAll = () => {
-    setCurrentFilters({} as ProductFilters);
+    setCurrentFilters({});
     setSearchTerm("");
-    updateURL({} as ProductFilters, true);
+    updateURL({}, true);
   };
 
   return (
@@ -166,11 +171,7 @@ export default function ShopClient({
       </div>
 
       {/* Active Filters */}
-      <ActiveFilters
-        filters={currentFilters}
-        onRemove={handleRemoveFilter}
-        onClearAll={handleClearAll}
-      />
+      <ActiveFilters filters={currentFilters} onRemove={handleRemoveFilter} />
 
       {/* Products Grid */}
       <div className="container mx-auto px-4 py-8">
