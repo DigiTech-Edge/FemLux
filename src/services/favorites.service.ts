@@ -2,73 +2,92 @@ import { prisma } from "@/utils/prisma";
 
 export const favoritesService = {
   async getFavoriteStatus(userId: string, productId: string) {
-    const favorite = await prisma.favorite.findUnique({
-      where: {
-        userId_productId: {
-          userId,
-          productId,
+    try {
+      const favorite = await prisma.favorite.findUnique({
+        where: {
+          userId_productId: {
+            userId,
+            productId,
+          },
         },
-      },
-    });
-    return !!favorite;
+      });
+      return !!favorite;
+    } catch (error) {
+      console.error("Error in getFavoriteStatus:", error);
+      throw error;
+    }
   },
 
   async toggleFavorite(userId: string, productId: string) {
-    const existingFavorite = await prisma.favorite.findUnique({
-      where: {
-        userId_productId: {
-          userId,
-          productId,
-        },
-      },
-    });
-
-    if (existingFavorite) {
-      // Remove favorite
-      await prisma.favorite.delete({
+    try {
+      const existingFavorite = await prisma.favorite.findUnique({
         where: {
-          id: existingFavorite.id,
+          userId_productId: {
+            userId,
+            productId,
+          },
         },
       });
-      return false;
-    } else {
-      // Add favorite
-      await prisma.favorite.create({
-        data: {
-          userId,
-          productId,
-        },
-      });
-      return true;
+
+      if (existingFavorite) {
+        await prisma.favorite.delete({
+          where: {
+            id: existingFavorite.id,
+          },
+        });
+        return false;
+      } else {
+        await prisma.favorite.create({
+          data: {
+            userId,
+            productId,
+          },
+        });
+        return true;
+      }
+    } catch (error) {
+      console.error("Error in toggleFavorite:", error);
+      throw error;
     }
   },
 
   async getUserFavorites(userId: string) {
-    return prisma.favorite.findMany({
-      where: {
-        userId,
-      },
-      include: {
-        product: {
-          include: {
-            category: true,
-            variants: true,
-            _count: {
-              select: {
-                reviews: true,
+    try {
+      return prisma.favorite.findMany({
+        where: {
+          userId,
+        },
+        include: {
+          product: {
+            include: {
+              category: true,
+              variants: true,
+              reviews: true,
+              _count: {
+                select: {
+                  reviews: true,
+                },
               },
             },
           },
         },
-      },
-    });
+      });
+    } catch (error) {
+      console.error("Error in getUserFavorites:", error);
+      throw error;
+    }
   },
 
   async clearAllFavorites(userId: string) {
-    await prisma.favorite.deleteMany({
-      where: {
-        userId,
-      },
-    });
+    try {
+      await prisma.favorite.deleteMany({
+        where: {
+          userId,
+        },
+      });
+    } catch (error) {
+      console.error("Error in clearAllFavorites:", error);
+      throw error;
+    }
   },
 };

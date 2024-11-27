@@ -40,7 +40,7 @@ export default function ProductsClient({
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-  const { data: products, mutate } = useSWR(
+  const { data: products, mutate } = useSWR<ProductWithRelations[]>(
     ["/api/products"],
     () => getAllProducts(),
     {
@@ -167,20 +167,27 @@ export default function ProductsClient({
   };
 
   const stats = {
-    total: products.length,
-    inStock: products.filter((p) => p.variants.some((v) => v.stock > 0)).length,
-    outOfStock: products.filter((p) => p.variants.every((v) => v.stock === 0))
-      .length,
-    lowStock: products.filter((p) =>
-      p.variants.some((v) => v.stock > 0 && v.stock <= 10)
-    ).length,
-    totalValue: products.reduce(
-      (sum, p) =>
-        sum +
-        p.variants.reduce((variantSum, v) => variantSum + v.price * v.stock, 0),
-      0
-    ),
-    newProducts: products.filter((p) => p.isNew).length,
+    total: products?.length || 0,
+    inStock:
+      products?.filter((p) => p.variants.some((v) => v.stock > 0)).length || 0,
+    outOfStock:
+      products?.filter((p) => p.variants.every((v) => v.stock === 0)).length ||
+      0,
+    lowStock:
+      products?.filter((p) =>
+        p.variants.some((v) => v.stock > 0 && v.stock <= 10)
+      ).length || 0,
+    totalValue:
+      products?.reduce(
+        (sum, p) =>
+          sum +
+          p.variants.reduce(
+            (variantSum, v) => variantSum + v.price * v.stock,
+            0
+          ),
+        0
+      ) || 0,
+    newProducts: products?.filter((p) => p.isNew).length || 0,
   };
 
   const handleFilterChange = (filters: string) => {

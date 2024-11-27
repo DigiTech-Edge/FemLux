@@ -3,7 +3,7 @@
 import React, { useMemo, useTransition, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Button, Skeleton } from "@nextui-org/react";
+import { Button } from "@nextui-org/react";
 import { Heart, ShoppingCart, Star, StarHalf } from "lucide-react";
 import type { ProductWithRelations } from "@/types/product";
 import { motion, useInView } from "framer-motion";
@@ -18,9 +18,18 @@ import { calculateAverageRating, calculateStars } from "@/helpers/rating";
 interface ProductCardProps {
   product: ProductWithRelations;
   index?: number;
+  isFavoriteView?: boolean;
+  additionalActions?: React.ReactNode;
+  addedDate?: string;
 }
 
-export default function ProductCard({ product, index = 0 }: ProductCardProps) {
+export default function ProductCard({
+  product,
+  index = 0,
+  isFavoriteView = false,
+  additionalActions,
+  addedDate,
+}: ProductCardProps) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
   const [isPending, startTransition] = useTransition();
@@ -28,6 +37,8 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
     product.id
   );
   const [selectedVariant, setSelectedVariant] = useState(product.variants[0]);
+
+  console.log(isPending);
 
   const handleFavoriteClick = () => {
     startTransition(async () => {
@@ -47,7 +58,10 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
     return product.variants.sort((a, b) => a.size.localeCompare(b.size));
   }, [product.variants]);
 
-  const rating = useMemo(() => calculateAverageRating(product.reviews), [product.reviews]);
+  const rating = useMemo(
+    () => calculateAverageRating(product.reviews),
+    [product.reviews]
+  );
   const stars = useMemo(() => calculateStars(rating), [rating]);
 
   return (
@@ -55,10 +69,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
       ref={ref}
       initial={{ opacity: 0, y: 50 }}
       animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-      transition={{
-        duration: 0.3,
-        delay: index * 0.1,
-      }}
+      transition={{ duration: 0.3, delay: index * 0.1 }}
       className="group"
     >
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
@@ -92,34 +103,30 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
             </div>
           )}
 
-          {/* Favorite Button */}
-          <div className="absolute right-2 top-2 z-10">
-            <Button
-              variant="flat"
-              size="sm"
-              isIconOnly
-              onClick={handleFavoriteClick}
-              disabled={isPending || isLoading}
-              className="bg-white/80 backdrop-blur-sm hover:bg-white"
-            >
-              {isLoading ? (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Skeleton className="h-4 w-4">
-                    <div className="h-full w-full" />
-                  </Skeleton>
-                </div>
-              ) : (
+          {/* Action Buttons */}
+          {isFavoriteView ? (
+            additionalActions
+          ) : (
+            <div className="absolute top-2 right-2 z-10 flex flex-col gap-2">
+              <Button
+                isIconOnly
+                size="sm"
+                variant="flat"
+                isLoading={isLoading}
+                onClick={handleFavoriteClick}
+                className="bg-white/80 backdrop-blur-sm hover:bg-white"
+              >
                 <Heart
-                  className={cn(
-                    "h-4 w-4 transition-colors",
-                    isFavorite ? "fill-red-500 text-red-500" : "text-red-500"
-                  )}
+                  className={cn("w-4 h-4", {
+                    "fill-danger text-danger": isFavorite,
+                    "text-default-500": !isFavorite,
+                  })}
                 />
-              )}
-            </Button>
-          </div>
+              </Button>
+            </div>
+          )}
 
-          {/* Quick Actions */}
+          {/* Cart Button - Show only in non-favorite view */}
           <div className="absolute top-12 right-2 z-10">
             <Button
               isIconOnly
@@ -146,21 +153,32 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
           {/* Middle Section: Title and Variants */}
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-2">
-              <h3 className="font-semibold text-foreground/90">
+              <h3 className="text-sm font-medium flex-grow line-clamp-2">
                 {product.name}
               </h3>
 
-              {/* Rating */}
               <div className="flex items-center gap-1">
                 {[...Array(5)].map((_, i) => {
                   if (i < stars.full) {
-                    return <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />;
+                    return (
+                      <Star
+                        key={i}
+                        className="w-3 h-3 fill-yellow-400 text-yellow-400"
+                      />
+                    );
                   } else if (i === stars.full && stars.half) {
-                    return <StarHalf key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />;
+                    return (
+                      <StarHalf
+                        key={i}
+                        className="w-3 h-3 fill-yellow-400 text-yellow-400"
+                      />
+                    );
                   }
                   return <Star key={i} className="w-3 h-3 text-gray-300" />;
                 })}
-                <span className="text-sm font-medium ml-1">({rating || "N/A"})</span>
+                <span className="text-sm font-medium ml-1">
+                  ({rating || "N/A"})
+                </span>
               </div>
             </div>
 
@@ -208,6 +226,13 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
               </Button>
             </Link>
           </div>
+
+          {/* Date Added (for favorites view) */}
+          {addedDate && (
+            <div className="mt-2 text-xs text-gray-500">
+              Added on {addedDate}
+            </div>
+          )}
         </div>
       </div>
     </motion.div>

@@ -23,7 +23,7 @@ import type { CategoryWithCount } from "@/types/category";
 import Image from "next/image";
 
 interface ProductsTableProps {
-  products: ProductWithRelations[];
+  products: ProductWithRelations[] | undefined;
   categories: CategoryWithCount[];
   onView: (product: ProductWithRelations) => void;
   onEdit: (product: ProductWithRelations) => void;
@@ -34,7 +34,7 @@ interface ProductsTableProps {
 const rowsPerPageOptions = [5, 10, 15, 20, 25, 30];
 
 export default function ProductsTable({
-  products,
+  products = [],
   categories,
   onView,
   onEdit,
@@ -178,6 +178,26 @@ export default function ProductsTable({
             <p className="text-bold text-tiny text-default-500">
               {product.variants.length} variants
             </p>
+          </div>
+        );
+      },
+    },
+    {
+      key: "ratings",
+      label: "Ratings",
+      render: (product: ProductWithRelations) => {
+        const reviews = product.reviews || [];
+        const avgRating = reviews.length > 0
+          ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1)
+          : "N/A";
+        
+        return (
+          <div className="flex items-center gap-2">
+            <span className="text-lg">⭐</span>
+            <span>{avgRating}</span>
+            <span className="text-small text-default-500">
+              ({reviews.length})
+            </span>
           </div>
         );
       },

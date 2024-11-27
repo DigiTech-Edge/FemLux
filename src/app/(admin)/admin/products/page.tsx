@@ -3,10 +3,8 @@ import { getAllProducts } from "@/services/actions/product.actions";
 import ProductManagementClient from "@/components/interfaces/admin/categories/ProductManagementClient";
 
 export default async function ProductsPage() {
-  const [initialProducts, initialCategories] = await Promise.all([
-    getAllProducts(),
-    getCategories(),
-  ]);
+  const initialProducts = await getAllProducts();
+  const initialCategories = await getCategories();
 
   return (
     <div className="mx-auto py-6">

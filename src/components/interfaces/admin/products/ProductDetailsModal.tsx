@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Modal,
   ModalContent,
@@ -18,6 +18,8 @@ import type { ProductWithRelations } from "@/types/product";
 import Carousel from "@/components/ui/Carousel";
 import Image from "next/image";
 import { cn } from "@/helpers/utils";
+import ReviewsSection from "@/components/ui/ReviewsSection";
+import { calculateAverageRating, calculateStars } from "@/helpers/rating";
 
 interface ProductDetailsModalProps {
   product: ProductWithRelations | null;
@@ -30,8 +32,8 @@ export default function ProductDetailsModal({
   isOpen,
   onClose,
 }: ProductDetailsModalProps) {
-  const [selectedImageIndex, setSelectedImageIndex] = React.useState(0);
-  const [selectedTab, setSelectedTab] = React.useState("details");
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [selectedTab, setSelectedTab] = useState("details");
   const mainCarouselRef = React.useRef<{
     scrollTo: (index: number) => void;
   } | null>(null);
@@ -44,6 +46,9 @@ export default function ProductDetailsModal({
     setSelectedImageIndex(index);
     mainCarouselRef.current?.scrollTo(index);
   };
+
+  const rating = calculateAverageRating(product.reviews);
+  const stars = () => calculateStars(rating);
 
   return (
     <Modal
@@ -225,61 +230,23 @@ export default function ProductDetailsModal({
                     </div>
                   </div>
                 </Tab>
-                <Tab
-                  key="reviews"
-                  title={`Reviews ${
-                    product._count.reviews
-                      ? `(${product._count.reviews.toLocaleString()})`
-                      : ""
-                  }`}
-                  className="px-6"
-                >
-                  <div className="space-y-6">
-                    {product._count.reviews === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-12 text-default-400">
-                        <Star className="w-12 h-12 mb-4 stroke-default-200" />
-                        <p className="text-xl font-semibold mb-2">
-                          No Reviews Yet
-                        </p>
-                        <p className="text-center text-small">
-                          This product hasn&apos;t received any reviews yet. Be
-                          the first to share your experience!
-                        </p>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex items-center gap-4">
-                          <div className="text-default-500">
-                            {product._count.reviews.toLocaleString()} reviews
-                          </div>
-                        </div>
-                        <div className="space-y-4">
-                          {product.reviews?.map((review) => (
-                            <div
-                              key={review.id}
-                              className="p-4 rounded-lg border border-default-200"
-                            >
-                              <div className="flex justify-between items-start mb-2">
-                                <div>
-                                  <h4 className="font-semibold">
-                                    {review.profile.fullName || "Anonymous"}
-                                  </h4>
-                                  <span className="text-small text-default-500">
-                                    {new Date(
-                                      review.createdAt
-                                    ).toLocaleDateString()}
-                                  </span>
-                                </div>
-                              </div>
-                              <p className="text-default-500">
-                                {review.comment}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
+                <Tab key="reviews" title="Reviews" className="px-6">
+                  <ReviewsSection
+                    productId={product.id}
+                    reviews={product.reviews?.map((review) => ({
+                      ...review,
+                      profile: review.profile
+                        ? {
+                            fullName: review.profile.fullName,
+                            avatarUrl: review.profile.avatarUrl,
+                          }
+                        : null,
+                    }))}
+                    rating={rating}
+                    reviewCount={product._count.reviews}
+                    stars={stars()}
+                    hideReviewButton
+                  />
                 </Tab>
               </Tabs>
             </ModalBody>
