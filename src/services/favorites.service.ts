@@ -63,4 +63,12 @@ export const favoritesService = {
       },
     });
   },
+
+  async clearAllFavorites(userId: string) {
+    await prisma.favorite.deleteMany({
+      where: {
+        userId,
+      },
+    });
+  },
 };

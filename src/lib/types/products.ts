@@ -40,4 +40,5 @@ export interface ProductFilters {
   sort?: "price_asc" | "price_desc" | "rating" | "newest";
   inStock?: boolean;
   search?: string;
+  isNew?: boolean;
 }

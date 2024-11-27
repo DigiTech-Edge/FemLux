@@ -6,6 +6,8 @@ import {
   AccordionItem,
   Button,
   Checkbox,
+  Radio,
+  RadioGroup,
   Slider,
 } from '@nextui-org/react'
 import { X } from 'lucide-react'
@@ -17,7 +19,7 @@ interface FilterDrawerProps {
   isOpen: boolean
   onClose: () => void
   filters: Partial<ProductFilters>
-  onFilterChange: (filters: ProductFilters) => void
+  onFilterChange: (filters: ProductFilters, clearAll?: boolean) => void
   categories: CategoryWithCount[]
   priceRange: { min: number; max: number }
 }
@@ -47,7 +49,8 @@ export default function FilterDrawer({
   const handleClearFilters = () => {
     const emptyFilters: ProductFilters = {}
     setLocalFilters(emptyFilters)
-    onFilterChange(emptyFilters)
+    onFilterChange(emptyFilters, true)
+    onClose()
   }
 
   useEffect(() => {
@@ -68,6 +71,7 @@ export default function FilterDrawer({
       <Button
         variant="light"
         onPress={handleClearFilters}
+        startContent={<X className="w-4 h-4" />}
       >
         Clear All
       </Button>
@@ -153,6 +157,26 @@ export default function FilterDrawer({
                       className="max-w-md"
                     />
                   </div>
+                </AccordionItem>
+
+                {/* Status */}
+                <AccordionItem
+                  key="status"
+                  aria-label="Status"
+                  title="Status"
+                  classNames={{
+                    content: "px-2",
+                  }}
+                >
+                  <RadioGroup
+                    value={localFilters.isNew?.toString() || "false"}
+                    onValueChange={(value) =>
+                      handleFilterChange("isNew", value === "true")
+                    }
+                  >
+                    <Radio value="true">New Arrivals</Radio>
+                    <Radio value="false">Regular Products</Radio>
+                  </RadioGroup>
                 </AccordionItem>
               </Accordion>
             </div>

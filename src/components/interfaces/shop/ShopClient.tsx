@@ -1,16 +1,15 @@
 "use client";
 
-import React, { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useTransition } from "react";
 import { Button, Input } from "@nextui-org/react";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { ProductFilters } from "@/lib/types/products";
 import ActiveFilters from "@/components/interfaces/shop/ActiveFilters";
 import FilterDrawer from "@/components/interfaces/shop/FilterDrawer";
 import ProductCard from "@/components/ui/ProductCard";
-import { useDebounce } from "@/hooks/useDebounce";
 import { ProductWithRelations } from "@/types/product";
 import { CategoryWithCount } from "@/types/category";
+import { updateSearchParams } from "@/helpers/searchParams";
 
 interface ShopClientProps {
   products: ProductWithRelations[];
@@ -23,7 +22,7 @@ export default function ShopClient({
   categories,
   initialFilters,
 }: ShopClientProps) {
-  const router = useRouter();
+  const [isPending] = useTransition();
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState(
     initialFilters.search || ""
@@ -31,7 +30,6 @@ export default function ShopClient({
   const [currentFilters, setCurrentFilters] = React.useState<ProductFilters>(
     initialFilters as ProductFilters
   );
-  const debouncedSearch = useDebounce(searchTerm, 500);
 
   // Calculate filtered products
   const filteredProducts = React.useMemo(() => {
@@ -61,6 +59,13 @@ export default function ShopClient({
         }
       }
 
+      // New products filter
+      if (currentFilters.isNew !== undefined) {
+        if (product.isNew !== currentFilters.isNew) {
+          return false;
+        }
+      }
+
       return true;
     });
   }, [products, currentFilters]);
@@ -74,33 +79,30 @@ export default function ShopClient({
     };
   }, [products]);
 
-  useEffect(() => {
-    const newFilters = { ...currentFilters, search: debouncedSearch };
+  const updateURL = (filters: ProductFilters, clearAll?: boolean) => {
+    updateSearchParams({
+      url: "/shop",
+      params: {
+        search: { value: filters.search },
+        categories: { value: filters.categories, joinWith: ',' },
+        minPrice: { value: filters.priceRange?.min },
+        maxPrice: { value: filters.priceRange?.max },
+        isNew: { value: filters.isNew?.toString() },
+      },
+      clearAll,
+    });
+  };
+
+  const handleSearch = (value: string) => {
+    const newFilters = { ...currentFilters, search: value };
+    setSearchTerm(value);
     setCurrentFilters(newFilters);
     updateURL(newFilters);
-  }, [debouncedSearch]);
-
-  const updateURL = (filters: ProductFilters) => {
-    const params = new URLSearchParams();
-
-    if (filters.search) {
-      params.set("search", filters.search);
-    }
-
-    if (filters.categories?.length) {
-      filters.categories.forEach((cat) => params.append("categories", cat));
-    }
-
-    if (filters.priceRange) {
-      params.set("minPrice", filters.priceRange.min.toString());
-      params.set("maxPrice", filters.priceRange.max.toString());
-    }
-
-    router.push(`/shop?${params.toString()}`);
   };
 
   const handleFilterChange = (newFilters: ProductFilters) => {
     setCurrentFilters(newFilters);
+    setSearchTerm(newFilters.search || "");
     updateURL(newFilters);
   };
 
@@ -117,10 +119,19 @@ export default function ShopClient({
       }
     } else {
       delete newFilters[key];
+      if (key === "search") {
+        setSearchTerm("");
+      }
     }
 
     setCurrentFilters(newFilters);
     updateURL(newFilters);
+  };
+
+  const handleClearAll = () => {
+    setCurrentFilters({} as ProductFilters);
+    setSearchTerm("");
+    updateURL({} as ProductFilters, true);
   };
 
   return (
@@ -132,12 +143,12 @@ export default function ShopClient({
             <div className="flex-1">
               <Input
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => handleSearch(e.target.value)}
                 placeholder="Search products..."
                 startContent={<Search className="w-4 h-4 text-gray-400" />}
                 className="max-w-sm"
                 isClearable
-                onClear={() => setSearchTerm("")}
+                onClear={() => handleSearch("")}
               />
             </div>
             <div className="flex items-center gap-2">
@@ -145,6 +156,7 @@ export default function ShopClient({
                 variant="bordered"
                 startContent={<SlidersHorizontal className="w-4 h-4" />}
                 onPress={() => setIsFilterDrawerOpen(true)}
+                isDisabled={isPending}
               >
                 <p className="max-sm:hidden">Filters</p>
               </Button>
@@ -154,7 +166,11 @@ export default function ShopClient({
       </div>
 
       {/* Active Filters */}
-      <ActiveFilters filters={currentFilters} onRemove={handleRemoveFilter} />
+      <ActiveFilters
+        filters={currentFilters}
+        onRemove={handleRemoveFilter}
+        onClearAll={handleClearAll}
+      />
 
       {/* Products Grid */}
       <div className="container mx-auto px-4 py-8">
@@ -176,10 +192,8 @@ export default function ShopClient({
           <Button
             color="primary"
             variant="flat"
-            onPress={() => {
-              setSearchTerm("");
-              handleFilterChange({} as ProductFilters);
-            }}
+            onPress={handleClearAll}
+            isDisabled={isPending}
           >
             Clear All Filters
           </Button>

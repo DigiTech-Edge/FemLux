@@ -1,15 +1,34 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useTransition } from 'react'
 import { Button } from '@nextui-org/react'
 import { Heart, Trash2 } from 'lucide-react'
 import { motion } from 'framer-motion'
+import DeleteConfirmationModal from '@/components/ui/DeleteConfirmationModal'
+import { clearAllFavorites } from '@/services/actions/favorite.actions'
+import toast from 'react-hot-toast'
 
 interface FavoritesHeaderProps {
   totalItems: number
 }
 
 export default function FavoritesHeader({ totalItems }: FavoritesHeaderProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [isPending, startTransition] = useTransition()
+
+  const handleClearAll = () => {
+    startTransition(async () => {
+      try {
+        await clearAllFavorites()
+        setIsOpen(false)
+        toast.success('All favorites cleared successfully')
+      } catch (error) {
+        toast.error('Failed to clear favorites')
+        console.error('Clear favorites error:', error)
+      }
+    })
+  }
+
   return (
     <div className="space-y-4">
       <motion.div
@@ -32,11 +51,22 @@ export default function FavoritesHeader({ totalItems }: FavoritesHeaderProps) {
             color="danger"
             variant="flat"
             startContent={<Trash2 className="w-4 h-4" />}
+            onClick={() => setIsOpen(true)}
+            isDisabled={totalItems === 0}
           >
             Clear All
           </Button>
         </div>
       </motion.div>
+
+      <DeleteConfirmationModal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        onConfirm={handleClearAll}
+        title="Clear All Favorites"
+        description="Are you sure you want to clear all your favorites? This action cannot be undone."
+        loading={isPending}
+      />
     </div>
   )
 }
