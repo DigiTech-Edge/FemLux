@@ -2,31 +2,26 @@ import { prisma } from "@/utils/prisma";
 import { User } from "@supabase/supabase-js";
 
 export const userService = {
-  /**
-   * Create or update a user profile
-   */
   upsertProfile: async (user: User) => {
     try {
       const profile = await prisma.profile.upsert({
-        where: { id: user.id },
+        where: { userId: user.id },
         create: {
-          id: user.id,
+          userId: user.id,
           email: user.email!,
           fullName: user.user_metadata.name || "",
           avatarUrl: user.user_metadata.avatar_url || "",
-          emailVerified: user.email_confirmed_at ? true : false,
         },
         update: {
           email: user.email,
           fullName: user.user_metadata.name,
           avatarUrl: user.user_metadata.avatar_url,
-          emailVerified: user.email_confirmed_at ? true : false,
         },
       });
       return { profile };
     } catch (error) {
       console.error("Error upserting profile:", error);
-      return { error: "Failed to create/update profile" };
+      throw error;
     }
   },
 
@@ -36,12 +31,12 @@ export const userService = {
   getProfile: async (userId: string) => {
     try {
       const profile = await prisma.profile.findUnique({
-        where: { id: userId },
+        where: { userId },
       });
       return { profile };
     } catch (error) {
       console.error("Error getting profile:", error);
-      return { error: "Failed to get profile" };
+      throw error;
     }
   },
 
@@ -59,13 +54,13 @@ export const userService = {
   ) => {
     try {
       const profile = await prisma.profile.update({
-        where: { id: userId },
+        where: { userId },
         data,
       });
       return { profile };
     } catch (error) {
       console.error("Error updating profile:", error);
-      return { error: "Failed to update profile" };
+      throw error;
     }
   },
 };

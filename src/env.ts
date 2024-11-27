@@ -13,6 +13,10 @@ const env = {
     categories: String(process.env.NEXT_PUBLIC_CATEGORIES_IMAGES_BUCKET),
     users: String(process.env.NEXT_PUBLIC_USER_AVATARS_BUCKET),
   },
+  paystack: {
+    publicKey: String(process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY),
+    secretKey: String(process.env.NEXT_PUBLIC_PAYSTACK_SECRET_KEY),
+  },
 } as const;
 
 // Type assertions to ensure all environment variables are defined
@@ -30,6 +34,8 @@ const assertEnvVar = (value: string | undefined, name: string): string => {
   assertEnvVar(env.buckets.products, "PRODUCTS_BUCKET");
   assertEnvVar(env.buckets.categories, "CATEGORIES_IMAGES_BUCKET");
   assertEnvVar(env.buckets.users, "USERS_AVATARS_BUCKET");
+  assertEnvVar(env.paystack.publicKey, "PAYSTACK_PUBLIC_KEY");
+  assertEnvVar(env.paystack.secretKey, "PAYSTACK_SECRET_KEY");
 })();
 
 export default env;
