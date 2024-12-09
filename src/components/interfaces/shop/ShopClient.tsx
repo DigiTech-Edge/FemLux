@@ -96,6 +96,8 @@ export default function ShopClient({
     });
   };
 
+  console.log(isFilterDrawerOpen);
+
   const handleSearch = (value: string) => {
     const newFilters = { ...currentFilters, search: value };
     setSearchTerm(value);

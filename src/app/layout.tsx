@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { Providers } from "./providers";
 import { Toaster } from "react-hot-toast";
+import { Check, XCircle } from "lucide-react";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -32,7 +33,43 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
-          <Toaster position="top-center" />
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                color: "#000",
+                padding: "16px",
+                borderRadius: "12px",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+                fontSize: "14px",
+                maxWidth: "400px",
+                border: "1px solid #eaeaea",
+              },
+              success: {
+                style: {
+                  background: "#d4edda", // light green color
+                  color: "#000",
+                },
+                icon: (
+                  <span style={{ color: "green" }}>
+                    <Check size={16} />
+                  </span>
+                ),
+              },
+              error: {
+                style: {
+                  background: "#f8d7da", // light red color
+                  color: "#000",
+                },
+                icon: (
+                  <span style={{ color: "red" }}>
+                    <XCircle size={16} />
+                  </span>
+                ),
+              },
+            }}
+          />
           {children}
         </Providers>
       </body>

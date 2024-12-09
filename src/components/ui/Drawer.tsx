@@ -1,9 +1,14 @@
 "use client";
 
-import React, { useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React from "react";
+import {
+  DrawerBody,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  Drawer as NextUIDrawer,
+} from "@nextui-org/react";
 import { cn } from "@/helpers/utils";
-import { X } from "lucide-react";
 
 interface DrawerProps {
   isOpen: boolean;
@@ -18,9 +23,9 @@ interface DrawerProps {
 }
 
 const drawerSizes = {
-  sm: "w-full xs:w-[80vw] sm:w-[280px]",
-  md: "w-full xs:w-[80vw] sm:w-[380px]",
-  lg: "w-full xs:w-[80vw] sm:w-[440px]",
+  sm: "xs",
+  md: "sm",
+  lg: "md",
 } as const;
 
 export default function Drawer({
@@ -34,77 +39,33 @@ export default function Drawer({
   className,
   title,
 }: DrawerProps) {
-  // Handle escape key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener("keydown", handleEscape);
-      document.body.style.overflow = "hidden";
-    }
-
-    return () => {
-      document.removeEventListener("keydown", handleEscape);
-      document.body.style.overflow = "unset";
-    };
-  }, [isOpen, onClose]);
-
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 bg-black/50 z-[60]"
-            onClick={onClose}
-          />
+    <NextUIDrawer
+      isOpen={isOpen}
+      onClose={onClose}
+      placement={placement}
+      size={drawerSizes[size]}
+      radius="none"
+      classNames={{
+        base: cn("bg-background", className),
+        header: "border-b",
+        footer: "border-t",
+      }}
+      hideCloseButton={!!header}
+    >
+      <DrawerContent>
+        {header ? (
+          <div className="p-4 border-b">{header}</div>
+        ) : (
+          <DrawerHeader className="flex justify-between items-center">
+            <span className="font-medium">{title}</span>
+          </DrawerHeader>
+        )}
 
-          {/* Drawer */}
-          <motion.div
-            initial={{ x: placement === "left" ? "-100%" : "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: placement === "left" ? "-100%" : "100%" }}
-            transition={{ type: "spring", damping: 20 }}
-            className={cn(
-              "fixed inset-y-0 bg-background flex flex-col z-[61]",
-              drawerSizes[size],
-              placement === "left" ? "left-0" : "right-0",
-              className
-            )}
-          >
-            {/* Header */}
-            {header ? (
-              <div className="p-4 border-b">{header}</div>
-            ) : (
-              <div className="flex items-center justify-between p-4 border-b">
-                <div className="font-medium">{title}</div>
-                <button
-                  onClick={onClose}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            )}
+        <DrawerBody className="p-4">{children}</DrawerBody>
 
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-4">{children}</div>
-
-            {/* Footer */}
-            {footer && (
-              <div className="p-4 border-t bg-background">{footer}</div>
-            )}
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+        {footer && <DrawerFooter className="w-full justify-between">{footer}</DrawerFooter>}
+      </DrawerContent>
+    </NextUIDrawer>
   );
 }

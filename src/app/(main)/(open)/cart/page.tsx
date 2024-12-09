@@ -25,8 +25,8 @@ export default function CartPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-center mb-8 space-x-3">
+    <div className="md:container mx-auto py-8">
+      <div className="flex items-center justify-center mb-8 gap-3">
         <div className="p-3 rounded-full bg-pink-100">
           <ShoppingBag className="w-6 h-6 text-pink-600" />
         </div>

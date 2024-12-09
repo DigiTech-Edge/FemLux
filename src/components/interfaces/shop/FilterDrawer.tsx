@@ -11,9 +11,9 @@ import {
   Slider,
 } from "@nextui-org/react";
 import { X } from "lucide-react";
-import { ProductFilters } from "@/lib/types/products";
-import { motion, AnimatePresence } from "framer-motion";
+import { ProductFilters } from "@/types/product";
 import { CategoryWithCount } from "@/types/category";
+import Drawer from "@/components/ui/Drawer";
 
 interface FilterDrawerProps {
   isOpen: boolean;
@@ -63,7 +63,7 @@ export default function FilterDrawer({
   }, [filters]);
 
   const header = (
-    <div className="flex items-center justify-between p-4 border-b">
+    <div className="flex items-center justify-between p-4">
       <h2 className="text-lg font-semibold">Filters</h2>
       <Button isIconOnly variant="light" onPress={onClose}>
         <X className="w-4 h-4" />
@@ -72,9 +72,10 @@ export default function FilterDrawer({
   );
 
   const footer = (
-    <div className="flex items-center justify-between p-4 border-t">
+    <div className="flex items-center justify-between">
       <Button
         variant="light"
+        color="danger"
         onPress={handleClearFilters}
         startContent={<X className="w-4 h-4" />}
       >
@@ -87,118 +88,97 @@ export default function FilterDrawer({
   );
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.5 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50"
-            onClick={onClose}
-          />
-          <motion.aside
-            initial={{ x: "-100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed left-0 top-0 h-[calc(100vh-4rem)] sm:h-screen w-full max-w-sm bg-background z-50 shadow-xl flex flex-col"
-          >
-            {header}
-
-            <div className="flex-1 overflow-y-auto p-4">
-              <Accordion>
-                {/* Categories */}
-                <AccordionItem key="categories" title="Categories">
-                  <div className="flex flex-wrap gap-4">
-                    {categories.map((category) => (
-                      <Checkbox
-                        key={category.id}
-                        value={category.name}
-                        isSelected={localFilters.categories?.includes(
-                          category.name
-                        )}
-                        onValueChange={(isSelected) => {
-                          const currentCategories =
-                            localFilters.categories || [];
-                          handleFilterChange(
-                            "categories",
-                            isSelected
-                              ? [...currentCategories, category.name]
-                              : currentCategories.filter(
-                                  (c) => c !== category.name
-                                )
-                          );
-                        }}
-                      >
-                        {category.name}
-                        <span className="text-sm text-gray-500 ml-1">
-                          ({category._count.products})
-                        </span>
-                      </Checkbox>
-                    ))}
-                  </div>
-                </AccordionItem>
-
-                {/* Price Range */}
-                <AccordionItem key="price" title="Price Range">
-                  <div className="px-2">
-                    <Slider
-                      label="Price Range"
-                      step={10}
-                      minValue={priceRange.min}
-                      maxValue={priceRange.max}
-                      value={[
-                        localFilters.priceRange?.min || priceRange.min,
-                        localFilters.priceRange?.max || priceRange.max,
-                      ]}
-                      formatOptions={{ style: "currency", currency: "USD" }}
-                      onChange={(value) => {
-                        if (Array.isArray(value)) {
-                          handleFilterChange("priceRange", {
-                            min: value[0],
-                            max: value[1],
-                          });
-                        }
-                      }}
-                      className="max-w-md"
-                    />
-                  </div>
-                </AccordionItem>
-
-                {/* Status */}
-                <AccordionItem
-                  key="status"
-                  aria-label="Status"
-                  title="Status"
-                  classNames={{
-                    content: "px-2",
+    <Drawer
+      isOpen={isOpen}
+      onClose={onClose}
+      placement="left"
+      size="sm"
+      header={header}
+      footer={footer}
+    >
+      <div className="flex-1 overflow-y-auto">
+        <Accordion>
+          {/* Categories */}
+          <AccordionItem key="categories" title="Categories">
+            <div className="flex flex-wrap gap-4">
+              {categories.map((category) => (
+                <Checkbox
+                  key={category.id}
+                  value={category.name}
+                  isSelected={localFilters.categories?.includes(category.name)}
+                  onValueChange={(isSelected) => {
+                    const currentCategories = localFilters.categories || [];
+                    handleFilterChange(
+                      "categories",
+                      isSelected
+                        ? [...currentCategories, category.name]
+                        : currentCategories.filter((c) => c !== category.name)
+                    );
                   }}
                 >
-                  <RadioGroup
-                    value={
-                      localFilters.isNew === undefined
-                        ? "all"
-                        : localFilters.isNew?.toString()
-                    }
-                    onValueChange={(value) =>
-                      handleFilterChange(
-                        "isNew",
-                        value === "all" ? undefined : value === "true"
-                      )
-                    }
-                  >
-                    <Radio value="all">All Products</Radio>
-                    <Radio value="true">New Arrivals</Radio>
-                  </RadioGroup>
-                </AccordionItem>
-              </Accordion>
+                  {category.name}
+                  <span className="text-sm text-gray-500 ml-1">
+                    ({category._count.products})
+                  </span>
+                </Checkbox>
+              ))}
             </div>
+          </AccordionItem>
 
-            {footer}
-          </motion.aside>
-        </>
-      )}
-    </AnimatePresence>
+          {/* Price Range */}
+          <AccordionItem key="price" title="Price Range">
+            <div className="px-2">
+              <Slider
+                label="Price Range"
+                step={10}
+                minValue={priceRange.min}
+                maxValue={priceRange.max}
+                value={[
+                  localFilters.priceRange?.min || priceRange.min,
+                  localFilters.priceRange?.max || priceRange.max,
+                ]}
+                formatOptions={{ style: "currency", currency: "GHS" }}
+                onChange={(value) => {
+                  if (Array.isArray(value)) {
+                    handleFilterChange("priceRange", {
+                      min: value[0],
+                      max: value[1],
+                    });
+                  }
+                }}
+                className="max-w-md"
+              />
+            </div>
+          </AccordionItem>
+
+          {/* Status */}
+          <AccordionItem
+            key="status"
+            aria-label="Status"
+            title="Status"
+            classNames={{
+              content: "px-2",
+            }}
+          >
+            <RadioGroup
+              value={
+                localFilters.isNew === undefined
+                  ? "all"
+                  : localFilters.isNew?.toString()
+              }
+              onValueChange={(value) =>
+                handleFilterChange(
+                  "isNew",
+                  value === "all" ? undefined : value === "true"
+                )
+              }
+            >
+              <Radio value="all">All Products</Radio>
+              <Radio value="true">New Arrivals</Radio>
+            </RadioGroup>
+          </AccordionItem>
+        </Accordion>
+      </div>
+    </Drawer>
   );
 }
