@@ -16,16 +16,9 @@ import {
   Tabs,
   Tab,
 } from "@nextui-org/react";
-import {
-  Mail,
-  Phone,
-  MapPin,
-  ShoppingBag,
-  Calendar,
-  CreditCard,
-} from "lucide-react";
+import { Mail, Phone, MapPin, ShoppingBag } from "lucide-react";
 import { formatCurrency } from "@/helpers";
-import type { Customer } from "@/lib/types/customers";
+import { Customer } from "@/types/customer";
 
 interface CustomerDetailsModalProps {
   customer: Customer | null;
@@ -130,7 +123,9 @@ export default function CustomerDetailsModal({
                             Last Order
                           </p>
                           <p className="text-large font-semibold">
-                            {new Date(customer.lastOrderDate).toLocaleDateString()}
+                            {new Date(
+                              customer.lastOrderDate
+                            ).toLocaleDateString()}
                           </p>
                         </div>
                         <div>
@@ -157,33 +152,15 @@ export default function CustomerDetailsModal({
                   <Card className="mt-4">
                     <CardBody>
                       <div className="space-y-4">
-                        <div>
-                          <p className="text-small text-default-500">Street</p>
-                          <p className="text-large">{customer.address.street}</p>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-default-400" />
+                          <span className="font-medium">Address</span>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-small text-default-500">City</p>
-                            <p className="text-large">{customer.address.city}</p>
-                          </div>
-                          <div>
-                            <p className="text-small text-default-500">State</p>
-                            <p className="text-large">{customer.address.state}</p>
-                          </div>
-                          <div>
-                            <p className="text-small text-default-500">
-                              ZIP Code
-                            </p>
-                            <p className="text-large">
-                              {customer.address.zipCode}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-small text-default-500">Country</p>
-                            <p className="text-large">
-                              {customer.address.country}
-                            </p>
-                          </div>
+                        <div>
+                          <p className="text-small text-default-500">
+                            Full Address
+                          </p>
+                          <p className="text-large">{customer.address}</p>
                         </div>
                       </div>
                     </CardBody>

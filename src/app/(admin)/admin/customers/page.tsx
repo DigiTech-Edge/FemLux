@@ -1,13 +1,21 @@
 import CustomersTable from "@/components/interfaces/admin/customers/CustomersTable";
 import CustomerStats from "@/components/interfaces/admin/customers/CustomerStats";
-import { mockCustomers, customerStats } from "@/lib/data/admin/customers";
+import {
+  fetchCustomers,
+  fetchCustomerStats,
+} from "@/services/actions/customers.actions";
 
-export default function CustomersPage() {
+export default async function CustomersPage() {
+  const [customers, stats] = await Promise.all([
+    fetchCustomers(),
+    fetchCustomerStats(),
+  ]);
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Customers</h1>
-      <CustomerStats {...customerStats} />
-      <CustomersTable customers={mockCustomers} />
+      <CustomerStats {...stats} />
+      <CustomersTable customers={customers} />
     </div>
   );
 }

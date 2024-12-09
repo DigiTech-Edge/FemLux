@@ -36,8 +36,8 @@ export default function CustomerStats({
       title: "Total Revenue",
       value: formatCurrency(totalRevenue),
       icon: CreditCard,
-      color: "text-secondary",
-      bgColor: "bg-secondary/10",
+      color: "text-success",
+      bgColor: "bg-success/10",
     },
     {
       title: "Average Order Value",

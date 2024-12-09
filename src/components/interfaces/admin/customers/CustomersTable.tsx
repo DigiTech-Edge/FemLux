@@ -17,17 +17,9 @@ import {
   SelectItem,
   Input,
 } from "@nextui-org/react";
-import {
-  Eye,
-  Search,
-  SlidersHorizontal,
-  Mail,
-  ShoppingBag,
-  Lock,
-  LockOpen,
-} from "lucide-react";
+import { Eye, Search, Mail, ShoppingBag } from "lucide-react";
 import { formatCurrency } from "@/helpers";
-import type { Customer } from "@/lib/types/customers";
+import type { Customer } from "@/types/customer";
 import CustomerDetailsModal from "./CustomerDetailsModal";
 
 interface CustomersTableProps {
@@ -155,7 +147,13 @@ export default function CustomersTable({ customers }: CustomersTableProps) {
                   <Mail className="w-4 h-4" color="blue" />
                 </Button>
               </Tooltip>
-              <Tooltip content={customer.status === "blocked" ? "Unblock customer" : "Block customer"}>
+              {/* <Tooltip
+                content={
+                  customer.status === "blocked"
+                    ? "Unblock customer"
+                    : "Block customer"
+                }
+              >
                 <Button
                   isIconOnly
                   size="sm"
@@ -163,7 +161,12 @@ export default function CustomersTable({ customers }: CustomersTableProps) {
                   color={customer.status === "blocked" ? "success" : "danger"}
                   onPress={() => {
                     // TODO: Implement block/unblock functionality
-                    console.log(`${customer.status === "blocked" ? "Unblock" : "Block"} customer:`, customer.id);
+                    console.log(
+                      `${
+                        customer.status === "blocked" ? "Unblock" : "Block"
+                      } customer:`,
+                      customer.id
+                    );
                   }}
                 >
                   {customer.status === "blocked" ? (
@@ -172,7 +175,7 @@ export default function CustomersTable({ customers }: CustomersTableProps) {
                     <Lock className="w-4 h-4" />
                   )}
                 </Button>
-              </Tooltip>
+              </Tooltip> */}
             </div>
           );
         default:
