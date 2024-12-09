@@ -1,6 +1,8 @@
 import { getCategories } from "@/services/actions/category.actions";
 import { getAllProducts } from "@/services/actions/product.actions";
 import ProductManagementClient from "@/components/interfaces/admin/categories/ProductManagementClient";
+import { Spinner } from "@nextui-org/react";
+import { Suspense } from "react";
 
 export default async function ProductsPage() {
   const initialProducts = await getAllProducts();
@@ -8,10 +10,12 @@ export default async function ProductsPage() {
 
   return (
     <div className="mx-auto py-6">
-      <ProductManagementClient
-        initialProducts={initialProducts}
-        initialCategories={initialCategories}
-      />
+      <Suspense fallback={<Spinner />}>
+        <ProductManagementClient
+          initialProducts={initialProducts}
+          initialCategories={initialCategories}
+        />
+      </Suspense>
     </div>
   );
 }

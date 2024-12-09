@@ -1,7 +1,8 @@
 import ProfileClient from "@/components/interfaces/profile/ProfileClient";
 import { fetchProfile } from "@/services/actions/profile.actions";
 import { fetchUserOrders } from "@/services/actions/orders.actions";
-import React from "react";
+import React, { Suspense } from "react";
+import { Spinner } from "@nextui-org/react";
 
 export default async function ProfilePage({
   searchParams,
@@ -21,7 +22,9 @@ export default async function ProfilePage({
 
   return (
     <main className="min-h-screen pb-20">
-      <ProfileClient tab={tab} profile={profile} orders={orders} />
+      <Suspense fallback={<Spinner />}>
+        <ProfileClient tab={tab} profile={profile} orders={orders} />
+      </Suspense>
     </main>
   );
 }
