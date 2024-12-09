@@ -149,3 +149,15 @@ enum PaymentStatus {
 
   @@map("payment_status")
 }
+
+model Banner {
+  id          String    @id @default(uuid()) @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  title       String    @db.VarChar(255)
+  description String    @db.Text
+  imageUrl    String    @map("image_url") @db.Text
+  isActive    Boolean   @default(true) @map("is_active")
+
+  @@map("banners")
+}
