@@ -2,13 +2,13 @@ import { Suspense } from "react";
 import ProfileClient from "@/components/interfaces/admin/profile/ProfileClient";
 import BannerManagement from "@/components/interfaces/admin/profile/BannerManagement";
 import { fetchProfile } from "@/services/actions/profile.actions";
-import { fetchBanner } from "@/services/actions/banner.actions";
+import { fetchBanners } from "@/services/actions/banner.actions";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 
 export default async function ProfilePage() {
-  const [profileData, bannerData] = await Promise.all([
+  const [profileData, banners] = await Promise.all([
     fetchProfile(),
-    fetchBanner(),
+    fetchBanners(false),
   ]);
 
   return (
@@ -18,7 +18,7 @@ export default async function ProfilePage() {
         <ProfileClient profile={profileData} />
       </Suspense>
       <Suspense fallback={<LoadingSpinner />}>
-        <BannerManagement initialBanner={bannerData} />
+        <BannerManagement initialBanners={banners} />
       </Suspense>
     </div>
   );

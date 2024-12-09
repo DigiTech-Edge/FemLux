@@ -1,17 +1,13 @@
 import { prisma } from "@/utils/prisma";
 import { Banner } from "@/types/banner";
 
-export async function getBanner() {
-  const banner = await prisma.banner.findFirst({
-    where: { isActive: true },
-    orderBy: { createdAt: "desc" },
+export async function getBanners(activeOnly = true) {
+  const banners = await prisma.banner.findMany({
+    where: activeOnly ? { isActive: true } : undefined,
+    orderBy: { createdAt: 'desc' },
   });
 
-  if (!banner) {
-    return null;
-  }
-
-  return banner;
+  return banners;
 }
 
 export async function createBanner(data: Banner) {

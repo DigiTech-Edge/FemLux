@@ -3,15 +3,15 @@
 import { revalidatePath } from "next/cache";
 import { Banner } from "@/types/banner";
 import {
-  getBanner,
+  getBanners,
   createBanner,
   updateBanner,
   deleteBanner,
   toggleBannerStatus,
 } from "../banner.service";
 
-export async function fetchBanner() {
-  return await getBanner();
+export async function fetchBanners(activeOnly = true) {
+  return await getBanners(activeOnly);
 }
 
 export async function createBannerAction(data: Banner) {

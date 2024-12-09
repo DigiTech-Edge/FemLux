@@ -10,8 +10,12 @@ import {
   getFilteredProducts,
   getNewArrivals,
 } from "@/services/actions/product.actions";
+import { fetchBanners } from "@/services/actions/banner.actions";
 
 export default async function Home() {
+  // Fetch active banners
+  const banners = await fetchBanners(true);
+
   // Fetch categories and filter featured ones
   const categories = await getCategories();
 
@@ -26,7 +30,7 @@ export default async function Home() {
     <main className="min-h-screen pb-20">
       {/* Hero Banner */}
       <section className="mt-4">
-        <HeroBanner />
+        <HeroBanner banners={banners} />
       </section>
 
       {/* Categories */}

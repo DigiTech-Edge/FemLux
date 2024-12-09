@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import {
   Card,
   CardBody,
-  CardHeader,
   Button,
   Modal,
   ModalContent,
@@ -13,25 +12,18 @@ import {
   ModalFooter,
   useDisclosure,
   Input,
+  Textarea,
   Switch,
-  Image,
   Chip,
   Divider,
-  Textarea,
 } from "@nextui-org/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { BannerWithId } from "@/types/banner";
-import {
-  PlusIcon,
-  Pencil,
-  Trash2,
-  Image as ImageIcon,
-  Calendar,
-  X,
-} from "lucide-react";
+import { PlusIcon, Pencil, Trash2, Image as ImageIcon, X } from "lucide-react";
 import ImageUpload from "@/components/ui/ImageUpload";
+import DeleteConfirmationModal from "@/components/ui/DeleteConfirmationModal";
 import toast from "react-hot-toast";
 import {
   createBannerAction,
@@ -41,7 +33,7 @@ import {
 } from "@/services/actions/banner.actions";
 import { deleteImage } from "@/utils/supabase/storage";
 import env from "@/env";
-import DeleteConfirmationModal from "@/components/ui/DeleteConfirmationModal";
+import { Image } from "@nextui-org/react";
 
 const bannerSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -53,14 +45,15 @@ const bannerSchema = z.object({
 type BannerFormData = z.infer<typeof bannerSchema>;
 
 interface BannerManagementProps {
-  initialBanner: BannerWithId | null;
+  initialBanners: BannerWithId[];
 }
 
 export default function BannerManagement({
-  initialBanner,
+  initialBanners,
 }: BannerManagementProps) {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [banner, setBanner] = useState<BannerWithId | null>(initialBanner);
+  const [banners, setBanners] = useState<BannerWithId[]>(initialBanners);
+  const [selectedBanner, setSelectedBanner] = useState<BannerWithId | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [deleteImageState, setDeleteImageState] = useState({
     isOpen: false,
@@ -82,12 +75,12 @@ export default function BannerManagement({
   });
 
   useEffect(() => {
-    if (banner) {
+    if (selectedBanner) {
       form.reset({
-        title: banner.title,
-        description: banner.description,
-        imageUrl: banner.imageUrl,
-        isActive: banner.isActive,
+        title: selectedBanner.title,
+        description: selectedBanner.description,
+        imageUrl: selectedBanner.imageUrl,
+        isActive: selectedBanner.isActive,
       });
     } else {
       form.reset({
@@ -97,21 +90,77 @@ export default function BannerManagement({
         isActive: true,
       });
     }
-  }, [banner, form]);
+  }, [selectedBanner, form]);
 
   const handleClose = () => {
+    setSelectedBanner(null);
     form.reset();
     onClose();
   };
 
-  const handleImageChange = (urls: string[]) => {
-    const imageUrl = urls[0] || "";
-    form.setValue("imageUrl", imageUrl);
+  const handleToggleStatus = async (banner: BannerWithId) => {
+    try {
+      setIsLoading(true);
+      const updatedBanner = await toggleBannerStatusAction(banner.id);
+      setBanners(prev => prev.map(b => b.id === banner.id ? updatedBanner : b));
+      toast.success("Banner status updated successfully");
+    } catch (error) {
+      toast.error("Failed to update banner status");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBannerDelete = async () => {
+    if (!selectedBanner) return;
+    
+    try {
+      setDeleteBannerState(prev => ({ ...prev, loading: true }));
+      await deleteImage(selectedBanner.imageUrl);
+      await deleteBannerAction(selectedBanner.id);
+      setBanners(prev => prev.filter(b => b.id !== selectedBanner.id));
+      toast.success("Banner deleted successfully");
+      setDeleteBannerState(prev => ({ ...prev, isOpen: false }));
+    } catch (error) {
+      toast.error("Failed to delete banner");
+      console.error(error);
+    } finally {
+      setDeleteBannerState(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  const handleAddNewBanner = () => {
+    setSelectedBanner(null);
+    onOpen();
+  };
+
+  const onSubmit = async (data: BannerFormData) => {
+    try {
+      setIsLoading(true);
+
+      if (selectedBanner) {
+        const updatedBanner = await updateBannerAction(selectedBanner.id, data);
+        setBanners(prev => prev.map(b => b.id === selectedBanner.id ? updatedBanner : b));
+        toast.success("Banner updated successfully");
+      } else {
+        const newBanner = await createBannerAction(data);
+        setBanners(prev => [...prev, newBanner]);
+        toast.success("Banner created successfully");
+      }
+
+      handleClose();
+    } catch (error) {
+      toast.error("Failed to save banner");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleImageRemove = async () => {
     if (!form.getValues("imageUrl")) return;
-
+    
     try {
       setDeleteImageState((prev) => ({ ...prev, loading: true }));
       await deleteImage(form.getValues("imageUrl"));
@@ -129,190 +178,107 @@ export default function BannerManagement({
     }
   };
 
-  const handleBannerDelete = async () => {
-    if (!banner) return;
-
-    try {
-      setDeleteBannerState((prev) => ({ ...prev, loading: true }));
-      await deleteImage(banner.imageUrl);
-      await deleteBannerAction(banner.id);
-      setBanner(null);
-      toast.success("Banner deleted successfully");
-    } catch (error) {
-      toast.error("Failed to delete banner");
-      console.error(error);
-    } finally {
-      setDeleteBannerState((prev) => ({
-        ...prev,
-        loading: false,
-        isOpen: false,
-      }));
-    }
-  };
-
-  const handleAddNewBanner = () => {
-    setBanner(null);
-    form.reset({
-      title: "",
-      description: "",
-      imageUrl: "",
-      isActive: true,
-    });
-    onOpen();
-  };
-
-  const onSubmit = async (data: BannerFormData) => {
-    try {
-      setIsLoading(true);
-
-      if (banner) {
-        const updatedBanner = await updateBannerAction(banner.id, data);
-        setBanner(updatedBanner);
-        toast.success("Banner updated successfully");
-      } else {
-        const newBanner = await createBannerAction(data);
-        setBanner(newBanner);
-        toast.success("Banner created successfully");
-      }
-
-      handleClose();
-    } catch (error) {
-      toast.error("Failed to save banner");
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleToggleStatus = async () => {
-    if (!banner) return;
-
-    try {
-      setIsLoading(true);
-      const updatedBanner = await toggleBannerStatusAction(banner.id);
-      setBanner(updatedBanner);
-      toast.success("Banner status updated successfully");
-    } catch (error) {
-      console.error("Error updating banner status:", error);
-      toast.error("Failed to update banner status");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
   return (
     <Card>
-      <CardHeader className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold">Banner Management</h2>
-          <p className="text-small text-default-500">
-            Manage your website banners and promotional content
-          </p>
-        </div>
-        <Button
-          color="primary"
-          endContent={<PlusIcon className="w-4 h-4" />}
-          onPress={handleAddNewBanner}
-          size="sm"
-          isDisabled={isLoading}
-        >
-          Add New Banner
-        </Button>
-      </CardHeader>
-      <Divider />
-      <CardBody className="gap-6">
-        {!banner ? (
-          <div className="text-center py-6">
-            <ImageIcon className="w-12 h-12 mx-auto text-default-300 mb-4" />
-            <p className="text-default-500">No banner yet</p>
-            <p className="text-small text-default-400">
-              Add your first banner to get started
+      <CardBody>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold">Banner Management</h2>
+            <p className="text-small text-default-500">
+              Manage your website banners and promotional content
             </p>
           </div>
-        ) : (
-          <Card className="w-full">
-            <CardBody className="p-4">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Image
-                  src={banner.imageUrl}
-                  alt={banner.title}
-                  className="w-full sm:w-48 h-32 object-cover rounded-lg"
-                />
-                <div className="flex-grow space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h3 className="text-lg font-semibold">{banner.title}</h3>
-                      {banner.description && (
-                        <p className="text-sm text-default-500 mt-1">
-                          {banner.description}
-                        </p>
-                      )}
+          <Button
+            color="primary"
+            endContent={<PlusIcon className="w-4 h-4" />}
+            onPress={handleAddNewBanner}
+            size="sm"
+            isDisabled={isLoading}
+          >
+            Add New Banner
+          </Button>
+        </div>
+
+        <Divider className="my-4" />
+
+        <div className="space-y-4">
+          {banners.length === 0 ? (
+            <div className="text-center py-6">
+              <ImageIcon className="w-12 h-12 mx-auto text-default-300 mb-4" />
+              <p className="text-default-500">No banners yet</p>
+              <p className="text-small text-default-400">
+                Add your first banner to get started
+              </p>
+            </div>
+          ) : (
+            banners.map((banner) => (
+              <div key={banner.id} className="relative">
+                <Card shadow="none" className="border-none bg-default-50">
+                  <CardBody className="gap-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="space-y-1">
+                          <h3 className="text-small font-medium">{banner.title}</h3>
+                          <p className="text-tiny text-default-500">
+                            {banner.description}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          size="sm"
+                          isSelected={banner.isActive}
+                          onValueChange={() => handleToggleStatus(banner)}
+                          isDisabled={isLoading}
+                        />
+                        <Chip
+                          color={banner.isActive ? "success" : "danger"}
+                          size="sm"
+                          variant="flat"
+                        >
+                          {banner.isActive ? "Active" : "Inactive"}
+                        </Chip>
+                        <Button
+                          variant="flat"
+                          color="primary"
+                          onPress={() => {
+                            setSelectedBanner(banner);
+                            onOpen();
+                          }}
+                          startContent={<Pencil className="w-4 h-4" />}
+                          isDisabled={isLoading}
+                          size="sm"
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="flat"
+                          color="danger"
+                          onPress={() => {
+                            setSelectedBanner(banner);
+                            setDeleteBannerState(prev => ({ ...prev, isOpen: true }));
+                          }}
+                          startContent={<Trash2 className="w-4 h-4" />}
+                          isDisabled={isLoading}
+                          size="sm"
+                        >
+                          Delete
+                        </Button>
+                      </div>
                     </div>
-                    <Chip
-                      color={banner.isActive ? "success" : "default"}
-                      variant="flat"
-                      size="sm"
-                    >
-                      {banner.isActive ? "Active" : "Inactive"}
-                    </Chip>
-                  </div>
-                  <div className="flex items-center gap-2 text-small text-default-500">
-                    <Calendar className="w-4 h-4" />
-                    <span>Created {formatDate(banner.createdAt)}</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 pt-2">
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        size="sm"
-                        isSelected={banner.isActive}
-                        onValueChange={handleToggleStatus}
-                        isDisabled={isLoading}
+                    {banner.imageUrl && (
+                      <Image
+                        src={banner.imageUrl}
+                        alt={banner.title}
+                        className="w-full h-48 object-cover rounded-lg"
                       />
-                      <span className="text-small">
-                        {banner.isActive ? "Active" : "Inactive"}
-                      </span>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="flat"
-                        color="primary"
-                        onPress={onOpen}
-                        startContent={<Pencil className="w-4 h-4" />}
-                        isDisabled={isLoading}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="flat"
-                        color="danger"
-                        onPress={() =>
-                          setDeleteBannerState((prev) => ({
-                            ...prev,
-                            isOpen: true,
-                          }))
-                        }
-                        startContent={<Trash2 className="w-4 h-4" />}
-                        isDisabled={isLoading}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+                    )}
+                  </CardBody>
+                </Card>
               </div>
-            </CardBody>
-          </Card>
-        )}
+            ))
+          )}
+        </div>
 
         <Modal
           isOpen={isOpen}
@@ -325,7 +291,9 @@ export default function BannerManagement({
               <form onSubmit={form.handleSubmit(onSubmit)}>
                 <ModalHeader className="flex flex-col gap-1">
                   <div className="flex items-center justify-between">
-                    <h2>{banner ? "Edit Banner" : "Add New Banner"}</h2>
+                    <h2>
+                      {selectedBanner ? "Edit Banner" : "Add New Banner"}
+                    </h2>
                   </div>
                 </ModalHeader>
                 <Divider />
@@ -376,27 +344,30 @@ export default function BannerManagement({
                             alt="Banner preview"
                             className="w-full h-full object-cover"
                           />
-                           <button
-                          type="button"
-                          onClick={() =>
-                            setDeleteImageState((prev) => ({
-                              ...prev,
-                              isOpen: true,
-                            }))
-                          }
-                          className="absolute top-2 z-10 right-2 p-1.5 rounded-full bg-white/80 hover:bg-white transition-colors"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setDeleteImageState((prev) => ({
+                                ...prev,
+                                isOpen: true,
+                              }))
+                            }
+                            className="absolute top-2 z-10 right-2 p-1.5 rounded-full bg-white/80 hover:bg-white transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
                         </div>
                       ) : (
                         <ImageUpload
                           value={[]}
-                          onChange={handleImageChange}
+                          onChange={(urls) => {
+                            const imageUrl = urls[0] || "";
+                            form.setValue("imageUrl", imageUrl);
+                          }}
                           onRemove={handleImageRemove}
                           bucket={env.buckets.categories}
                           maxFiles={1}
-                          maxFileSize={2 * 1024 * 1024}
+                          maxFileSize={1 * 1024 * 1024}
                         />
                       )}
                       {form.formState.errors.imageUrl && (
@@ -423,7 +394,7 @@ export default function BannerManagement({
                     isLoading={isLoading}
                     isDisabled={isLoading}
                   >
-                    {banner ? "Save Changes" : "Add Banner"}
+                    {selectedBanner ? "Save Changes" : "Add Banner"}
                   </Button>
                 </ModalFooter>
               </form>
@@ -444,9 +415,7 @@ export default function BannerManagement({
 
         <DeleteConfirmationModal
           isOpen={deleteBannerState.isOpen}
-          onClose={() =>
-            setDeleteBannerState((prev) => ({ ...prev, isOpen: false }))
-          }
+          onClose={() => setDeleteBannerState(prev => ({ ...prev, isOpen: false }))}
           onConfirm={handleBannerDelete}
           title="Delete Banner"
           description="Are you sure you want to delete this banner? This action cannot be undone."
