@@ -2,18 +2,10 @@ import StatsCards from "@/components/interfaces/admin/dashboard/StatsCards";
 import SalesChart from "@/components/interfaces/admin/dashboard/SalesChart";
 import TopProducts from "@/components/interfaces/admin/dashboard/TopProducts";
 import RecentOrders from "@/components/interfaces/admin/dashboard/RecentOrders";
-import {
-  getAdminDashboardStats,
-  getSalesOverTime,
-  getTopProducts,
-  getRecentOrders,
-} from "@/lib/data/admin/dashboard";
+import { fetchDashboardData } from "@/services/actions/dashboard.actions";
 
-const DashboardPage = () => {
-  const stats = getAdminDashboardStats();
-  const salesData = getSalesOverTime();
-  const topProducts = getTopProducts();
-  const recentOrders = getRecentOrders();
+const DashboardPage = async () => {
+  const dashboardData = await fetchDashboardData();
 
   return (
     <div className="space-y-6">
@@ -22,18 +14,18 @@ const DashboardPage = () => {
         <p className="text-default-500">Welcome to your admin dashboard</p>
       </div>
 
-      <StatsCards data={stats} />
+      <StatsCards data={dashboardData.stats} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <SalesChart data={salesData} />
+          <SalesChart data={dashboardData.salesData} />
         </div>
         <div>
-          <TopProducts data={topProducts} />
+          <TopProducts data={dashboardData.topProducts} />
         </div>
       </div>
 
-      <RecentOrders data={recentOrders} />
+      <RecentOrders data={dashboardData.recentOrders} />
     </div>
   );
 };

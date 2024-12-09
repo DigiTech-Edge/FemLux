@@ -13,6 +13,7 @@ import {
 import { Select, SelectItem } from "@nextui-org/react";
 import { formatCurrency } from "@/helpers";
 import { SalesData } from "@/lib/types/analytics";
+import NoDataPlaceholder from "@/components/shared/NoDataPlaceholder";
 
 const timeRanges = [
   { value: "3", label: "Last 3 months" },
@@ -48,6 +49,7 @@ export default function SalesChart({ data }: SalesChartProps) {
       </div>
 
       <div className="h-[300px]">
+        {filteredData.length > 0 ? (
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
             data={filteredData}
@@ -125,6 +127,9 @@ export default function SalesChart({ data }: SalesChartProps) {
             />
           </AreaChart>
         </ResponsiveContainer>
+        ) : (
+          <NoDataPlaceholder text="No sales data available for this time range" />
+        )}
       </div>
     </div>
   );

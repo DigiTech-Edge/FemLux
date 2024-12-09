@@ -3,8 +3,15 @@
 import { Card, CardBody } from "@nextui-org/react";
 import { motion } from "framer-motion";
 import { formatCurrency } from "@/helpers";
-import { AnalyticsStat } from "@/lib/types/analytics";
-import { TrendingUp, TrendingDown, DollarSign, ShoppingBag, CreditCard, Users } from "lucide-react";
+import { AnalyticsStat } from "@/types/analytics";
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  ShoppingBag,
+  CreditCard,
+  Users,
+} from "lucide-react";
 
 interface AnalyticsOverviewProps {
   data: AnalyticsStat[];
@@ -19,7 +26,7 @@ const iconMap = {
 
 export default function AnalyticsOverview({ data }: AnalyticsOverviewProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
       {data.map((stat, index) => {
         const Icon = iconMap[stat.title as keyof typeof iconMap];
         return (
@@ -44,7 +51,8 @@ export default function AnalyticsOverview({ data }: AnalyticsOverviewProps) {
                   <p className="text-small text-default-500">{stat.title}</p>
                   <div className="flex items-center gap-2">
                     <p className="text-xl font-semibold">
-                      {stat.title.includes("Revenue") || stat.title.includes("Value")
+                      {stat.title.includes("Revenue") ||
+                      stat.title.includes("Value")
                         ? formatCurrency(stat.value)
                         : stat.value.toLocaleString()}
                     </p>
