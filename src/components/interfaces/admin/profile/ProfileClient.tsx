@@ -18,9 +18,7 @@ import {
 import { Profile } from "@/types/profile";
 import { Eye, EyeOff, Mail, Key, ShieldCheck } from "lucide-react";
 import toast from "react-hot-toast";
-import {
-  updatePasswordAction,
-} from "@/services/actions/profile.actions";
+import { updatePasswordAction } from "@/services/actions/profile.actions";
 import UserAvatar from "@/components/shared/UserAvatar";
 
 interface ProfileClientProps {
@@ -63,10 +61,6 @@ export default function ProfileClient({ profile }: ProfileClientProps) {
     }
   };
 
- 
-
-
-
   return (
     <div className="space-y-8">
       {/* Profile Overview */}
@@ -79,8 +73,8 @@ export default function ProfileClient({ profile }: ProfileClientProps) {
             <UserAvatar showEditButton className="w-24 h-24" />
             <div className="flex-grow space-y-4">
               <div>
-                <h3 className="text-xl font-semibold">{profile.fullName}</h3>
-                <p className="text-default-500">{profile.role}</p>
+                <h3 className="text-xl font-semibold">{profile.name}</h3>
+                <p className="text-default-500">Administrator</p>
               </div>
               <Divider />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

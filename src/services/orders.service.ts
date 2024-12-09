@@ -274,6 +274,44 @@ const updateOrderTracking = async (orderId: string, trackingNumber: string) => {
   }
 };
 
+const getUserOrders = async (userId: string) => {
+  try {
+    const orders = await prisma.order.findMany({
+      where: { userId },
+      include: {
+        items: true,
+        profile: {
+          select: {
+            fullName: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return orders.map((order) => ({
+      ...order,
+      totalAmount: Number(order.totalAmount),
+      items: order.items.map((item) => ({
+        ...item,
+        price: Number(item.price),
+      })),
+      user: {
+        name: order.profile.fullName || "",
+        email: order.profile.email,
+        image: order.profile.avatarUrl,
+      },
+    }));
+  } catch (error) {
+    console.error("Error getting user orders:", error);
+    throw error;
+  }
+};
+
 export const ordersService = {
   createPaymentLink,
   verifyPayment,
@@ -281,4 +319,5 @@ export const ordersService = {
   getOrderStats,
   updateOrderStatus,
   updateOrderTracking,
+  getUserOrders,
 };

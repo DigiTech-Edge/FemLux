@@ -18,23 +18,28 @@ export async function fetchProfile() {
 export async function updateProfileAction(profile: Profile) {
   const updatedProfile = await updateProfile(profile);
   revalidatePath("/admin/profile");
+  revalidatePath("/profile");
   return updatedProfile;
 }
 
 export async function updatePasswordAction(passwords: PasswordUpdate) {
   await updatePassword(passwords);
+  revalidatePath("/admin/profile");
+  revalidatePath("/profile");
   return { success: true };
 }
 
 export async function updateAvatarUrlAction(avatarUrl: string) {
   const updatedUrl = await updateAvatarUrl(avatarUrl);
   revalidatePath("/admin/profile");
+  revalidatePath("/profile");
   return updatedUrl;
 }
 
 export async function deleteAvatarAction() {
   const urlToDelete = await deleteAvatar();
   revalidatePath("/admin/profile");
+  revalidatePath("/profile");
   return urlToDelete;
 }
 

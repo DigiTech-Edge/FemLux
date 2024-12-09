@@ -3,8 +3,8 @@
 import { ordersService } from "../orders.service";
 import { CartItem } from "@/store/cart";
 import { createClient } from "@/utils/supabase/server";
-import { OrderStatus } from "@/types/orders";
 import { revalidatePath } from "next/cache";
+import { OrderStatus } from "@prisma/client";
 
 interface InitiatePaymentParams {
   email: string;
@@ -107,6 +107,48 @@ export async function updateOrderTracking(
     return { success: true, data: order };
   } catch (error) {
     console.error("Error updating order tracking:", error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+export async function fetchUserOrders() {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
+
+    const orders = await ordersService.getUserOrders(user.id);
+    return orders;
+  } catch (error) {
+    console.error("Error fetching user orders:", error);
+    throw error;
+  }
+}
+
+export async function cancelOrderAction(orderId: string) {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
+
+    const order = await ordersService.updateOrderStatus(
+      orderId,
+      OrderStatus.CANCELLED
+    );
+    revalidatePath(`/orders/${orderId}`);
+    return { success: true, data: order };
+  } catch (error) {
+    console.error("Error cancelling order:", error);
     return { success: false, error: (error as Error).message };
   }
 }

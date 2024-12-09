@@ -7,6 +7,7 @@ import { User, Package, Settings, Menu, X } from "lucide-react";
 import { UserProfile } from "@/lib/types/user";
 import { cn } from "@/helpers/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import UserAvatar from "@/components/shared/UserAvatar";
 
 interface ProfileSidebarProps {
   profile: UserProfile;
@@ -50,14 +51,9 @@ export default function ProfileSidebar({
   const SidebarContent = () => (
     <>
       <div className="flex flex-col items-center gap-4 p-6">
-        <Avatar
-          src={profile.avatar}
-          className="w-24 h-24"
-          showFallback
-          name={profile.name}
-        />
+        <UserAvatar showEditButton className="w-24 h-24" />
         <div className="text-center">
-          <h2 className="text-xl font-semibold">{profile.name}</h2>
+          <h2 className="text-md font-semibold">{profile.name}</h2>
           <p className="text-sm text-gray-500">{profile.email}</p>
         </div>
       </div>
@@ -72,7 +68,9 @@ export default function ProfileSidebar({
               variant="light"
               className={cn(
                 "relative w-full justify-start gap-2 h-11 px-3",
-                isActive ? "text-pink-500" : "text-foreground/70 hover:text-foreground"
+                isActive
+                  ? "text-pink-500"
+                  : "text-foreground/70 hover:text-foreground"
               )}
               onClick={() => handleTabChange(tab.key)}
             >
@@ -89,8 +87,8 @@ export default function ProfileSidebar({
                     layout: {
                       type: "spring",
                       stiffness: 500,
-                      damping: 30
-                    }
+                      damping: 30,
+                    },
                   }}
                 />
               )}
@@ -151,7 +149,9 @@ export default function ProfileSidebar({
                         alt={profile.name}
                       />
                       <div className="text-center">
-                        <h2 className="text-xl font-semibold">{profile.name}</h2>
+                        <h2 className="text-xl font-semibold">
+                          {profile.name}
+                        </h2>
                         <p className="text-sm text-gray-500">{profile.email}</p>
                       </div>
                     </div>
@@ -166,7 +166,9 @@ export default function ProfileSidebar({
                             variant="light"
                             className={cn(
                               "relative w-full justify-start gap-2 h-11 px-3",
-                              isActive ? "text-pink-500" : "text-foreground/70 hover:text-foreground"
+                              isActive
+                                ? "text-pink-500"
+                                : "text-foreground/70 hover:text-foreground"
                             )}
                             onClick={() => handleTabChange(tab.key)}
                           >
@@ -183,8 +185,8 @@ export default function ProfileSidebar({
                                   layout: {
                                     type: "spring",
                                     stiffness: 500,
-                                    damping: 30
-                                  }
+                                    damping: 30,
+                                  },
                                 }}
                               />
                             )}

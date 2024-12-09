@@ -1,14 +1,27 @@
 import { z } from "zod";
 
+export interface Profile {
+  id: string;
+  email: string;
+  name: string;
+  avatar?: string;
+  phone?: string;
+  address?: {
+    street: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+  };
+  dateJoined: string;
+}
+
 // Profile Section
 export const profileSchema = z.object({
-  fullName: z.string().min(1, "Full name is required"),
-  email: z.string().email("Invalid email address"),
-  role: z.string(),
-  avatar: z.string().optional(),
+  name: z.string().min(1, "Name is required"),
 });
 
-export type Profile = z.infer<typeof profileSchema>;
+export type ProfileFormData = z.infer<typeof profileSchema>;
 
 // Security Section
 export const passwordSchema = z

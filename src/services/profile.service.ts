@@ -3,130 +3,178 @@ import { Profile, PasswordUpdate } from "@/types/profile";
 import { prisma } from "@/utils/prisma";
 
 export async function getProfile() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  if (!user) throw new Error("User not found");
+    if (!user) throw new Error("User not found");
 
-  const profile = await prisma.profile.findUnique({
-    where: { userId: user.id },
-  });
+    const profile = await prisma.profile.findUnique({
+      where: { userId: user.id },
+    });
 
-  if (!profile) throw new Error("Profile not found");
+    if (!profile) throw new Error("Profile not found");
 
-  return {
-    fullName: profile.fullName || "",
-    email: profile.email,
-    role: user.user_metadata.role,
-    avatar: profile.avatarUrl || "",
-  };
+    return {
+      id: profile.id,
+      name: profile.fullName || "",
+      email: profile.email,
+      avatar: profile.avatarUrl || "",
+      dateJoined: profile.createdAt.toISOString(),
+    };
+  } catch (error) {
+    console.error("Error getting profile:", error);
+    throw error;
+  }
 }
 
 export async function updateAvatarUrl(avatarUrl: string) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  if (!user) throw new Error("User not found");
+    if (!user) throw new Error("User not found");
 
-  const profile = await prisma.profile.findUnique({
-    where: { userId: user.id },
-  });
+    const profile = await prisma.profile.findUnique({
+      where: { userId: user.id },
+    });
 
-  if (!profile) throw new Error("Profile not found");
+    if (!profile) throw new Error("Profile not found");
 
-  const updatedProfile = await prisma.profile.update({
-    where: { userId: user.id },
-    data: {
-      avatarUrl: avatarUrl,
-      updatedAt: new Date(),
-    },
-  });
+    const updatedProfile = await prisma.profile.update({
+      where: { userId: user.id },
+      data: {
+        avatarUrl: avatarUrl,
+        updatedAt: new Date(),
+      },
+    });
 
-  return updatedProfile.avatarUrl;
+    return updatedProfile.avatarUrl;
+  } catch (error) {
+    console.error("Error updating avatar URL:", error);
+    throw error;
+  }
 }
 
 export async function deleteAvatar() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  if (!user) throw new Error("User not found");
+    if (!user) throw new Error("User not found");
 
-  const profile = await prisma.profile.findUnique({
-    where: { userId: user.id },
-  });
+    const profile = await prisma.profile.findUnique({
+      where: { userId: user.id },
+    });
 
-  if (!profile || !profile.avatarUrl) return null;
+    if (!profile || !profile.avatarUrl) return null;
 
-  const urlToDelete = profile.avatarUrl;
+    const urlToDelete = profile.avatarUrl;
 
-  await prisma.profile.update({
-    where: { userId: user.id },
-    data: {
-      avatarUrl: null,
-      updatedAt: new Date(),
-    },
-  });
+    await prisma.profile.update({
+      where: { userId: user.id },
+      data: {
+        avatarUrl: null,
+        updatedAt: new Date(),
+      },
+    });
 
-  return urlToDelete;
+    return urlToDelete;
+  } catch (error) {
+    console.error("Error deleting avatar:", error);
+    throw error;
+  }
 }
 
-export async function updateProfile(profile: Profile) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export async function updateProfile(data: Profile) {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  if (!user) throw new Error("User not found");
+    if (!user) throw new Error("User not found");
 
-  const updatedProfile = await prisma.profile.update({
-    where: { userId: user.id },
-    data: {
-      fullName: profile.fullName,
-      avatarUrl: profile.avatar,
-      updatedAt: new Date(),
-    },
-  });
+    const updatedProfile = await prisma.profile.update({
+      where: { userId: user.id },
+      data: {
+        fullName: data.name,
+        avatarUrl: data.avatar,
+        updatedAt: new Date(),
+      },
+    });
 
-  return {
-    fullName: updatedProfile.fullName || "",
-    email: updatedProfile.email,
-    role: user.user_metadata.role,
-    avatar: updatedProfile.avatarUrl || "",
-  };
+    return {
+      id: updatedProfile.id,
+      name: updatedProfile.fullName || "",
+      email: updatedProfile.email,
+      avatar: updatedProfile.avatarUrl || "",
+      dateJoined: updatedProfile.createdAt.toISOString(),
+    };
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    throw error;
+  }
 }
 
 export async function updatePassword(passwords: PasswordUpdate) {
-  const supabase = await createClient();
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  const { error } = await supabase.auth.updateUser({
-    password: passwords.newPassword,
-  });
+    if (!user) throw new Error("User not found");
 
-  if (error) throw error;
+    // First verify the current password
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user.email!,
+      password: passwords.currentPassword,
+    });
 
-  return { success: true };
+    if (signInError) {
+      throw new Error("Current password is incorrect");
+    }
+
+    // If current password is correct, update to new password
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: passwords.newPassword,
+    });
+
+    if (updateError) throw updateError;
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating password:", error);
+    throw error;
+  }
 }
 
 export async function getAvatarUrl() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  if (!user) throw new Error("User not found");
+    if (!user) throw new Error("User not found");
 
-  const profile = await prisma.profile.findUnique({
-    where: { userId: user.id },
-    select: { avatarUrl: true },
-  });
+    const profile = await prisma.profile.findUnique({
+      where: { userId: user.id },
+      select: { avatarUrl: true },
+    });
 
-  if (!profile) throw new Error("Profile not found");
+    if (!profile) throw new Error("Profile not found");
 
-  return profile.avatarUrl;
+    return profile.avatarUrl;
+  } catch (error) {
+    console.error("Error getting avatar URL:", error);
+    throw error;
+  }
 }

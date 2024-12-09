@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import React from 'react'
+import React from "react";
 import {
   Table,
   TableHeader,
@@ -18,32 +18,69 @@ import {
   Card,
   CardBody,
   Divider,
-} from '@nextui-org/react'
-import { Eye } from 'lucide-react'
-import { motion } from 'framer-motion'
-import { Order } from '@/lib/types/user'
-import { cn } from '@/helpers/utils'
+  Image,
+  Pagination,
+} from "@nextui-org/react";
+import { Eye, ShoppingBag } from "lucide-react";
+import { motion } from "framer-motion";
+import { OrderWithDetails } from "@/types/order";
+import { formatCurrency } from "@/helpers";
+import DeleteConfirmationModal from "@/components/ui/DeleteConfirmationModal";
 
 interface OrdersTabProps {
-  orders: Order[]
+  orders: OrderWithDetails[];
+  onCancel: (orderId: string) => Promise<void>;
 }
 
 const statusColorMap = {
-  pending: 'warning',
-  processing: 'primary',
-  shipped: 'secondary',
-  delivered: 'success',
-  cancelled: 'danger',
-} as const
+  PENDING: "warning",
+  PROCESSING: "primary",
+  SHIPPED: "secondary",
+  DELIVERED: "success",
+  CANCELLED: "danger",
+} as const;
 
-export default function OrdersTab({ orders }: OrdersTabProps) {
-  const { isOpen, onOpen, onClose } = useDisclosure()
-  const [selectedOrder, setSelectedOrder] = React.useState<Order | null>(null)
+const ROWS_PER_PAGE = 10;
 
-  const handleViewOrder = (order: Order) => {
-    setSelectedOrder(order)
-    onOpen()
-  }
+export default function OrdersTab({ orders, onCancel }: OrdersTabProps) {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [selectedOrder, setSelectedOrder] =
+    React.useState<OrderWithDetails | null>(null);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [page, setPage] = React.useState(1);
+  const [showCancelConfirm, setShowCancelConfirm] = React.useState(false);
+  const [orderToCancel, setOrderToCancel] = React.useState<string | null>(null);
+
+  const pages = Math.ceil(orders.length / ROWS_PER_PAGE);
+  const items = React.useMemo(() => {
+    const start = (page - 1) * ROWS_PER_PAGE;
+    const end = start + ROWS_PER_PAGE;
+    return orders.slice(start, end);
+  }, [orders, page]);
+
+  const handleViewOrder = (order: OrderWithDetails) => {
+    setSelectedOrder(order);
+    onOpen();
+  };
+
+  const handleCancelClick = (orderId: string) => {
+    setOrderToCancel(orderId);
+    setShowCancelConfirm(true);
+  };
+
+  const handleCancelConfirm = async () => {
+    if (!orderToCancel) return;
+
+    try {
+      setIsLoading(true);
+      await onCancel(orderToCancel);
+      setShowCancelConfirm(false);
+      onClose();
+    } finally {
+      setIsLoading(false);
+      setOrderToCancel(null);
+    }
+  };
 
   return (
     <motion.div
@@ -64,11 +101,23 @@ export default function OrdersTab({ orders }: OrdersTabProps) {
           <TableColumn>TOTAL</TableColumn>
           <TableColumn>ACTIONS</TableColumn>
         </TableHeader>
-        <TableBody>
-          {orders.map((order) => (
+        <TableBody
+          emptyContent={
+            <div className="flex flex-col items-center justify-center py-12">
+              <ShoppingBag className="w-12 h-12 text-default-300 mb-4" />
+              <p className="text-default-300 text-lg">No Orders found</p>
+              <p className="text-default-300 text-sm">
+                Your orders will appear here.
+              </p>
+            </div>
+          }
+        >
+          {items.map((order) => (
             <TableRow key={order.id}>
               <TableCell>{order.orderNumber}</TableCell>
-              <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
+              <TableCell>
+                {new Date(order.createdAt).toLocaleDateString()}
+              </TableCell>
               <TableCell>
                 <Chip
                   color={statusColorMap[order.status]}
@@ -78,7 +127,7 @@ export default function OrdersTab({ orders }: OrdersTabProps) {
                   {order.status}
                 </Chip>
               </TableCell>
-              <TableCell>${order.total.toFixed(2)}</TableCell>
+              <TableCell>{formatCurrency(order.totalAmount)}</TableCell>
               <TableCell>
                 <Button
                   isIconOnly
@@ -94,77 +143,107 @@ export default function OrdersTab({ orders }: OrdersTabProps) {
         </TableBody>
       </Table>
 
+      {pages > 1 && (
+        <div className="flex justify-center">
+          <Pagination
+            total={pages}
+            color="primary"
+            page={page}
+            onChange={setPage}
+          />
+        </div>
+      )}
+
       <Modal
-        size="2xl"
         isOpen={isOpen}
         onClose={onClose}
+        size="2xl"
         scrollBehavior="inside"
       >
         <ModalContent>
-          {(onClose) => (
+          {() => (
             <>
               <ModalHeader>
-                <div>
-                  <h3 className="text-xl">Order #{selectedOrder?.orderNumber}</h3>
-                  <p className="text-sm text-gray-500">
-                    Placed on {selectedOrder && new Date(selectedOrder.date).toLocaleDateString()}
+                <div className="flex flex-col gap-1">
+                  <h3 className="text-xl">Order Details</h3>
+                  <p className="text-small text-default-500">
+                    Order #{selectedOrder?.orderNumber}
                   </p>
                 </div>
               </ModalHeader>
-              <ModalBody className="pb-6">
+              <ModalBody>
                 {selectedOrder && (
                   <div className="space-y-6">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-medium mb-2">Shipping Address</h4>
-                        <p className="text-sm text-gray-600">
-                          {selectedOrder.shippingAddress.street}<br />
-                          {selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state} {selectedOrder.shippingAddress.postalCode}<br />
-                          {selectedOrder.shippingAddress.country}
-                        </p>
-                      </div>
-                      <Chip
-                        color={statusColorMap[selectedOrder.status]}
-                        variant="flat"
-                      >
-                        {selectedOrder.status}
-                      </Chip>
-                    </div>
+                    {/* Order Status */}
+                    <Card>
+                      <CardBody>
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="text-small text-default-500">
+                              Status
+                            </p>
+                            <Chip
+                              color={statusColorMap[selectedOrder.status]}
+                              variant="flat"
+                              size="sm"
+                            >
+                              {selectedOrder.status}
+                            </Chip>
+                          </div>
+                          {selectedOrder.status === "PENDING" && (
+                            <Button
+                              color="danger"
+                              variant="flat"
+                              size="sm"
+                              onClick={() =>
+                                handleCancelClick(selectedOrder.id)
+                              }
+                            >
+                              Cancel Order
+                            </Button>
+                          )}
+                        </div>
+                      </CardBody>
+                    </Card>
 
-                    {selectedOrder.trackingNumber && (
-                      <div>
-                        <h4 className="font-medium mb-2">Tracking Information</h4>
-                        <p className="text-sm text-gray-600">
-                          Tracking Number: {selectedOrder.trackingNumber}<br />
-                          Estimated Delivery: {selectedOrder.estimatedDelivery}
-                        </p>
-                      </div>
-                    )}
-
-                    <Divider />
-
+                    {/* Order Items */}
                     <div>
-                      <h4 className="font-medium mb-4">Order Items</h4>
-                      <div className="space-y-4">
+                      <h4 className="text-medium font-semibold mb-3">Items</h4>
+                      <div className="space-y-3">
                         {selectedOrder.items.map((item) => (
-                          <Card key={item.productId} className="shadow-sm">
-                            <CardBody>
+                          <Card key={item.id} className="shadow-none border-1">
+                            <CardBody className="p-3">
                               <div className="flex gap-4">
-                                <div className="w-20 h-20 relative rounded-lg overflow-hidden">
-                                  <img
-                                    src={item.image}
-                                    alt={item.name}
-                                    className="object-cover w-full h-full"
-                                  />
-                                </div>
-                                <div className="flex-1">
-                                  <h5 className="font-medium">{item.name}</h5>
-                                  <p className="text-sm text-gray-500">
-                                    Quantity: {item.quantity}
-                                  </p>
-                                  <p className="text-sm font-medium">
-                                    ${item.price.toFixed(2)}
-                                  </p>
+                                <Image
+                                  alt={item.productName}
+                                  className="object-cover rounded-lg"
+                                  src={item.productImage}
+                                  width={80}
+                                  height={80}
+                                />
+                                <div className="flex-grow space-y-2">
+                                  <div className="flex justify-between items-start">
+                                    <div>
+                                      <h4 className="font-semibold">
+                                        {item.productName}
+                                      </h4>
+                                      <div className="flex flex-wrap gap-3 text-small text-default-500">
+                                        <div>Size: {item.size}</div>
+                                        <div>Quantity: {item.quantity}</div>
+                                        <div>
+                                          Price: {formatCurrency(item.price)}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="font-semibold">
+                                        Total:{" "}
+                                        {formatCurrency(
+                                          item.price * item.quantity
+                                        )}
+                                      </p>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                             </CardBody>
@@ -173,14 +252,30 @@ export default function OrdersTab({ orders }: OrdersTabProps) {
                       </div>
                     </div>
 
-                    <Divider />
-
-                    <div className="flex justify-between items-center">
-                      <h4 className="font-medium">Total</h4>
-                      <p className="text-xl font-semibold">
-                        ${selectedOrder.total.toFixed(2)}
-                      </p>
-                    </div>
+                    {/* Order Summary */}
+                    <Card>
+                      <CardBody>
+                        <div className="space-y-3">
+                          <div className="flex justify-between">
+                            <p className="text-default-500">Shipping Address</p>
+                            <p className="text-right">
+                              {selectedOrder.shippingAddress}
+                            </p>
+                          </div>
+                          <div className="flex justify-between">
+                            <p className="text-default-500">Phone Number</p>
+                            <p>{selectedOrder.phoneNumber}</p>
+                          </div>
+                          <Divider />
+                          <div className="flex justify-between">
+                            <p className="font-semibold">Total Amount</p>
+                            <p className="font-semibold">
+                              {formatCurrency(selectedOrder.totalAmount)}
+                            </p>
+                          </div>
+                        </div>
+                      </CardBody>
+                    </Card>
                   </div>
                 )}
               </ModalBody>
@@ -188,6 +283,18 @@ export default function OrdersTab({ orders }: OrdersTabProps) {
           )}
         </ModalContent>
       </Modal>
+
+      <DeleteConfirmationModal
+        isOpen={showCancelConfirm}
+        onClose={() => {
+          setShowCancelConfirm(false);
+          setOrderToCancel(null);
+        }}
+        onConfirm={handleCancelConfirm}
+        title="Cancel Order"
+        description="Are you sure you want to cancel this order? This action cannot be undone."
+        loading={isLoading}
+      />
     </motion.div>
-  )
+  );
 }

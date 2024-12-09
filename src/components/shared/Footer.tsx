@@ -1,9 +1,9 @@
-'use client'
+"use client";
 
-import React from 'react'
-import Link from 'next/link'
-import Image from 'next/image'
-import { Facebook, Instagram, Twitter, Youtube } from 'lucide-react'
+import React from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { Facebook, Instagram, Twitter, Youtube } from "lucide-react";
 
 const Footer = () => {
   return (
@@ -24,9 +24,9 @@ const Footer = () => {
                 />
               </Link>
             </div>
-            <p className="text-white/80 text-center md:text-left">
+            {/* <p className="text-white/80 text-center md:text-left">
               Empowering women through fashion and beauty. Your one-stop destination for all things feminine and fabulous.
-            </p>
+            </p> */}
           </div>
 
           {/* Quick Links */}
@@ -34,22 +34,34 @@ const Footer = () => {
             <h3 className="text-xl font-semibold mb-4">About Us</h3>
             <ul className="space-y-2 text-center md:text-left">
               <li>
-                <Link href="/about-us" className="text-white/80 hover:text-white transition-colors">
+                <Link
+                  href="/about-us"
+                  className="text-white/80 hover:text-white transition-colors"
+                >
                   Our Story
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="text-white/80 hover:text-white transition-colors">
+                <Link
+                  href="/contact"
+                  className="text-white/80 hover:text-white transition-colors"
+                >
                   Contact Us
                 </Link>
               </li>
               <li>
-                <Link href="/terms-of-use" className="text-white/80 hover:text-white transition-colors">
+                <Link
+                  href="/terms-of-use"
+                  className="text-white/80 hover:text-white transition-colors"
+                >
                   Terms of Use
                 </Link>
               </li>
               <li>
-                <Link href="/privacy-policy" className="text-white/80 hover:text-white transition-colors">
+                <Link
+                  href="/privacy-policy"
+                  className="text-white/80 hover:text-white transition-colors"
+                >
                   Privacy Policy
                 </Link>
               </li>
@@ -60,33 +72,33 @@ const Footer = () => {
           <div className="md:col-span-4 flex flex-col items-center md:items-start">
             <h3 className="text-xl font-semibold mb-4">Connect With Us</h3>
             <div className="flex gap-4 mb-6">
-              <a 
-                href="https://facebook.com" 
-                target="_blank" 
+              <a
+                href="https://facebook.com"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="bg-white/10 p-2 rounded-full hover:bg-white/20 transition-colors"
               >
                 <Facebook className="w-6 h-6" />
               </a>
-              <a 
-                href="https://instagram.com" 
-                target="_blank" 
+              <a
+                href="https://instagram.com"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="bg-white/10 p-2 rounded-full hover:bg-white/20 transition-colors"
               >
                 <Instagram className="w-6 h-6" />
               </a>
-              <a 
-                href="https://twitter.com" 
-                target="_blank" 
+              <a
+                href="https://twitter.com"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="bg-white/10 p-2 rounded-full hover:bg-white/20 transition-colors"
               >
                 <Twitter className="w-6 h-6" />
               </a>
-              <a 
-                href="https://youtube.com" 
-                target="_blank" 
+              <a
+                href="https://youtube.com"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="bg-white/10 p-2 rounded-full hover:bg-white/20 transition-colors"
               >
@@ -104,7 +116,7 @@ const Footer = () => {
         </div>
       </div>
     </footer>
-  )
-}
+  );
+};
 
-export default Footer
+export default Footer;

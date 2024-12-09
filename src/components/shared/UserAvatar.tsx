@@ -34,14 +34,14 @@ interface UserAvatarProps {
 const fetcher = async () => {
   const supabase = createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session) throw new Error("No session");
+  if (!user) throw new Error("No session");
 
-  if (session.user.app_metadata.provider === "google") {
+  if (user.app_metadata.provider === "google") {
     return {
-      avatarUrl: session.user.user_metadata.avatar_url,
+      avatarUrl: user.user_metadata.avatar_url,
       isGoogleAuth: true,
     };
   }
