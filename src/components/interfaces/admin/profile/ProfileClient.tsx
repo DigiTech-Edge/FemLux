@@ -5,7 +5,6 @@ import {
   Card,
   CardBody,
   CardHeader,
-  Avatar,
   Button,
   Input,
   Modal,
@@ -17,15 +16,12 @@ import {
   Divider,
 } from "@nextui-org/react";
 import { Profile } from "@/types/profile";
-import { Eye, EyeOff, Mail, Key, ShieldCheck, X } from "lucide-react";
-import ImageUpload from "@/components/ui/ImageUpload";
-import env from "@/env";
-import { deleteImage } from "@/utils/supabase/storage";
+import { Eye, EyeOff, Mail, Key, ShieldCheck } from "lucide-react";
 import toast from "react-hot-toast";
 import {
-  updateProfileAction,
   updatePasswordAction,
 } from "@/services/actions/profile.actions";
+import UserAvatar from "@/components/shared/UserAvatar";
 
 interface ProfileClientProps {
   profile: Profile;
@@ -67,41 +63,9 @@ export default function ProfileClient({ profile }: ProfileClientProps) {
     }
   };
 
-  const handleAvatarChange = async (urls: string[]) => {
-    try {
-      setIsLoading(true);
-      const avatarUrl = urls[0];
-      await updateProfileAction({
-        ...profile,
-        avatar: avatarUrl,
-      });
-      toast.success("Avatar updated successfully");
-    } catch (error) {
-      toast.error("Failed to update avatar");
-      console.error("Error updating avatar:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+ 
 
-  const handleAvatarRemove = async () => {
-    if (!profile.avatar) return;
 
-    try {
-      setIsLoading(true);
-      await deleteImage(profile.avatar);
-      await updateProfileAction({
-        ...profile,
-        avatar: "",
-      });
-      toast.success("Avatar removed successfully");
-    } catch (error) {
-      toast.error("Failed to remove avatar");
-      console.error("Error removing avatar:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="space-y-8">
@@ -112,35 +76,7 @@ export default function ProfileClient({ profile }: ProfileClientProps) {
         </CardHeader>
         <CardBody className="gap-6">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-            <div className="flex flex-col items-center gap-2">
-              {profile.avatar ? (
-                <div className="relative">
-                  <Avatar
-                    className="w-24 h-24 text-large"
-                    src={profile.avatar}
-                    showFallback
-                  />
-                  <button
-                    onClick={handleAvatarRemove}
-                    className="absolute -top-2 -right-2 p-1 bg-danger rounded-full text-white hover:bg-danger-400 transition-colors"
-                    disabled={isLoading}
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <ImageUpload
-                  value={[]}
-                  onChange={handleAvatarChange}
-                  onRemove={handleAvatarRemove}
-                  bucket={env.buckets.users}
-                  maxFiles={1}
-                  maxFileSize={1 * 1024 * 1024}
-                  compact
-                  className="w-24 h-24"
-                />
-              )}
-            </div>
+            <UserAvatar showEditButton className="w-24 h-24" />
             <div className="flex-grow space-y-4">
               <div>
                 <h3 className="text-xl font-semibold">{profile.fullName}</h3>
