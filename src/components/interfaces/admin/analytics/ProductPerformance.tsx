@@ -1,6 +1,13 @@
 "use client";
 
-import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@nextui-org/react";
+import {
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@nextui-org/react";
 import { motion } from "framer-motion";
 import { formatCurrency } from "@/helpers";
 import { ProductPerformanceData } from "@/lib/types/analytics";
@@ -60,7 +67,9 @@ export default function ProductPerformance({ data }: ProductPerformanceProps) {
                 >
                   <span
                     className={`${
-                      product.growth >= 0 ? "text-success-500" : "text-danger-500"
+                      product.growth >= 0
+                        ? "text-success-500"
+                        : "text-danger-500"
                     }`}
                   >
                     {product.growth >= 0 ? "+" : ""}

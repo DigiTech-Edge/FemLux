@@ -1,33 +1,33 @@
-'use client'
+"use client";
 
-import React, { useState, useTransition } from 'react'
-import { Button } from '@nextui-org/react'
-import { Heart, Trash2 } from 'lucide-react'
-import { motion } from 'framer-motion'
-import DeleteConfirmationModal from '@/components/ui/DeleteConfirmationModal'
-import { clearAllFavorites } from '@/services/actions/favorite.actions'
-import toast from 'react-hot-toast'
+import React, { useState, useTransition } from "react";
+import { Button } from "@nextui-org/react";
+import { Heart, Trash2 } from "lucide-react";
+import { motion } from "framer-motion";
+import DeleteConfirmationModal from "@/components/ui/DeleteConfirmationModal";
+import { clearAllFavorites } from "@/services/actions/favorite.actions";
+import toast from "react-hot-toast";
 
 interface FavoritesHeaderProps {
-  totalItems: number
+  totalItems: number;
 }
 
 export default function FavoritesHeader({ totalItems }: FavoritesHeaderProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [isPending, startTransition] = useTransition()
+  const [isOpen, setIsOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const handleClearAll = () => {
     startTransition(async () => {
       try {
-        await clearAllFavorites()
-        setIsOpen(false)
-        toast.success('All favorites cleared successfully')
+        await clearAllFavorites();
+        setIsOpen(false);
+        toast.success("All favorites cleared successfully");
       } catch (error) {
-        toast.error('Failed to clear favorites')
-        console.error('Clear favorites error:', error)
+        toast.error("Failed to clear favorites");
+        console.error("Clear favorites error:", error);
       }
-    })
-  }
+    });
+  };
 
   return (
     <div className="space-y-4">
@@ -68,5 +68,5 @@ export default function FavoritesHeader({ totalItems }: FavoritesHeaderProps) {
         loading={isPending}
       />
     </div>
-  )
+  );
 }

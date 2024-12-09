@@ -59,6 +59,7 @@ export default function SettingsTab({ onPasswordChange }: SettingsTabProps) {
       className="space-y-8"
     >
       <div>
+        
         <h3 className="text-xl font-semibold mb-6">
           <Shield className="inline-block mr-2" size={24} />
           Security Settings

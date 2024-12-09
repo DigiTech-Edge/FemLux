@@ -296,6 +296,10 @@ const getUserOrders = async (userId: string) => {
     return orders.map((order) => ({
       ...order,
       totalAmount: Number(order.totalAmount),
+      shippingAddress:
+        typeof order.shippingAddress === "string"
+          ? order.shippingAddress
+          : JSON.stringify(order.shippingAddress),
       items: order.items.map((item) => ({
         ...item,
         price: Number(item.price),

@@ -23,7 +23,7 @@ export default async function ProductsPage({
   try {
     // Fetch categories first since it's a smaller query
     const categories = await categoriesService.getAll();
-    
+
     // Then fetch products
     const products = await productsService.getAll();
 
@@ -41,7 +41,7 @@ export default async function ProductsPage({
               max: Number(resolvedSearchParams.maxPrice),
             }
           : undefined,
-      isNew: resolvedSearchParams?.isNew === 'true' ? true : undefined,
+      isNew: resolvedSearchParams?.isNew === "true" ? true : undefined,
     };
 
     return (

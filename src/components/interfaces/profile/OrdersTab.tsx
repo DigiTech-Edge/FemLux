@@ -89,8 +89,9 @@ export default function OrdersTab({ orders, onCancel }: OrdersTabProps) {
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
-      <div className="flex justify-between items-center">
+      <div >
         <h3 className="text-xl font-semibold">Order History</h3>
+        <p className="text-default-500">View your order history</p>
       </div>
 
       <Table aria-label="Orders table">

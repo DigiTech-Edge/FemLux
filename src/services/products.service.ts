@@ -5,7 +5,7 @@ import {
   ProductWithRelations,
 } from "@/types/product";
 import { prisma } from "@/utils/prisma";
-import { Prisma } from "@prisma/client";
+import { Prisma, ProductVariant } from "@prisma/client";
 
 const defaultProductInclude = {
   category: true,
@@ -38,10 +38,9 @@ export const productsService = {
         },
       });
 
-      // Convert Decimal to number for serialization
       return products.map((product) => ({
         ...product,
-        variants: product.variants.map((variant) => ({
+        variants: product.variants.map((variant: ProductVariant) => ({
           ...variant,
           price: Number(variant.price),
         })),
@@ -60,32 +59,33 @@ export const productsService = {
         where.OR = [
           { name: { contains: filters.search, mode: "insensitive" } },
           { description: { contains: filters.search, mode: "insensitive" } },
+          {
+            category: {
+              name: { contains: filters.search, mode: "insensitive" },
+            },
+          },
         ];
       }
 
-      if (filters.categoryId) {
-        where.categoryId = filters.categoryId;
+      if (filters.categories?.length) {
+        where.category = {
+          name: { in: filters.categories },
+        };
+      }
+
+      if (filters.priceRange) {
+        where.variants = {
+          some: {
+            price: {
+              gte: filters.priceRange.min,
+              lte: filters.priceRange.max,
+            },
+          },
+        };
       }
 
       if (filters.isNew !== undefined) {
         where.isNew = filters.isNew;
-      }
-
-      if (filters.size) {
-        where.variants = {
-          some: { size: filters.size },
-        };
-      }
-
-      if (filters.minPrice || filters.maxPrice) {
-        where.variants = {
-          some: {
-            AND: [
-              filters.minPrice ? { price: { gte: filters.minPrice } } : {},
-              filters.maxPrice ? { price: { lte: filters.maxPrice } } : {},
-            ],
-          },
-        };
       }
 
       const products = await prisma.product.findMany({
@@ -96,10 +96,9 @@ export const productsService = {
         },
       });
 
-      // Convert Decimal to number for serialization
       return products.map((product) => ({
         ...product,
-        variants: product.variants.map((variant) => ({
+        variants: product.variants.map((variant: ProductVariant) => ({
           ...variant,
           price: Number(variant.price),
         })),
@@ -119,10 +118,9 @@ export const productsService = {
 
       if (!product) return null;
 
-      // Convert Decimal to number for serialization
       return {
         ...product,
-        variants: product.variants.map((variant) => ({
+        variants: product.variants.map((variant: ProductVariant) => ({
           ...variant,
           price: Number(variant.price),
         })),
@@ -135,29 +133,26 @@ export const productsService = {
 
   async create(data: ProductFormData) {
     try {
-      // Convert number to Prisma.Decimal for database
-      const result = await prisma.product.create({
+      const product = await prisma.product.create({
         data: {
           name: data.name,
           description: data.description,
-          categoryId: data.categoryId,
           images: data.images,
+          categoryId: data.categoryId,
           isNew: data.isNew,
           variants: {
             create: data.variants.map((variant) => ({
-              size: variant.size,
+              ...variant,
               price: new Prisma.Decimal(variant.price),
-              stock: variant.stock,
             })),
           },
         },
         include: defaultProductInclude,
       });
 
-      // Convert Decimal back to number for response
       return {
-        ...result,
-        variants: result.variants.map((variant) => ({
+        ...product,
+        variants: product.variants.map((variant: ProductVariant) => ({
           ...variant,
           price: Number(variant.price),
         })),
@@ -182,18 +177,16 @@ export const productsService = {
         updateData.variants = {
           ...(data.variants.create && {
             create: data.variants.create.map((variant) => ({
-              size: variant.size,
+              ...variant,
               price: new Prisma.Decimal(variant.price),
-              stock: variant.stock,
             })),
           }),
           ...(data.variants.update && {
             update: data.variants.update.map((variant) => ({
               where: { id: variant.id },
               data: {
-                size: variant.size,
+                ...variant,
                 price: new Prisma.Decimal(variant.price),
-                stock: variant.stock,
               },
             })),
           }),
@@ -203,16 +196,15 @@ export const productsService = {
         };
       }
 
-      const result = await prisma.product.update({
+      const product = await prisma.product.update({
         where: { id },
         data: updateData,
         include: defaultProductInclude,
       });
 
-      // Convert Decimal back to number for response
       return {
-        ...result,
-        variants: result.variants.map((variant) => ({
+        ...product,
+        variants: product.variants.map((variant: ProductVariant) => ({
           ...variant,
           price: Number(variant.price),
         })),
@@ -225,7 +217,7 @@ export const productsService = {
 
   async delete(id: string) {
     try {
-      return await prisma.product.delete({
+      await prisma.product.delete({
         where: { id },
       });
     } catch (error) {
@@ -247,10 +239,9 @@ export const productsService = {
         },
       });
 
-      // Convert Decimal to number for serialization
       return products.map((product) => ({
         ...product,
-        variants: product.variants.map((variant) => ({
+        variants: product.variants.map((variant: ProductVariant) => ({
           ...variant,
           price: Number(variant.price),
         })),

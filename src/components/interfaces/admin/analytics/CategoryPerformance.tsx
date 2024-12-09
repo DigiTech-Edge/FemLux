@@ -18,7 +18,9 @@ interface CategoryPerformanceProps {
   data: CategoryAnalytics[];
 }
 
-export default function CategoryPerformance({ data }: CategoryPerformanceProps) {
+export default function CategoryPerformance({
+  data,
+}: CategoryPerformanceProps) {
   const maxRevenue = Math.max(...data.map((cat) => cat.revenue));
 
   return (

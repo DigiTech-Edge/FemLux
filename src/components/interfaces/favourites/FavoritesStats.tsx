@@ -1,13 +1,14 @@
-'use client'
+"use client";
 
-import React from 'react'
-import { Card, CardBody, Divider } from '@nextui-org/react'
-import { Clock, DollarSign, Heart, ShoppingBag } from 'lucide-react'
-import { FavoritesStats as FavoritesStatsType } from '@/lib/types/favorites'
-import { motion } from 'framer-motion'
+import React from "react";
+import { Card, CardBody, Divider } from "@nextui-org/react";
+import { Clock, DollarSign, Heart, ShoppingBag } from "lucide-react";
+import { FavoritesStats as FavoritesStatsType } from "@/lib/types/favorites";
+import { motion } from "framer-motion";
+import { formatCurrency } from "@/helpers/currency";
 
 interface FavoritesStatsProps {
-  stats: FavoritesStatsType
+  stats: FavoritesStatsType;
 }
 
 export default function FavoritesStats({ stats }: FavoritesStatsProps) {
@@ -15,24 +16,26 @@ export default function FavoritesStats({ stats }: FavoritesStatsProps) {
     {
       icon: <Heart className="w-5 h-5 text-primary" />,
       label: "Total Items",
-      value: stats.totalItems
+      value: stats.totalItems,
     },
     {
       icon: <Clock className="w-5 h-5 text-blue-500" />,
       label: "Recently Added",
-      value: stats.recentlyAdded
+      value: stats.recentlyAdded,
     },
     {
       icon: <ShoppingBag className="w-5 h-5 text-purple-500" />,
       label: "Top Category",
-      value: stats.mostViewedCategory
+      value: stats.mostViewedCategory,
     },
     {
       icon: <DollarSign className="w-5 h-5 text-green-500" />,
       label: "Price Range",
-      value: `$${stats.priceRange.min.toFixed(2)} - $${stats.priceRange.max.toFixed(2)}`
-    }
-  ]
+      value: `${formatCurrency(stats.priceRange.min)} - ${formatCurrency(
+        stats.priceRange.max
+      )}`,
+    },
+  ];
 
   return (
     <motion.div
@@ -61,5 +64,5 @@ export default function FavoritesStats({ stats }: FavoritesStatsProps) {
         </CardBody>
       </Card>
     </motion.div>
-  )
+  );
 }

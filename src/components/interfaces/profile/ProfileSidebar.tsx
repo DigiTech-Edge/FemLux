@@ -2,12 +2,21 @@
 
 import React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Card, CardBody, Avatar, Button, Divider } from "@nextui-org/react";
-import { User, Package, Settings, Menu, X } from "lucide-react";
+import {
+  Card,
+  CardBody,
+  Avatar,
+  Button,
+  Divider,
+  Link,
+} from "@nextui-org/react";
+import { User, Package, Settings, Menu, X, ArrowRight } from "lucide-react";
 import { UserProfile } from "@/lib/types/user";
 import { cn } from "@/helpers/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import UserAvatar from "@/components/shared/UserAvatar";
+import useSWR from "swr";
+import { createClient } from "@/utils/supabase/client";
 
 interface ProfileSidebarProps {
   profile: UserProfile;
@@ -32,6 +41,17 @@ const tabs = [
   },
 ];
 
+const fetcher = async () => {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("No session");
+
+  return user.user_metadata.role;
+};
+
 export default function ProfileSidebar({
   profile,
   className,
@@ -40,6 +60,8 @@ export default function ProfileSidebar({
   const searchParams = useSearchParams();
   const [isOpen, setIsOpen] = React.useState(false);
   const activeTab = searchParams.get("tab") || "profile";
+
+  const { data } = useSWR("role", fetcher);
 
   const handleTabChange = (tab: string) => {
     const params = new URLSearchParams(searchParams);
@@ -51,6 +73,14 @@ export default function ProfileSidebar({
   const SidebarContent = () => (
     <>
       <div className="flex flex-col items-center gap-4 p-6">
+        {data === "admin" && (
+          <Link className="text-sm text-blue-500 self-end" href="/admin">
+            <motion.span className="flex gap-1 items-center hover:translate-x-1 transition-all duration-300">
+              Admin
+              <ArrowRight size={16} />
+            </motion.span>
+          </Link>
+        )}
         <UserAvatar showEditButton className="w-24 h-24" />
         <div className="text-center">
           <h2 className="text-md font-semibold">{profile.name}</h2>
@@ -141,6 +171,17 @@ export default function ProfileSidebar({
                       <X className="w-4 h-4" />
                     </Button>
                   </div>
+                  {data === "admin" && (
+                    <Link
+                      className="text-sm text-blue-500 self-end mx-6"
+                      href="/admin"
+                    >
+                      <motion.span className="flex gap-1 items-center hover:translate-x-1 transition-all duration-300">
+                        Admin
+                        <ArrowRight size={16} />
+                      </motion.span>
+                    </Link>
+                  )}
                   <div className="flex-1">
                     <div className="flex flex-col items-center gap-4 p-6">
                       <Avatar

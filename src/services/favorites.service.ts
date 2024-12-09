@@ -53,7 +53,7 @@ export const favoritesService = {
 
   async getUserFavorites(userId: string) {
     try {
-      return prisma.favorite.findMany({
+      const favorites = await prisma.favorite.findMany({
         where: {
           userId,
         },
@@ -62,7 +62,16 @@ export const favoritesService = {
             include: {
               category: true,
               variants: true,
-              reviews: true,
+              reviews: {
+                include: {
+                  profile: {
+                    select: {
+                      fullName: true,
+                      avatarUrl: true,
+                    },
+                  },
+                },
+              },
               _count: {
                 select: {
                   reviews: true,
@@ -71,7 +80,29 @@ export const favoritesService = {
             },
           },
         },
+        orderBy: {
+          createdAt: "desc",
+        },
       });
+
+      return favorites.map((favorite) => ({
+        productId: favorite.productId,
+        dateAdded: favorite.createdAt.toISOString(),
+        product: {
+          ...favorite.product,
+          variants: favorite.product.variants.map((variant) => ({
+            ...variant,
+            price: Number(variant.price),
+          })),
+          reviews: favorite.product.reviews.map((review) => ({
+            ...review,
+            profile: {
+              fullName: review.profile.fullName,
+              avatarUrl: review.profile.avatarUrl,
+            },
+          })),
+        },
+      }));
     } catch (error) {
       console.error("Error in getUserFavorites:", error);
       throw error;
@@ -87,6 +118,55 @@ export const favoritesService = {
       });
     } catch (error) {
       console.error("Error in clearAllFavorites:", error);
+      throw error;
+    }
+  },
+
+  async getFavorites(userId: string) {
+    try {
+      const favorites = await prisma.favorite.findMany({
+        where: { userId },
+        include: {
+          product: {
+            include: {
+              category: true,
+              variants: true,
+              reviews: {
+                include: {
+                  profile: {
+                    select: {
+                      fullName: true,
+                      avatarUrl: true,
+                    },
+                  },
+                },
+              },
+              _count: {
+                select: {
+                  reviews: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+
+      return favorites.map((favorite) => ({
+        productId: favorite.productId,
+        dateAdded: favorite.createdAt.toISOString(),
+        product: {
+          ...favorite.product,
+          variants: favorite.product.variants.map((variant) => ({
+            ...variant,
+            price: Number(variant.price),
+          })),
+        },
+      }));
+    } catch (error) {
+      console.error("Error getting favorites:", error);
       throw error;
     }
   },

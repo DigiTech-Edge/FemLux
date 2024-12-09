@@ -1,138 +1,107 @@
-import { Product, ProductFilters } from '../lib/types/products'
+import {
+  ProductWithRelations,
+  ProductFilters,
+  ProductVariantWithNumber,
+} from "../types/product";
 
-export function getFilteredProducts(products: Product[], filters: Partial<ProductFilters>) {
-  let filteredProducts = [...products]
+export function getFilteredProducts(
+  products: ProductWithRelations[],
+  filters: Partial<ProductFilters>
+) {
+  let filteredProducts = [...products];
 
   // Search filter
   if (filters.search) {
-    const searchTerm = filters.search.toLowerCase()
-    filteredProducts = filteredProducts.filter(product =>
-      product.name.toLowerCase().includes(searchTerm) ||
-      product.description.toLowerCase().includes(searchTerm) ||
-      product.brand.toLowerCase().includes(searchTerm) ||
-      product.category.toLowerCase().includes(searchTerm)
-    )
-  }
-
-  if (filters.categories?.length) {
-    filteredProducts = filteredProducts.filter(product =>
-      filters.categories?.includes(product.category)
-    )
-  }
-
-  if (filters.priceRange) {
+    const searchTerm = filters.search.toLowerCase();
     filteredProducts = filteredProducts.filter(
-      product =>
-        product.price >= filters.priceRange!.min &&
-        product.price <= filters.priceRange!.max
-    )
+      (product) =>
+        product.name.toLowerCase().includes(searchTerm) ||
+        product.description.toLowerCase().includes(searchTerm) ||
+        product.category.name.toLowerCase().includes(searchTerm)
+    );
   }
 
-  if (filters.colors?.length) {
-    filteredProducts = filteredProducts.filter(product =>
-      product.colors.some(color => filters.colors?.includes(color))
-    )
+  // Category filter
+  if (filters.categories?.length) {
+    filteredProducts = filteredProducts.filter((product) =>
+      filters.categories?.includes(product.category.name)
+    );
   }
 
-  if (filters.sizes?.length) {
-    filteredProducts = filteredProducts.filter(product =>
-      product.sizes.some(size => filters.sizes?.includes(size))
-    )
+  // Price range filter
+  if (filters.priceRange) {
+    filteredProducts = filteredProducts.filter((product) =>
+      product.variants.some(
+        (variant: ProductVariantWithNumber) =>
+          Number(variant.price) >= filters.priceRange!.min &&
+          Number(variant.price) <= filters.priceRange!.max
+      )
+    );
   }
 
-  if (filters.brands?.length) {
-    filteredProducts = filteredProducts.filter(product =>
-      filters.brands?.includes(product.brand)
-    )
+  // New arrivals filter
+  if (filters.isNew !== undefined) {
+    filteredProducts = filteredProducts.filter(
+      (product) => product.isNew === filters.isNew
+    );
   }
 
-  if (filters.inStock) {
-    filteredProducts = filteredProducts.filter(product => product.stock > 0)
-  }
-
-  // Apply sorting
-  if (filters.sort) {
-    switch (filters.sort) {
-      case 'price_asc':
-        filteredProducts.sort((a, b) => a.price - b.price)
-        break
-      case 'price_desc':
-        filteredProducts.sort((a, b) => b.price - a.price)
-        break
-      case 'rating':
-        filteredProducts.sort((a, b) => b.rating - a.rating)
-        break
-      case 'newest':
-        filteredProducts = filteredProducts.filter(product => product.isNew)
-        break
-    }
-  }
-
-  return filteredProducts
+  return filteredProducts;
 }
 
-export function getUniqueFilterOptions(products: Product[]) {
-  const brands = Array.from(new Set(products.map(p => p.brand))).map(brand => ({
-    label: brand,
-    value: brand
-  }))
+export function getUniqueFilterOptions(products: ProductWithRelations[]) {
+  const categories = Array.from(
+    new Set(products.map((p) => p.category.name))
+  ).map((category) => ({
+    label: category,
+    value: category,
+  }));
 
-  const colors = Array.from(new Set(products.flatMap(p => p.colors))).map(color => ({
-    label: color,
-    value: color
-  }))
+  const priceRange = products.reduce(
+    (acc, product) => {
+      const prices = product.variants.map((v: ProductVariantWithNumber) =>
+        Number(v.price)
+      );
+      const min = Math.min(...prices);
+      const max = Math.max(...prices);
+      return {
+        min: Math.min(acc.min, min),
+        max: Math.max(acc.max, max),
+      };
+    },
+    { min: Infinity, max: 0 }
+  );
 
-  const sizes = Array.from(new Set(products.flatMap(p => p.sizes))).map(size => ({
-    label: size,
-    value: size
-  }))
-
-  return { brands, colors, sizes }
+  return { categories, priceRange };
 }
 
-export async function parseSearchParamsToFilters(searchParams: { [key: string]: string | string[] | undefined }): Promise<Partial<ProductFilters>> {
-  const filters: Partial<ProductFilters> = {}
+export async function parseSearchParamsToFilters(searchParams: {
+  [key: string]: string | string[] | undefined;
+}): Promise<Partial<ProductFilters>> {
+  const filters: Partial<ProductFilters> = {};
 
-  const categories = await searchParams.categories
+  const categories = searchParams.categories;
   if (categories) {
-    filters.categories = Array.isArray(categories) ? categories : [categories]
+    filters.categories = Array.isArray(categories) ? categories : [categories];
   }
 
-  const colors = await searchParams.colors
-  if (colors) {
-    filters.colors = Array.isArray(colors) ? colors : [colors]
-  }
-
-  const sizes = await searchParams.sizes
-  if (sizes) {
-    filters.sizes = Array.isArray(sizes) ? sizes : [sizes]
-  }
-
-  const brands = await searchParams.brands
-  if (brands) {
-    filters.brands = Array.isArray(brands) ? brands : [brands]
-  }
-
-  const priceRange = await searchParams.priceRange
+  const priceRange = searchParams.priceRange;
   if (priceRange) {
-    const [min, max] = (Array.isArray(priceRange) ? priceRange[0] : priceRange).split('-').map(Number)
-    filters.priceRange = { min, max }
+    const [min, max] = (Array.isArray(priceRange) ? priceRange[0] : priceRange)
+      .split("-")
+      .map(Number);
+    filters.priceRange = { min, max };
   }
 
-  const sort = await searchParams.sort
-  if (sort) {
-    filters.sort = Array.isArray(sort) ? sort[0] as ProductFilters['sort'] : sort as ProductFilters['sort']
+  const isNew = searchParams.isNew;
+  if (isNew === "true" || isNew === "false") {
+    filters.isNew = isNew === "true";
   }
 
-  const inStock = await searchParams.inStock
-  if (inStock === 'true') {
-    filters.inStock = true
-  }
-
-  const search = await searchParams.search
+  const search = searchParams.search;
   if (search) {
-    filters.search = Array.isArray(search) ? search[0] : search
+    filters.search = Array.isArray(search) ? search[0] : search;
   }
 
-  return filters
+  return filters;
 }
