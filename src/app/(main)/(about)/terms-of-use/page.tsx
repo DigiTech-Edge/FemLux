@@ -44,9 +44,9 @@ export default function TermsOfUsePage() {
               3. Privacy Policy
             </h2>
             <p className="text-gray-600">
-              Your use of FemLux's website is subject to our Privacy Policy.
-              Please review our Privacy Policy, which also governs the site and
-              informs users of our data collection practices.
+              Your use of FemLux&apos;s website is subject to our Privacy
+              Policy. Please review our Privacy Policy, which also governs the
+              site and informs users of our data collection practices.
             </p>
           </section>
 

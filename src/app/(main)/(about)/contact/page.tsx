@@ -17,7 +17,7 @@ export default function ContactPage() {
         <div className="animate-in slide-in-from-left duration-700">
           <h2 className="text-2xl font-semibold mb-6 text-pink-600">Get in Touch</h2>
           <p className="text-gray-600 mb-8">
-            We'd love to hear from you! Whether you have a question about our products,
+            We&apos;d love to hear from you! Whether you have a question about our products,
             need assistance with an order, or want to provide feedback, our team is here to help.
           </p>
 
