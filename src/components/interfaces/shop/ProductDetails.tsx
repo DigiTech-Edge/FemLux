@@ -72,8 +72,12 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
     startTransition(async () => {
       try {
         await toggleFavoriteStatus();
-      } catch {
-        toast.error("Error updating favorite status");
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Error updating favorite status"
+        );
       }
     });
   };

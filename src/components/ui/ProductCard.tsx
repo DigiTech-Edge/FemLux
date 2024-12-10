@@ -51,8 +51,10 @@ export default function ProductCard({
     startTransition(async () => {
       try {
         await toggleFavoriteStatus();
-      } catch {
-        toast.error("Error favoriting product");
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Error favoriting product"
+        );
       }
     });
   };

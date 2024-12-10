@@ -18,7 +18,8 @@ export async function toggleFavorite(productId: string) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user?.id) throw new Error("Unauthorized");
+  if (!user?.id)
+    throw new Error("Please sign in to add items to your favorites");
 
   const result = await favoritesService.toggleFavorite(user.id, productId);
   revalidatePath("/favourites");
