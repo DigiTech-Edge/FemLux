@@ -50,7 +50,7 @@ export default function FavoritesList({ favorites }: FavoritesListProps) {
                     size="sm"
                     variant="flat"
                     className="bg-white/80 backdrop-blur-sm hover:bg-white"
-                    onClick={() => handleRemoveFavorite(favorite.productId)}
+                    onPress={() => handleRemoveFavorite(favorite.productId)}
                   >
                     <Trash2 className="w-4 h-4 text-danger" />
                   </Button>

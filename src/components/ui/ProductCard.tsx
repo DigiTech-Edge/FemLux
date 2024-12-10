@@ -2,8 +2,13 @@
 
 import React, { useMemo, useTransition, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { Button } from "@nextui-org/react";
+import {
+  Button,
+  Card,
+  CardBody,
+  CardFooter,
+  CardHeader,
+} from "@nextui-org/react";
 import { Heart, ShoppingCart, Star, StarHalf } from "lucide-react";
 import type { ProductWithRelations } from "@/types/product";
 import { motion, useInView } from "framer-motion";
@@ -15,6 +20,7 @@ import { cn } from "@/helpers/utils";
 import { useFavorite } from "@/hooks/useFavorite";
 import { calculateAverageRating, calculateStars } from "@/helpers/rating";
 import { useCartStore } from "@/store/cart";
+import { useRouter } from "next/navigation";
 
 interface ProductCardProps {
   product: ProductWithRelations;
@@ -32,6 +38,7 @@ export default function ProductCard({
   addedDate,
 }: ProductCardProps) {
   const ref = useRef(null);
+  const router = useRouter();
   const isInView = useInView(ref, { once: true });
   const [, startTransition] = useTransition();
   const { isFavorite, toggleFavoriteStatus, isLoading } = useFavorite(
@@ -61,7 +68,7 @@ export default function ProductCard({
         id: product.id,
         name: product.name,
         images: product.images,
-        variants: product.variants
+        variants: product.variants,
       },
       {
         id: selectedVariant.id,
@@ -96,76 +103,81 @@ export default function ProductCard({
       transition={{ duration: 0.3, delay: index * 0.1 }}
       className="group"
     >
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
-        <div className="relative w-full">
-          <Carousel
-            showControls
-            showIndicators
-            slideWidth="100%"
-            className="w-full"
-          >
-            {product.images.map((image, idx) => (
-              <div key={idx} className="relative w-full flex-[0_0_100%]">
-                <div className="relative aspect-square w-full">
-                  <Image
-                    src={image}
-                    alt={`${product.name} - View ${idx + 1}`}
-                    fill
-                    priority={idx === 0}
-                    className="object-cover"
-                    sizes="100vw"
-                  />
+      <Card
+        className="hover:shadow-md transition-shadow duration-200"
+        radius="none"
+      >
+        <CardHeader className="p-0">
+          <div className="relative w-full">
+            <Carousel
+              showControls
+              showIndicators
+              slideWidth="100%"
+              className="w-full"
+            >
+              {product.images.map((image, idx) => (
+                <div key={idx} className="relative w-full flex-[0_0_100%]">
+                  <div className="relative aspect-square w-full">
+                    <Image
+                      src={image}
+                      alt={`${product.name} - View ${idx + 1}`}
+                      fill
+                      priority={idx === 0}
+                      className="object-cover"
+                      sizes="100vw"
+                    />
+                  </div>
                 </div>
+              ))}
+            </Carousel>
+
+            {/* New Tag */}
+            {product.isNew && (
+              <div className="absolute top-2 left-2 bg-primary text-white px-2 py-1 text-xs font-semibold rounded">
+                NEW
               </div>
-            ))}
-          </Carousel>
+            )}
 
-          {/* New Tag */}
-          {product.isNew && (
-            <div className="absolute top-2 left-2 bg-primary text-white px-2 py-1 text-xs font-semibold rounded">
-              NEW
-            </div>
-          )}
+            {/* Action Buttons */}
+            {isFavoriteView ? (
+              additionalActions
+            ) : (
+              <div className="absolute top-2 right-2 z-10 flex flex-col gap-2">
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="flat"
+                  isLoading={isLoading}
+                  onPress={handleFavoriteClick}
+                  className="bg-white/80 backdrop-blur-sm hover:bg-white"
+                >
+                  <Heart
+                    className={cn("w-4 h-4", {
+                      "fill-danger text-danger": isFavorite,
+                      "text-default-500": !isFavorite,
+                    })}
+                  />
+                </Button>
+              </div>
+            )}
 
-          {/* Action Buttons */}
-          {isFavoriteView ? (
-            additionalActions
-          ) : (
-            <div className="absolute top-2 right-2 z-10 flex flex-col gap-2">
+            {/* Cart Button - Show only in non-favorite view */}
+            <div className="absolute top-12 right-2 z-10">
               <Button
                 isIconOnly
-                size="sm"
                 variant="flat"
-                isLoading={isLoading}
-                onClick={handleFavoriteClick}
+                size="sm"
+                onPress={handleAddToCart}
+                isDisabled={!selectedVariant}
                 className="bg-white/80 backdrop-blur-sm hover:bg-white"
               >
-                <Heart
-                  className={cn("w-4 h-4", {
-                    "fill-danger text-danger": isFavorite,
-                    "text-default-500": !isFavorite,
-                  })}
-                />
+                <ShoppingCart className="w-4 h-4 text-primary" />
               </Button>
             </div>
-          )}
-
-          {/* Cart Button - Show only in non-favorite view */}
-          <div className="absolute top-12 right-2 z-10">
-            <Button
-              isIconOnly
-              variant="flat"
-              size="sm"
-              onClick={handleAddToCart}
-              isDisabled={!selectedVariant}
-              className="bg-white/80 backdrop-blur-sm hover:bg-white"
-            >
-              <ShoppingCart className="w-4 h-4 text-primary" />
-            </Button>
           </div>
-        </div>
+        </CardHeader>
 
-        <div className="p-4">
+        <CardBody className="p-4">
           {/* Top Section: Category and Price */}
           <div className="flex items-center justify-between mb-2">
             <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -210,10 +222,12 @@ export default function ProductCard({
 
             <div className="flex flex-wrap gap-1 min-w-[80px] justify-end">
               {availableVariants.map((variant) => (
-                <button
+                <Button
                   key={variant.size}
-                  onClick={() => setSelectedVariant(variant)}
+                  onPress={() => setSelectedVariant(variant)}
                   disabled={variant.stock === 0}
+                  isIconOnly
+                  size="sm"
                   className={cn(
                     "text-xs px-2 py-1 rounded-md transition-colors",
                     variant.id === selectedVariant.id
@@ -224,13 +238,15 @@ export default function ProductCard({
                   )}
                 >
                   {variant.size}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
+        </CardBody>
 
+        <CardFooter className="px-4 pb-4 pt-0">
           {/* Bottom Section: Stock, Rating, and Action */}
-          <div className="flex items-center justify-between mt-2">
+          <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-2">
               {/* Stock Status */}
               <span className="text-xs text-gray-500">
@@ -241,16 +257,15 @@ export default function ProductCard({
             </div>
 
             {/* View Details Button */}
-            <Link href={`/shop/${product.id}`}>
-              <Button
-                size="sm"
-                color="danger"
-                variant="flat"
-                disabled={!inStock}
-              >
-                Details
-              </Button>
-            </Link>
+            <Button
+              size="sm"
+              color="danger"
+              variant="flat"
+              disabled={!inStock}
+              onPress={() => router.push(`/shop/${product.id}`)}
+            >
+              Details
+            </Button>
           </div>
 
           {/* Date Added (for favorites view) */}
@@ -259,8 +274,8 @@ export default function ProductCard({
               Added on {addedDate}
             </div>
           )}
-        </div>
-      </div>
+        </CardFooter>
+      </Card>
     </motion.div>
   );
 }

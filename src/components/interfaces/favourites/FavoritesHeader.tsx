@@ -51,7 +51,7 @@ export default function FavoritesHeader({ totalItems }: FavoritesHeaderProps) {
             color="danger"
             variant="flat"
             startContent={<Trash2 className="w-4 h-4" />}
-            onClick={() => setIsOpen(true)}
+            onPress={() => setIsOpen(true)}
             isDisabled={totalItems === 0}
           >
             Clear All

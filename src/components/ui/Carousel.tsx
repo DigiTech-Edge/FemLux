@@ -108,7 +108,7 @@ const Carousel = forwardRef<CarouselRef, CarouselProps>(({
             radius="full"
             variant="flat"
             className="absolute left-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
-            onClick={scrollPrev}
+            onPress={scrollPrev}
           >
             <ChevronLeft className="w-6 h-6" />
           </Button>
@@ -118,7 +118,7 @@ const Carousel = forwardRef<CarouselRef, CarouselProps>(({
             radius="full"
             variant="flat"
             className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
-            onClick={scrollNext}
+            onPress={scrollNext}
           >
             <ChevronRight className="w-6 h-6" />
           </Button>

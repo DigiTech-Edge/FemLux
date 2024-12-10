@@ -117,7 +117,7 @@ const TopNavbar = ({ isAuthenticated }: TopNavbarProps) => {
               aria-label="Logout"
               isLoading={isLoading}
               startContent={<LogOut className="w-5 h-5" />}
-              onClick={handleLogout}
+              onPress={handleLogout}
             >
               <span className="hidden sm:inline">Logout</span>
             </Button>

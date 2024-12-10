@@ -102,7 +102,7 @@ export default function ProfileSidebar({
                   ? "text-pink-500"
                   : "text-foreground/70 hover:text-foreground"
               )}
-              onClick={() => handleTabChange(tab.key)}
+              onPress={() => handleTabChange(tab.key)}
             >
               <div className="flex items-center gap-2">
                 <Icon size={20} />
@@ -136,7 +136,7 @@ export default function ProfileSidebar({
         <Button
           isIconOnly
           variant="light"
-          onClick={() => setIsOpen(true)}
+          onPress={() => setIsOpen(true)}
           className="absolute left-0 -top-6 z-30"
           aria-label="Open menu"
         >
@@ -165,7 +165,7 @@ export default function ProfileSidebar({
                     <Button
                       isIconOnly
                       variant="light"
-                      onClick={() => setIsOpen(false)}
+                      onPress={() => setIsOpen(false)}
                       aria-label="Close menu"
                     >
                       <X className="w-4 h-4" />
@@ -211,7 +211,7 @@ export default function ProfileSidebar({
                                 ? "text-pink-500"
                                 : "text-foreground/70 hover:text-foreground"
                             )}
-                            onClick={() => handleTabChange(tab.key)}
+                            onPress={() => handleTabChange(tab.key)}
                           >
                             <div className="flex items-center gap-2">
                               <Icon size={20} />

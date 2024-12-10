@@ -134,7 +134,7 @@ export default function OrdersTab({ orders, onCancel }: OrdersTabProps) {
                   isIconOnly
                   size="sm"
                   variant="light"
-                  onClick={() => handleViewOrder(order)}
+                  onPress={() => handleViewOrder(order)}
                 >
                   <Eye size={18} />
                 </Button>
@@ -196,7 +196,7 @@ export default function OrdersTab({ orders, onCancel }: OrdersTabProps) {
                               color="danger"
                               variant="flat"
                               size="sm"
-                              onClick={() =>
+                              onPress={() =>
                                 handleCancelClick(selectedOrder.id)
                               }
                             >

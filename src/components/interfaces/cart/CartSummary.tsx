@@ -153,7 +153,7 @@ export default function CartSummary() {
               size="lg"
               startContent={<CreditCard className="h-5 w-5" />}
               className="w-full"
-              onClick={() => !isLoadingProfile && !error && setIsOpen(true)}
+              onPress={() => !isLoadingProfile && !error && setIsOpen(true)}
               isDisabled={
                 isLoadingProfile || error || !items || items.length === 0
               }

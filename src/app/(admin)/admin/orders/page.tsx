@@ -21,7 +21,13 @@ export default async function OrdersPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Orders</h1>
-      <Suspense fallback={<Spinner />}>
+      <Suspense
+        fallback={
+          <div className="flex justify-center items-center h-screen">
+            <Spinner />
+          </div>
+        }
+      >
         <OrdersStats stats={stats!} />
         <OrdersTable orders={orders ?? []} />
       </Suspense>

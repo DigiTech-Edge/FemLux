@@ -39,7 +39,7 @@ const SocialAuth = () => {
         variant="bordered"
         startContent={<FaGoogle className="text-[#4285F4]" />}
         className="w-full"
-        onClick={handleGoogleLogin}
+        onPress={handleGoogleLogin}
         isLoading={isLoading}
       >
         Google

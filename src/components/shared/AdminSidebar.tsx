@@ -1,15 +1,33 @@
 "use client";
 
 import { adminRoutes } from "@/lib/routes";
+import { logout } from "@/services/actions/auth.actions";
 import { Button, Divider, Tooltip } from "@nextui-org/react";
 import { motion } from "framer-motion";
 import { Info, LogOut, Home } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 const AdminSidebar = () => {
   const pathname = usePathname();
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      setIsLoading(true);
+      await logout();
+      router.push("/");
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.error("Failed to logout");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="hidden md:flex flex-col h-screen bg-white dark:bg-black border-r border-divider fixed left-0 top-0 w-[80px] lg:w-[240px]">
@@ -60,7 +78,9 @@ const AdminSidebar = () => {
               key={route.path}
               href={route.path}
               className={`relative flex items-center h-11 ${
-                isActive ? "text-pink-500" : "text-foreground/70 hover:text-foreground"
+                isActive
+                  ? "text-pink-500"
+                  : "text-foreground/70 hover:text-foreground"
               }`}
             >
               <div className="flex items-center w-full px-3 gap-3">
@@ -76,7 +96,7 @@ const AdminSidebar = () => {
                     transition={{
                       type: "spring",
                       stiffness: 500,
-                      damping: 30
+                      damping: 30,
                     }}
                   />
                 )}
@@ -89,23 +109,24 @@ const AdminSidebar = () => {
       <div className="px-2 pb-4">
         <Divider className="mb-4" />
         <div className="flex flex-col gap-2">
-          <Link href="/" className="block">
-            <Button
-              className={`
+          <Button
+            className={`
                 w-full min-w-0 h-11 md:justify-center lg:justify-start gap-3 
                 bg-gradient-to-r from-blue-500/10 to-blue-500/5 hover:from-blue-500/20 hover:to-blue-500/10
                 text-blue-600 dark:text-blue-400
                 transition-all duration-200
                 group
               `}
-              variant="flat"
-              startContent={
-                <Home className="w-5 h-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110" />
-              }
-            >
-              <span className="truncate md:hidden lg:block font-medium">Back to Site</span>
-            </Button>
-          </Link>
+            variant="flat"
+            startContent={
+              <Home className="w-5 h-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110" />
+            }
+            onPress={() => router.push("/")}
+          >
+            <span className="truncate md:hidden lg:block font-medium">
+              Back to Site
+            </span>
+          </Button>
           <Button
             className={`
               w-full min-w-0 h-11 md:justify-center lg:justify-start gap-3
@@ -118,8 +139,12 @@ const AdminSidebar = () => {
             startContent={
               <LogOut className="w-5 h-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110" />
             }
+            onPress={handleLogout}
+            isLoading={isLoading}
           >
-            <span className="truncate md:hidden lg:block font-medium">Logout</span>
+            <span className="truncate md:hidden lg:block font-medium">
+              Logout
+            </span>
           </Button>
         </div>
       </div>

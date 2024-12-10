@@ -10,7 +10,9 @@ export default async function ProductsPage() {
 
   return (
     <div className="mx-auto py-6">
-      <Suspense fallback={<Spinner />}>
+      <Suspense fallback={<div className="flex justify-center items-center h-screen">
+            <Spinner />
+          </div>}>
         <ProductManagementClient
           initialProducts={initialProducts}
           initialCategories={initialCategories}
