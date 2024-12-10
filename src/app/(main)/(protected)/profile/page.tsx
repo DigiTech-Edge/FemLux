@@ -22,7 +22,9 @@ export default async function ProfilePage({
 
   return (
     <main className="min-h-screen pb-20">
-      <Suspense fallback={<Spinner />}>
+      <Suspense fallback={<div className="flex justify-center items-center h-screen">
+            <Spinner />
+          </div>}>
         <ProfileClient tab={tab} profile={profile} orders={orders} />
       </Suspense>
     </main>

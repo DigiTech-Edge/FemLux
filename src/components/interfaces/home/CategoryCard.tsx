@@ -4,10 +4,9 @@ import React from "react";
 import { Card } from "@nextui-org/react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import Link from "next/link";
 import { useInView } from "framer-motion";
 import { CategoryWithCount } from "@/types/category";
-
+import { useRouter } from "next/navigation";
 interface CategoryCardProps {
   category: CategoryWithCount;
   index: number;
@@ -16,7 +15,7 @@ interface CategoryCardProps {
 const CategoryCard: React.FC<CategoryCardProps> = ({ category, index }) => {
   const ref = React.useRef(null);
   const isInView = useInView(ref, { once: true });
-
+  const router = useRouter();
   return (
     <motion.div
       ref={ref}
@@ -29,13 +28,13 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ category, index }) => {
       }}
       className="h-full w-full"
     >
-      <Link
-        href={`/shop?category=${category.name.toLowerCase()}`}
-        className="block h-full w-full"
-      >
+      <div className="block h-full w-full">
         <Card
           isPressable
           className="relative w-full h-[240px] overflow-hidden group bg-default-100"
+          onPress={() =>
+            router.push(`/shop?category=${category.name.toLowerCase()}`)
+          }
         >
           <div className="relative w-full h-full">
             <Image
@@ -57,7 +56,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ category, index }) => {
             </div>
           </div>
         </Card>
-      </Link>
+      </div>
     </motion.div>
   );
 };

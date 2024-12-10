@@ -4,9 +4,10 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Button } from "@nextui-org/react";
 import { ShoppingBag } from "lucide-react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function EmptyCart() {
+  const router = useRouter();
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -44,16 +45,15 @@ export default function EmptyCart() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
       >
-        <Link href="/shop">
-          <Button
-            size="lg"
-            color="primary"
-            variant="shadow"
-            className="font-semibold"
-          >
-            Start Shopping
-          </Button>
-        </Link>
+        <Button
+          size="lg"
+          color="primary"
+          variant="shadow"
+          className="font-semibold"
+          onPress={() => router.push("/shop")}
+        >
+          Start Shopping
+        </Button>
       </motion.div>
     </motion.div>
   );
