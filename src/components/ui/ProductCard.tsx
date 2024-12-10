@@ -177,7 +177,7 @@ export default function ProductCard({
           </div>
         </CardHeader>
 
-        <CardBody className="p-4">
+        <CardBody className="px-4">
           {/* Top Section: Category and Price */}
           <div className="flex items-center justify-between mb-2">
             <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -246,34 +246,34 @@ export default function ProductCard({
 
         <CardFooter className="px-4 pb-4 pt-0">
           {/* Bottom Section: Stock, Rating, and Action */}
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-2">
-              {/* Stock Status */}
-              <span className="text-xs text-gray-500">
-                {selectedVariant.stock > 0
-                  ? `${selectedVariant.stock} in stock`
-                  : "Out of stock"}
-              </span>
+          <div className="flex flex-col w-full">
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-2">
+                {/* Stock Status */}
+                <span className="text-xs text-gray-500">
+                  {selectedVariant.stock > 0
+                    ? `${selectedVariant.stock} in stock`
+                    : "Out of stock"}
+                </span>
+              </div>
+
+              {/* View Details Button */}
+              <Button
+                size="sm"
+                color="danger"
+                variant="flat"
+                disabled={!inStock}
+                onPress={() => router.push(`/shop/${product.id}`)}
+              >
+                Details
+              </Button>
             </div>
 
-            {/* View Details Button */}
-            <Button
-              size="sm"
-              color="danger"
-              variant="flat"
-              disabled={!inStock}
-              onPress={() => router.push(`/shop/${product.id}`)}
-            >
-              Details
-            </Button>
+            {/* Date Added (for favorites view) */}
+            {addedDate && (
+              <div className="text-xs text-gray-500">Added on {addedDate}</div>
+            )}
           </div>
-
-          {/* Date Added (for favorites view) */}
-          {addedDate && (
-            <div className="mt-2 text-xs text-gray-500">
-              Added on {addedDate}
-            </div>
-          )}
         </CardFooter>
       </Card>
     </motion.div>
