@@ -79,6 +79,7 @@ const RecentOrders = ({ data }: RecentOrdersProps) => {
                       size="sm"
                       variant="flat"
                       color={statusColorMap[order.status]}
+                      className="capitalize"
                     >
                       {order.status}
                     </Chip>

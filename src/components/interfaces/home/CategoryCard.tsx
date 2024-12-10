@@ -32,9 +32,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ category, index }) => {
         <Card
           isPressable
           className="relative w-full h-[240px] overflow-hidden group bg-default-100"
-          onPress={() =>
-            router.push(`/shop?category=${category.name.toLowerCase()}`)
-          }
+          onPress={() => router.push(`/shop?categories=${category.name}`)}
         >
           <div className="relative w-full h-full">
             <Image
