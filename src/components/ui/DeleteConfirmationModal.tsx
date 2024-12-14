@@ -7,7 +7,6 @@ import {
   ModalBody,
   ModalFooter,
   Button,
-  Spinner,
 } from "@nextui-org/react";
 import { AlertTriangle } from "lucide-react";
 
@@ -18,6 +17,7 @@ interface DeleteConfirmationModalProps {
   title?: string;
   description?: string;
   loading?: boolean;
+  buttonText?: string;
 }
 
 export default function DeleteConfirmationModal({
@@ -27,6 +27,7 @@ export default function DeleteConfirmationModal({
   title = "Delete Confirmation",
   description = "Are you sure you want to delete this item? This action cannot be undone.",
   loading = false,
+  buttonText = "Delete",
 }: DeleteConfirmationModalProps) {
   return (
     <Modal
@@ -37,7 +38,8 @@ export default function DeleteConfirmationModal({
       backdrop="blur"
       placement="center"
       classNames={{
-        backdrop: "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-20",
+        backdrop:
+          "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-20",
       }}
     >
       <ModalContent>
@@ -49,27 +51,16 @@ export default function DeleteConfirmationModal({
           <p className="text-default-500">{description}</p>
         </ModalBody>
         <ModalFooter>
-          <Button
-            variant="light"
-            onPress={onClose}
-            disabled={loading}
-          >
+          <Button variant="light" onPress={onClose} disabled={loading}>
             Cancel
           </Button>
           <Button
             color="danger"
             variant="flat"
             onPress={onConfirm}
-            disabled={loading}
+            isLoading={loading}
           >
-            {loading ? (
-              <div className="flex items-center gap-2">
-                <Spinner size="sm" color="white" />
-                <span>Deleting...</span>
-              </div>
-            ) : (
-              "Delete"
-            )}
+            {buttonText}
           </Button>
         </ModalFooter>
       </ModalContent>

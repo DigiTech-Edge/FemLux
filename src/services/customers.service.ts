@@ -1,5 +1,6 @@
 import { CustomerStats, CustomerWithOrders } from "@/types/customer";
 import { prisma } from "@/utils/prisma";
+import { createAdminClient } from "@/utils/supabase/server";
 
 export async function getCustomers(): Promise<CustomerWithOrders[]> {
   try {
@@ -98,5 +99,25 @@ export async function getCustomerStats(): Promise<CustomerStats> {
   } catch (error) {
     console.error("Error fetching customer stats:", error);
     throw new Error("Failed to fetch customer statistics");
+  }
+}
+
+export async function updateCustomerRole(
+  userId: string,
+  role: "admin" | "user"
+): Promise<void> {
+  try {
+    const adminClient = await createAdminClient();
+
+    const { error } = await adminClient.auth.admin.updateUserById(userId, {
+      user_metadata: { role },
+    });
+
+    if (error) {
+      throw error;
+    }
+  } catch (error) {
+    console.error("Error updating customer role:", error);
+    throw new Error("Failed to update customer role");
   }
 }

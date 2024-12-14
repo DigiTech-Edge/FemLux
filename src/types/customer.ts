@@ -10,6 +10,7 @@ export interface Customer {
   lastOrderDate: string;
   address: string;
   phone: string;
+  role?: "admin" | "user";
 }
 
 export interface CustomerStats {

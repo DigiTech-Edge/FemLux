@@ -16,11 +16,25 @@ import {
   Select,
   SelectItem,
   Input,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
 } from "@nextui-org/react";
-import { Eye, Search, Mail, ShoppingBag } from "lucide-react";
+import {
+  Eye,
+  Search,
+  Mail,
+  MoreVertical,
+  Shield,
+  ShoppingBag,
+} from "lucide-react";
 import { formatCurrency } from "@/helpers";
 import type { Customer } from "@/types/customer";
 import CustomerDetailsModal from "./CustomerDetailsModal";
+import DeleteConfirmationModal from "@/components/ui/DeleteConfirmationModal";
+import { updateCustomerRoleAction } from "@/services/actions/customers.actions";
+import toast from "react-hot-toast";
 
 interface CustomersTableProps {
   customers: Customer[];
@@ -42,8 +56,13 @@ export default function CustomersTable({ customers }: CustomersTableProps) {
     new Set(["10"])
   );
   const [page, setPage] = React.useState(1);
-  const [selectedCustomer, setSelectedCustomer] =
+  const [selectedCustomerForDetails, setSelectedCustomerForDetails] =
     React.useState<Customer | null>(null);
+  const [selectedCustomerForRole, setSelectedCustomerForRole] =
+    React.useState<Customer | null>(null);
+  const [isRoleModalOpen, setIsRoleModalOpen] = React.useState(false);
+  const [newRole, setNewRole] = React.useState<"admin" | "user">("user");
+  const [isUpdatingRole, setIsUpdatingRole] = React.useState(false);
 
   // Filter customers
   const filteredCustomers = React.useMemo(() => {
@@ -81,12 +100,49 @@ export default function CustomersTable({ customers }: CustomersTableProps) {
     { name: "ORDERS", uid: "orders" },
     { name: "TOTAL SPENT", uid: "spent" },
     { name: "JOINED", uid: "joined" },
+    ...(customers[0]?.role !== undefined
+      ? [
+          {
+            name: "ROLE",
+            uid: "role",
+            renderCell: (customer: Customer) => (
+              <Chip
+                color={customer.role === "admin" ? "success" : "default"}
+                startContent={<Shield className="h-3 w-3" />}
+                variant="flat"
+                size="sm"
+                className="capitalize p-2"
+              >
+                {customer.role || "user"}
+              </Chip>
+            ),
+          },
+        ]
+      : []),
     { name: "ACTIONS", uid: "actions" },
   ];
 
+  const handleRoleUpdate = async () => {
+    if (!selectedCustomerForRole) return;
+
+    try {
+      setIsUpdatingRole(true);
+      await updateCustomerRoleAction(selectedCustomerForRole.id, newRole);
+      toast.success("Role updated successfully");
+    } catch (error) {
+      console.error("Failed to update role:", error);
+    } finally {
+      setIsUpdatingRole(false);
+      setIsRoleModalOpen(false);
+      setSelectedCustomerForRole(null);
+    }
+  };
+
   const renderCell = React.useCallback(
     (customer: Customer, columnKey: React.Key) => {
-      switch (columnKey) {
+      const key = String(columnKey); // Convert Key to string
+
+      switch (key) {
         case "customer":
           return (
             <User
@@ -124,58 +180,52 @@ export default function CustomersTable({ customers }: CustomersTableProps) {
           );
         case "actions":
           return (
-            <div className="flex items-center gap-2">
-              <Tooltip content="View details">
+            <div className="flex items-center">
+              <Tooltip content="View Details">
                 <Button
                   isIconOnly
                   size="sm"
                   variant="light"
-                  onPress={() => setSelectedCustomer(customer)}
+                  onPress={() => setSelectedCustomerForDetails(customer)}
                 >
-                  <Eye className="w-4 h-4" />
+                  <Eye className="h-4 w-4" />
                 </Button>
               </Tooltip>
-              <Tooltip content="Send email">
+              <Tooltip content="Send Email">
                 <Button
+                  as="a"
+                  href={`mailto:${customer.email}`}
                   isIconOnly
                   size="sm"
                   variant="light"
-                  onPress={() => {
-                    window.location.href = `mailto:${customer.email}`;
-                  }}
                 >
-                  <Mail className="w-4 h-4" color="blue" />
+                  <Mail className="h-4 w-4" />
                 </Button>
               </Tooltip>
-              {/* <Tooltip
-                content={
-                  customer.status === "blocked"
-                    ? "Unblock customer"
-                    : "Block customer"
-                }
-              >
-                <Button
-                  isIconOnly
-                  size="sm"
-                  variant="light"
-                  color={customer.status === "blocked" ? "success" : "danger"}
-                  onPress={() => {
-                    // TODO: Implement block/unblock functionality
-                    console.log(
-                      `${
-                        customer.status === "blocked" ? "Unblock" : "Block"
-                      } customer:`,
-                      customer.id
-                    );
-                  }}
-                >
-                  {customer.status === "blocked" ? (
-                    <LockOpen className="w-4 h-4" />
-                  ) : (
-                    <Lock className="w-4 h-4" />
-                  )}
-                </Button>
-              </Tooltip> */}
+              {customer.role !== undefined && (
+                <Dropdown>
+                  <DropdownTrigger>
+                    <Button isIconOnly size="sm" variant="light">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownTrigger>
+                  <DropdownMenu aria-label="Actions">
+                    <DropdownItem
+                      key="change-role"
+                      startContent={<Shield className="h-4 w-4" />}
+                      onPress={() => {
+                        setSelectedCustomerForRole(customer);
+                        setNewRole(
+                          customer.role === "admin" ? "user" : "admin"
+                        );
+                        setIsRoleModalOpen(true);
+                      }}
+                    >
+                      Change to {customer.role === "admin" ? "User" : "Admin"}
+                    </DropdownItem>
+                  </DropdownMenu>
+                </Dropdown>
+              )}
             </div>
           );
         default:
@@ -287,17 +337,38 @@ export default function CustomersTable({ customers }: CustomersTableProps) {
         >
           {(item) => (
             <TableRow key={item.id}>
-              {(columnKey) => (
-                <TableCell>{renderCell(item, columnKey)}</TableCell>
-              )}
+              {(columnKey) => {
+                const column = columns.find(
+                  (col) => col.uid === String(columnKey)
+                );
+                return (
+                  <TableCell>
+                    {column?.renderCell
+                      ? column.renderCell(item)
+                      : renderCell(item, columnKey)}
+                  </TableCell>
+                );
+              }}
             </TableRow>
           )}
         </TableBody>
       </Table>
       <CustomerDetailsModal
-        customer={selectedCustomer}
-        isOpen={!!selectedCustomer}
-        onClose={() => setSelectedCustomer(null)}
+        customer={selectedCustomerForDetails}
+        isOpen={!!selectedCustomerForDetails}
+        onClose={() => setSelectedCustomerForDetails(null)}
+      />
+      <DeleteConfirmationModal
+        isOpen={isRoleModalOpen}
+        onClose={() => {
+          setIsRoleModalOpen(false);
+          setSelectedCustomerForRole(null);
+        }}
+        onConfirm={handleRoleUpdate}
+        title="Change User Role"
+        description={`Are you sure you want to change ${selectedCustomerForRole?.name}'s role to ${newRole}? This will affect their access level.`}
+        loading={isUpdatingRole}
+        buttonText="Change"
       />
     </div>
   );
