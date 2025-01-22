@@ -9,8 +9,8 @@ export const checkoutFormSchema = z.object({
     .max(15, "Phone number must not exceed 15 digits"),
   shippingAddress: z
     .string()
-    .min(5, "Shipping address must be at least 5 characters")
-    .describe("Please enter your full address separated by commas"),
+    .min(5, "Location must be at least 5 characters")
+    .describe("Please enter your Location"),
 });
 
 export type CheckoutFormValues = z.infer<typeof checkoutFormSchema>;

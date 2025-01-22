@@ -208,8 +208,8 @@ export default function CartSummary() {
               />
               <Input
                 {...register("shippingAddress")}
-                label="Shipping Address"
-                placeholder="Enter your full address separated by commas"
+                label="Location"
+                placeholder="Enter your Location"
                 errorMessage={errors.shippingAddress?.message}
                 isInvalid={!!errors.shippingAddress}
               />
