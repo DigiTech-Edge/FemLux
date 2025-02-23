@@ -71,8 +71,10 @@ export default function CartSummary() {
     }
   }, [data, reset]);
 
-  const shipping = total > 100 ? 0 : 10;
-  const grandTotal = total + shipping;
+  // Commented out shipping logic for future implementation
+  // const shipping = total > 100 ? 0 : 10;
+  // const grandTotal = total + shipping;
+  const grandTotal = total; // Using subtotal as grand total for now
 
   const SummaryRow = ({
     label,
@@ -139,12 +141,13 @@ export default function CartSummary() {
             <Divider />
             <div className="space-y-3">
               <SummaryRow label="Subtotal" value={total} />
-              <SummaryRow label="Shipping" value={shipping} />
-              {shipping > 0 && (
+              {/* Commented out shipping row for future implementation */}
+              {/* <SummaryRow label="Shipping" value={shipping} /> */}
+              {/* {shipping > 0 && (
                 <p className="text-xs text-pink-600">
                   Add {formatCurrency(100 - total)} more for free shipping!
                 </p>
-              )}
+              )} */}
               <Divider />
               <SummaryRow label="Total" value={grandTotal} isTotal />
             </div>

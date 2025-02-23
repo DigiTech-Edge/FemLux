@@ -145,7 +145,7 @@ export default function CustomerDetailsModal({
                   title={
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4" />
-                      <span>Address</span>
+                      <span>Location</span>
                     </div>
                   }
                 >
@@ -154,11 +154,11 @@ export default function CustomerDetailsModal({
                       <div className="space-y-4">
                         <div className="flex items-center gap-2">
                           <MapPin className="w-4 h-4 text-default-400" />
-                          <span className="font-medium">Address</span>
+                          <span className="font-medium">Location</span>
                         </div>
                         <div>
                           <p className="text-small text-default-500">
-                            Full Address
+                            Location
                           </p>
                           <p className="text-large">{customer.address}</p>
                         </div>

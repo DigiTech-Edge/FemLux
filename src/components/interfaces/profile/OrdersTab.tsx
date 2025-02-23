@@ -258,7 +258,7 @@ export default function OrdersTab({ orders, onCancel }: OrdersTabProps) {
                       <CardBody>
                         <div className="space-y-3">
                           <div className="flex justify-between">
-                            <p className="text-default-500">Shipping Address</p>
+                            <p className="text-default-500">Location</p>
                             <p className="text-right">
                               {selectedOrder.shippingAddress}
                             </p>
