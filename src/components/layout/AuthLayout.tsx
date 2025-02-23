@@ -20,9 +20,6 @@ const AuthLayout = ({ children }: AuthLayoutProps) => {
             height={40}
             className="mx-auto"
           />
-          <p className="text-sm text-default-500 mt-2">
-            Your Fashion Destination
-          </p>
         </div>
         {children}
       </Card>
