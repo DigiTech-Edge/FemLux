@@ -17,8 +17,7 @@ import {
 import type {
   ProductWithRelations,
   ProductFormData,
-  ProductVariantCreate,
-  ProductVariantUpdate,
+  ProductUpdateData,
 } from "@/types/product";
 import type { CategoryWithCount } from "@/types/category";
 import useSWR from "swr";
@@ -37,7 +36,13 @@ export default function ProductsClient({
     useState<ProductWithRelations | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deleteModalState, setDeleteModalState] = useState<{
+    isOpen: boolean;
+    loading: boolean;
+  }>({
+    isOpen: false,
+    loading: false,
+  });
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   const { data: products, mutate } = useSWR<ProductWithRelations[]>(
@@ -61,13 +66,14 @@ export default function ProductsClient({
 
   const handleDelete = async (product: ProductWithRelations) => {
     setSelectedProduct(product);
-    setIsDeleteOpen(true);
+    setDeleteModalState({ isOpen: true, loading: false });
   };
 
   const handleConfirmDelete = async () => {
     if (!selectedProduct) return;
 
     try {
+      setDeleteModalState((prev) => ({ ...prev, loading: true }));
       await deleteProduct(selectedProduct.id);
       await mutate();
       toast.success("Product deleted successfully");
@@ -75,7 +81,7 @@ export default function ProductsClient({
       console.log(error);
       toast.error("Failed to delete product");
     } finally {
-      setIsDeleteOpen(false);
+      setDeleteModalState({ isOpen: false, loading: false });
       setSelectedProduct(null);
     }
   };
@@ -86,60 +92,8 @@ export default function ProductsClient({
     return result;
   };
 
-  const handleUpdate = async (data: ProductFormData) => {
+  const handleUpdate = async (data: ProductUpdateData) => {
     if (!selectedProduct) return;
-
-    // Compare existing variants with new variants to determine changes
-    const existingVariantMap = new Map(
-      selectedProduct.variants.map((v) => [
-        JSON.stringify({ size: v.size, price: v.price, stock: v.stock }),
-        v,
-      ])
-    );
-
-    const newVariantMap = new Map(
-      data.variants.map((v) => [
-        JSON.stringify({ size: v.size, price: v.price, stock: v.stock }),
-        v,
-      ])
-    );
-
-    const variantsToCreate: ProductVariantCreate[] = [];
-    const variantsToUpdate: ProductVariantUpdate[] = [];
-    const variantsToDelete: string[] = [];
-
-    // Find variants to create or update
-    data.variants.forEach((variant) => {
-      const key = JSON.stringify({
-        size: variant.size,
-        price: variant.price,
-        stock: variant.stock,
-      });
-      const existingVariant = existingVariantMap.get(key);
-
-      if (existingVariant) {
-        variantsToUpdate.push({
-          id: existingVariant.id,
-          size: variant.size,
-          price: variant.price,
-          stock: variant.stock,
-        });
-      } else {
-        variantsToCreate.push(variant);
-      }
-    });
-
-    // Find variants to delete
-    selectedProduct.variants.forEach((variant) => {
-      const key = JSON.stringify({
-        size: variant.size,
-        price: variant.price,
-        stock: variant.stock,
-      });
-      if (!newVariantMap.has(key)) {
-        variantsToDelete.push(variant.id);
-      }
-    });
 
     const result = await updateProduct(selectedProduct.id, {
       id: selectedProduct.id,
@@ -148,21 +102,18 @@ export default function ProductsClient({
       categoryId: data.categoryId,
       images: data.images,
       isNew: data.isNew,
-      variants: {
-        create: variantsToCreate,
-        update: variantsToUpdate,
-        delete: variantsToDelete,
-      },
+      variants: data.variants,
     });
     await mutate();
     return result;
   };
 
-  const onSubmit = (data: ProductFormData) => {
+  const onSubmit = async (data: ProductFormData | ProductUpdateData) => {
     if (isEditing) {
-      return handleUpdate(data);
+      if (!selectedProduct) return;
+      return handleUpdate(data as ProductUpdateData);
     } else {
-      return handleCreate(data);
+      return handleCreate(data as ProductFormData);
     }
   };
 
@@ -246,9 +197,10 @@ export default function ProductsClient({
       />
 
       <DeleteConfirmationModal
-        isOpen={isDeleteOpen}
+        isOpen={deleteModalState.isOpen}
+        loading={deleteModalState.loading}
         onClose={() => {
-          setIsDeleteOpen(false);
+          setDeleteModalState((prev) => ({ ...prev, isOpen: false }));
           setSelectedProduct(null);
         }}
         onConfirm={handleConfirmDelete}

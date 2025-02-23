@@ -33,7 +33,7 @@ export async function getCustomers(): Promise<CustomerWithOrders[]> {
         name: customer.fullName || customer.email.split("@")[0],
         email: customer.email,
         avatar: customer.avatarUrl || `/images/default-avatar.png`,
-        status: customer.deletedAt ? "blocked" : "active",
+        status: "active",
         totalOrders: customer.orders.length,
         totalSpent: customer.orders.reduce(
           (sum, order) => sum + Number(order.totalAmount),
@@ -69,12 +69,7 @@ export async function getCustomerStats(): Promise<CustomerStats> {
       // Total customers
       prisma.profile.count(),
       // Active customers (not blocked)
-      prisma.profile.count({
-        where: {
-          deletedAt: null,
-        },
-      }),
-
+      prisma.profile.count(),
       // All orders for revenue calculations
       prisma.order.findMany({
         select: {

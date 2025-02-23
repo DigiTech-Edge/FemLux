@@ -32,6 +32,10 @@ export const productsService = {
   async getAll() {
     try {
       const products = await prisma.product.findMany({
+        where: {
+          isActive: true,
+          deletedAt: null,
+        },
         include: defaultProductInclude,
         orderBy: {
           createdAt: "desc",
@@ -53,7 +57,10 @@ export const productsService = {
 
   async getFiltered(filters: ProductFilters = {}) {
     try {
-      const where: Prisma.ProductWhereInput = {};
+      const where: Prisma.ProductWhereInput = {
+        isActive: true,
+        deletedAt: null,
+      };
 
       if (filters.search) {
         where.OR = [
@@ -133,6 +140,12 @@ export const productsService = {
 
   async create(data: ProductFormData) {
     try {
+      console.log("Creating product with data:", data);
+
+      if (!Array.isArray(data.variants)) {
+        throw new Error("Invalid variants data");
+      }
+
       const product = await prisma.product.create({
         data: {
           name: data.name,
@@ -142,8 +155,9 @@ export const productsService = {
           isNew: data.isNew,
           variants: {
             create: data.variants.map((variant) => ({
-              ...variant,
+              size: variant.size,
               price: new Prisma.Decimal(variant.price),
+              stock: variant.stock,
             })),
           },
         },
@@ -342,9 +356,48 @@ export const productsService = {
 
   async delete(id: string) {
     try {
-      await prisma.product.delete({
+      const product = await prisma.product.findUnique({
         where: { id },
+        include: {
+          variants: {
+            include: {
+              orderItems: true,
+            },
+          },
+        },
       });
+
+      if (!product) {
+        throw new Error("Product not found");
+      }
+
+      const hasOrders = product.variants.some((v) => v.orderItems.length > 0);
+
+      if (hasOrders) {
+        // Soft delete if product has orders
+        await prisma.product.update({
+          where: { id },
+          data: {
+            isActive: false,
+            deletedAt: new Date(),
+            variants: {
+              updateMany: {
+                where: { productId: id },
+                data: {
+                  isActive: false,
+                  deletedAt: new Date(),
+                  stock: 0,
+                },
+              },
+            },
+          },
+        });
+      } else {
+        // Hard delete if no orders
+        await prisma.product.delete({
+          where: { id },
+        });
+      }
     } catch (error) {
       console.error("Error deleting product:", error);
       throw error;
@@ -356,6 +409,8 @@ export const productsService = {
       const products = await prisma.product.findMany({
         where: {
           isNew: true,
+          isActive: true,
+          deletedAt: null,
         },
         include: defaultProductInclude,
         take: limit,

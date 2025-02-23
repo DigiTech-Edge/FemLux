@@ -134,6 +134,10 @@ export async function getAnalytics(timePeriod: TimeRange): Promise<Analytics> {
 
     // Top selling products
     prisma.product.findMany({
+      where: {
+        isActive: true,
+        deletedAt: null,
+      },
       include: {
         orderItems: {
           where: {
@@ -183,8 +187,16 @@ export async function getAnalytics(timePeriod: TimeRange): Promise<Analytics> {
 
     // Category analytics
     prisma.category.findMany({
+      where: {
+        isActive: true,
+        deletedAt: null,
+      },
       include: {
         products: {
+          where: {
+            isActive: true,
+            deletedAt: null,
+          },
           include: {
             orderItems: {
               where: {
@@ -223,7 +235,12 @@ export async function getAnalytics(timePeriod: TimeRange): Promise<Analytics> {
     }),
 
     // Product variants
-    prisma.productVariant.findMany(),
+    prisma.productVariant.findMany({
+      where: {
+        isActive: true,
+        deletedAt: null,
+      },
+    }),
   ]);
 
   // Calculate growth percentages
@@ -363,7 +380,12 @@ export async function getAnalytics(timePeriod: TimeRange): Promise<Analytics> {
       averageOrderValue: averageOrderValueGrowth,
     },
     products: {
-      totalProducts: await prisma.product.count(),
+      totalProducts: await prisma.product.count({
+        where: {
+          isActive: true,
+          deletedAt: null,
+        },
+      }),
       totalVariants: productVariants.length,
       lowStockProducts: productVariants.filter((v) => v.stock <= 10).length,
       outOfStockProducts: productVariants.filter((v) => v.stock === 0).length,

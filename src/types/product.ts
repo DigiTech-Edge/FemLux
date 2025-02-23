@@ -53,12 +53,19 @@ export type ProductFilters = {
   isNew?: boolean;
 };
 
+export type ProductVariantFormData = {
+  id?: string;
+  size: string;
+  price: number;
+  stock: number;
+};
+
 export type ProductFormData = {
   name: string;
   description: string;
   categoryId: string;
   images: string[];
-  variants: ProductVariantCreate[];
+  variants: ProductVariantFormData[];
   isNew?: boolean;
 };
 

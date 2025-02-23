@@ -28,6 +28,10 @@ export const categoriesService = {
   async getAll() {
     try {
       return await prisma.category.findMany({
+        where: {
+          isActive: true,
+          deletedAt: null,
+        },
         include: defaultCategoryInclude,
         orderBy: {
           name: "asc",
@@ -45,10 +49,18 @@ export const categoriesService = {
   async getById(id: string) {
     try {
       return await prisma.category.findUnique({
-        where: { id },
+        where: {
+          id,
+          isActive: true,
+          deletedAt: null,
+        },
         include: {
           ...defaultCategoryInclude,
           products: {
+            where: {
+              isActive: true,
+              deletedAt: null,
+            },
             include: {
               variants: true,
             },
@@ -89,9 +101,56 @@ export const categoriesService = {
    */
   async delete(id: string) {
     try {
-      return await prisma.category.delete({
+      // Check if category has any products
+      const category = await prisma.category.findUnique({
         where: { id },
+        include: {
+          products: {
+            include: {
+              variants: {
+                include: {
+                  orderItems: true,
+                },
+              },
+            },
+          },
+        },
       });
+
+      if (!category) {
+        throw new Error("Category not found");
+      }
+
+      const hasProductsWithOrders = category.products.some((product) =>
+        product.variants.some((variant) => variant.orderItems.length > 0)
+      );
+
+      if (hasProductsWithOrders) {
+        // Soft delete if category has products with orders
+        await prisma.category.update({
+          where: { id },
+          data: {
+            isActive: false,
+            deletedAt: new Date(),
+            products: {
+              updateMany: {
+                where: {
+                  categoryId: id,
+                },
+                data: {
+                  isActive: false,
+                  deletedAt: new Date(),
+                },
+              },
+            },
+          },
+        });
+      } else {
+        // Hard delete if no products with orders
+        await prisma.category.delete({
+          where: { id },
+        });
+      }
     } catch (error) {
       console.error("Error deleting category:", error);
       throw error;

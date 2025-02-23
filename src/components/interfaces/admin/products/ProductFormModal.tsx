@@ -17,7 +17,11 @@ import {
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import type { ProductWithRelations, ProductFormData } from "@/types/product";
+import {
+  ProductFormData,
+  ProductUpdateData,
+  ProductWithRelations,
+} from "@/types/product";
 import type { CategoryWithCount } from "@/types/category";
 import ImageUpload from "@/components/ui/ImageUpload";
 import DeleteConfirmationModal from "@/components/ui/DeleteConfirmationModal";
@@ -35,10 +39,11 @@ interface ProductFormModalProps {
   isOpen: boolean;
   isEditing: boolean;
   onClose: () => void;
-  onSubmit: (data: ProductFormData) => void;
+  onSubmit: (data: ProductFormData | ProductUpdateData) => void;
 }
 
 const variantSchema = z.object({
+  id: z.string().optional(),
   size: z.string().min(1, "Size is required"),
   price: z.number().min(0, "Price must be greater than 0"),
   stock: z.number().min(0, "Stock must be greater than or equal to 0"),
@@ -68,6 +73,7 @@ export default function ProductFormModal({
     url: "",
     loading: false,
   });
+  const [removedVariantIds, setRemovedVariantIds] = useState<string[]>([]);
   const mainCarouselRef = useRef<{ scrollTo: (index: number) => void } | null>(
     null
   );
@@ -82,11 +88,13 @@ export default function ProductFormModal({
       variants: [{ size: "", price: 0, stock: 0 }],
       isNew: false,
     },
+    mode: "onChange",
   });
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "variants",
+    keyName: "fieldId",
   });
 
   const images = form.watch("images");
@@ -98,11 +106,35 @@ export default function ProductFormModal({
 
   const handleClose = () => {
     form.reset();
+    setRemovedVariantIds([]);
     onClose();
   };
 
-  const handleFormSubmit = async (data: ProductFormData) => {
+  const handleVariantRemove = (index: number) => {
+    const variant = form.getValues(`variants.${index}`);
+    if (variant.id && typeof variant.id === "string") {
+      setRemovedVariantIds((prev) => [...prev, variant.id as string]);
+    }
+    remove(index);
+  };
+
+  const handleFormSubmit = async () => {
     try {
+      // Get form data
+      const formData = form.getValues();
+      console.log("Raw form data:", formData);
+
+      // Validate form data
+      const validationResult = productSchema.safeParse(formData);
+      if (!validationResult.success) {
+        console.error("Validation errors:", validationResult.error);
+        toast.error("Please check all required fields");
+        return;
+      }
+
+      const data = validationResult.data;
+      console.log("Validated form data:", data);
+
       // Check for duplicate sizes
       const sizes = data.variants.map((v) => v.size);
       const hasDuplicates = sizes.length !== new Set(sizes).size;
@@ -114,17 +146,59 @@ export default function ProductFormModal({
       }
 
       setIsLoading(true);
-      // Convert variant prices to numbers and ensure proper type handling
-      const formattedData = {
-        ...data,
-        variants: data.variants.map((variant) => ({
-          ...variant,
-          price: Number(variant.price),
-          stock: Number(variant.stock),
-        })),
-      };
 
-      await onSubmitProp(formattedData);
+      if (isEditing && product) {
+        // Handle update
+        const updateData: ProductUpdateData = {
+          id: product.id,
+          name: data.name,
+          description: data.description,
+          categoryId: data.categoryId,
+          images: data.images,
+          isNew: data.isNew,
+          variants: {
+            create: data.variants
+              .filter((v) => !v.id)
+              .map((variant) => ({
+                size: variant.size,
+                price: Number(variant.price),
+                stock: Number(variant.stock),
+              })),
+            update: data.variants
+              .filter((v) => v.id)
+              .map((variant) => ({
+                id: variant.id!,
+                size: variant.size,
+                price: Number(variant.price),
+                stock: Number(variant.stock),
+              })),
+            delete: removedVariantIds,
+          },
+        };
+
+        console.log("Submitting update data:", updateData);
+        await onSubmitProp(updateData);
+      } else {
+        // Handle create
+        const createData: ProductFormData = {
+          name: data.name,
+          description: data.description,
+          categoryId: data.categoryId,
+          images: data.images,
+          isNew: data.isNew,
+          variants: Array.isArray(data.variants)
+            ? data.variants.map((variant) => ({
+                size: variant.size || "",
+                price: Number(variant.price || 0),
+                stock: Number(variant.stock || 0),
+              }))
+            : [],
+        };
+
+        console.log("Submitting create data:", createData);
+        await onSubmitProp(createData);
+      }
+
       handleClose();
       toast.success(
         isEditing
@@ -136,7 +210,9 @@ export default function ProductFormModal({
       console.error("Error submitting product:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to save product",
-        { id: "product-error" }
+        {
+          id: "product-error",
+        }
       );
     } finally {
       setIsLoading(false);
@@ -180,16 +256,22 @@ export default function ProductFormModal({
 
   useEffect(() => {
     if (product && isEditing) {
+      const formattedVariants = product.variants.map((variant) => ({
+        id: variant.id,
+        size: variant.size,
+        price: Number(variant.price),
+        stock: variant.stock,
+      }));
+
       form.reset({
         name: product.name,
         description: product.description || "",
         categoryId: product.categoryId,
         images: product.images || [],
-        variants: product.variants.map((variant) => ({
-          size: variant.size,
-          price: Number(variant.price),
-          stock: variant.stock,
-        })) || [{ size: "", price: 0, stock: 0 }],
+        variants:
+          formattedVariants.length > 0
+            ? formattedVariants
+            : [{ size: "", price: 0, stock: 0 }],
         isNew: product.isNew || false,
       });
       if (product.images?.length > 0) {
@@ -205,6 +287,7 @@ export default function ProductFormModal({
         isNew: false,
       });
     }
+    setRemovedVariantIds([]);
   }, [product, isEditing, form]);
 
   return (
@@ -421,13 +504,13 @@ export default function ProductFormModal({
                   <div className="space-y-4">
                     {fields.map((field, index) => (
                       <div
-                        key={field.id}
+                        key={field.fieldId}
                         className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start p-4 rounded-lg border border-gray-200 dark:border-gray-700 relative"
                       >
                         {index > 0 && (
                           <button
                             type="button"
-                            onClick={() => remove(index)}
+                            onClick={() => handleVariantRemove(index)}
                             className="absolute -top-2 -right-2 p-1 rounded-full bg-danger text-white hover:bg-danger-400 transition-colors"
                           >
                             <X className="w-4 h-4" />

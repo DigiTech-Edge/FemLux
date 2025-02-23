@@ -12,11 +12,13 @@ model Product {
   id          String     @id @default(uuid()) @db.Uuid
   createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt   DateTime?  @map("deleted_at") @db.Timestamptz(6)
   name        String     @db.VarChar(255)
   description String     @db.Text
   images      String[]   @db.Text
   categoryId  String     @map("category_id") @db.Uuid
   isNew       Boolean    @default(true) @map("is_new")
+  isActive    Boolean    @default(true) @map("is_active")
   variants    ProductVariant[]
   favorites   Favorite[]
   category    Category   @relation(fields: [categoryId], references: [id])
@@ -30,9 +32,11 @@ model ProductVariant {
   id        String   @id @default(uuid()) @db.Uuid
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
   size      String
   price     Decimal  @db.Decimal(10, 2)
   stock     Int      @default(0)
+  isActive  Boolean  @default(true) @map("is_active")
   productId String   @map("product_id") @db.Uuid
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   orderItems OrderItem[]
@@ -45,9 +49,11 @@ model Category {
   id          String    @id @default(uuid()) @db.Uuid
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6)
   name        String    @db.VarChar(255)
   image       String?   @db.Text
   description String?   @db.Text
+  isActive    Boolean   @default(true) @map("is_active")
   products    Product[]
 
   @@map("categories")
@@ -93,10 +99,12 @@ model Review {
   id        String   @id @default(uuid()) @db.Uuid
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
   userId    String   @map("user_id") @db.Uuid
   productId String   @map("product_id") @db.Uuid
   rating    Int      @db.Integer
   comment   String   @db.Text
+  isActive  Boolean  @default(true) @map("is_active")
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   profile   Profile  @relation(fields: [userId], references: [userId])
 
