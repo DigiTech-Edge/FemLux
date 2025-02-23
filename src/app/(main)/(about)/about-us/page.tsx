@@ -3,14 +3,14 @@ import { Metadata } from "next";
 export const metadata: Metadata = {
   title: "About Us | FemLux",
   description:
-    "Learn about FemLux's journey in revolutionizing women's fashion.",
+    "FemLux - Your trusted online destination for premium female hygiene products.",
 };
 
 export default function AboutUsPage() {
   return (
     <div className="container mx-auto px-4 py-16 max-w-4xl">
       <h1 className="text-4xl font-bold text-center mb-8 animate-in slide-in-from-bottom duration-700">
-        Our Story
+        About FemLUX by MC
       </h1>
 
       <div className="prose prose-pink mx-auto">
@@ -19,15 +19,17 @@ export default function AboutUsPage() {
             Who We Are
           </h2>
           <p className="text-gray-600 mb-6">
-            FemLux was born from a vision to create a fashion destination that
-            celebrates the essence of modern femininity. Founded in 2023, we set
-            out to revolutionize the way women shop for fashion by combining
-            luxury with accessibility.
+            FemLux is a dedicated online retailer specializing in premium female
+            hygiene products. We understand that every woman deserves access to
+            high-quality personal care items in a convenient and discreet
+            manner.
           </p>
           <p className="text-gray-600">
-            Our curated collection represents the perfect blend of contemporary
-            trends and timeless elegance, ensuring that every piece tells a
-            story of sophistication and style.
+            Our carefully curated selection of products combines comfort,
+            reliability, and sustainability to meet the diverse needs of our
+            customers. Through our registered online platform, we provide a
+            secure and comfortable shopping experience, ensuring that essential
+            feminine care products are just a click away.
           </p>
         </section>
 
@@ -36,36 +38,25 @@ export default function AboutUsPage() {
             Our Mission
           </h2>
           <p className="text-gray-600 mb-6">
-            At FemLux, we believe that fashion is more than just clothing –
-            it&apos;s a form of self-expression that empowers women to feel
-            confident and beautiful. Our mission is to provide high-quality,
-            trendsetting fashion pieces that inspire confidence and celebrate
-            individuality.
+            To empower women by providing convenient access to superior feminine
+            hygiene products while promoting health education and breaking
+            stigmas around menstrual wellness. We strive to create a supportive
+            online environment where women can make informed choices about their
+            personal care needs with confidence and dignity.
           </p>
         </section>
 
-        <section className="animate-in slide-in-from-bottom duration-700 delay-500">
+        <section className="mb-12 animate-in slide-in-from-bottom duration-700 delay-400">
           <h2 className="text-2xl font-semibold mb-4 text-pink-600">
-            Our Values
+            Our Vision
           </h2>
-          <ul className="list-disc pl-6 text-gray-600 space-y-3">
-            <li>
-              Quality: We source only the finest materials and partner with
-              skilled artisans.
-            </li>
-            <li>
-              Sustainability: Our commitment to ethical fashion guides every
-              decision we make.
-            </li>
-            <li>
-              Innovation: We continuously evolve to meet the changing needs of
-              our customers.
-            </li>
-            <li>
-              Community: We foster a supportive community that celebrates
-              diversity and inclusion.
-            </li>
-          </ul>
+          <p className="text-gray-600 mb-6">
+            To become the most trusted destination for feminine hygiene
+            products, leading the way in promoting menstrual health awareness
+            and sustainable practices. We envision a world where every woman has
+            access to quality personal care products and feels empowered to
+            embrace their wellbeing without compromise.
+          </p>
         </section>
       </div>
     </div>

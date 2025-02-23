@@ -8,12 +8,6 @@ type AuthResponse = {
   error?: string;
 };
 
-const isAdminEmail = (email: string) => {
-  // Implement logic to check if email is admin email
-  // For example:
-  return email.includes("admin");
-};
-
 export const authService = {
   /**
    * Get current session and user
@@ -89,11 +83,12 @@ export const authService = {
       });
 
       // Set role based on email
-      if (user) {
-        await supabase.auth.updateUser({
-          data: { role: isAdminEmail(email) ? "admin" : "user" },
-        });
-      }
+      // Commented out since roles are now managed through admin interface
+      // if (user) {
+      //   await supabase.auth.updateUser({
+      //     data: { role: isAdminEmail(email) ? "admin" : "user" },
+      //   });
+      // }
 
       if (error) throw error;
       return { user };

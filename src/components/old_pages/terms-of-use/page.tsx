@@ -73,7 +73,7 @@ export default function TermsOfUsePage() {
             </p>
           </section>
 
-          <section className="animate-in slide-in-from-bottom duration-700 delay-900">
+          {/* <section className="animate-in slide-in-from-bottom duration-700 delay-900">
             <h2 className="text-2xl font-semibold mb-4 text-pink-600">
               6. Shipping and Returns
             </h2>
@@ -83,15 +83,15 @@ export default function TermsOfUsePage() {
               purchase, you agree to be bound by our shipping and return
               policies.
             </p>
-          </section>
+          </section> */}
         </div>
 
-        <div className="mt-12 p-6 bg-pink-50 rounded-lg animate-in fade-in duration-700 delay-1000">
+        {/* <div className="mt-12 p-6 bg-pink-50 rounded-lg animate-in fade-in duration-700 delay-1000">
           <p className="text-sm text-gray-600">
             Last updated: November 2023. These terms and conditions are subject
             to change without notice. Please check back regularly for updates.
           </p>
-        </div>
+        </div> */}
       </div>
     </div>
   );

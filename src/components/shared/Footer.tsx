@@ -3,7 +3,8 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Facebook, Instagram, Twitter, Youtube } from "lucide-react";
+import { Instagram } from "lucide-react";
+import { FaTiktok, FaWhatsapp, FaSnapchatGhost } from "react-icons/fa";
 
 const Footer = () => {
   return (
@@ -17,7 +18,7 @@ const Footer = () => {
               <Link href="/">
                 <Image
                   src="/logo.png"
-                  alt="Femlux Logo"
+                  alt="FemLUX by MC Logo"
                   width={150}
                   height={50}
                   className="h-auto"
@@ -49,22 +50,22 @@ const Footer = () => {
                   Contact Us
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link
                   href="/terms-of-use"
                   className="text-white/80 hover:text-white transition-colors"
                 >
                   Terms of Use
                 </Link>
-              </li>
-              <li>
+              </li> */}
+              {/* <li>
                 <Link
                   href="/privacy-policy"
                   className="text-white/80 hover:text-white transition-colors"
                 >
                   Privacy Policy
                 </Link>
-              </li>
+              </li> */}
             </ul>
           </div>
 
@@ -73,36 +74,40 @@ const Footer = () => {
             <h3 className="text-xl font-semibold mb-4">Connect With Us</h3>
             <div className="flex gap-4 mb-6">
               <a
-                href="https://facebook.com"
+                href="https://instagram.com/femlux_by_mc"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-white/10 p-2 rounded-full hover:bg-white/20 transition-colors"
-              >
-                <Facebook className="w-6 h-6" />
-              </a>
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-white/10 p-2 rounded-full hover:bg-white/20 transition-colors"
+                title="Follow us on Instagram"
               >
                 <Instagram className="w-6 h-6" />
               </a>
               <a
-                href="https://twitter.com"
+                href="https://www.snapchat.com/add/blissbycharii"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-white/10 p-2 rounded-full hover:bg-white/20 transition-colors"
+                title="Follow us on Snapchat"
               >
-                <Twitter className="w-6 h-6" />
+                <FaSnapchatGhost className="w-6 h-6" />
               </a>
               <a
-                href="https://youtube.com"
+                href="https://www.tiktok.com/@femlux1"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-white/10 p-2 rounded-full hover:bg-white/20 transition-colors"
+                title="Follow us on TikTok"
               >
-                <Youtube className="w-6 h-6" />
+                <FaTiktok className="w-6 h-6" />
+              </a>
+              <a
+                href="https://wa.me/233530555785"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-white/10 p-2 rounded-full hover:bg-white/20 transition-colors"
+                title="Chat with us on WhatsApp"
+              >
+                <FaWhatsapp className="w-6 h-6" />
               </a>
             </div>
           </div>
@@ -111,7 +116,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="border-t border-white/10 py-6 px-4">
           <div className="text-center text-white/60 text-sm">
-            {new Date().getFullYear()} Femlux. All rights reserved.
+            {new Date().getFullYear()} FemLUX by MC. All rights reserved.
           </div>
         </div>
       </div>
