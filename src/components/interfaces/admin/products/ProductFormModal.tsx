@@ -103,6 +103,16 @@ export default function ProductFormModal({
 
   const handleFormSubmit = async (data: ProductFormData) => {
     try {
+      // Check for duplicate sizes
+      const sizes = data.variants.map((v) => v.size);
+      const hasDuplicates = sizes.length !== new Set(sizes).size;
+      if (hasDuplicates) {
+        toast.error("Each variant must have a unique size", {
+          id: "duplicate-size",
+        });
+        return;
+      }
+
       setIsLoading(true);
       // Convert variant prices to numbers and ensure proper type handling
       const formattedData = {
@@ -124,7 +134,10 @@ export default function ProductFormModal({
       );
     } catch (error) {
       console.error("Error submitting product:", error);
-      toast.error("Failed to save product");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to save product",
+        { id: "product-error" }
+      );
     } finally {
       setIsLoading(false);
     }
@@ -451,7 +464,7 @@ export default function ProductFormModal({
                           startContent={
                             <div className="pointer-events-none flex items-center">
                               <span className="text-default-400 text-small">
-                                $
+                                ₵
                               </span>
                             </div>
                           }

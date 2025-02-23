@@ -165,37 +165,156 @@ export const productsService = {
 
   async update(id: string, data: ProductUpdateData) {
     try {
+      // First, validate that the product exists
+      const existingProduct = await prisma.product.findUnique({
+        where: { id },
+        include: {
+          variants: {
+            include: {
+              orderItems: true,
+            },
+          },
+        },
+      });
+
+      if (!existingProduct) {
+        throw new Error("Product not found");
+      }
+
+      // Prepare the base update data
       const updateData: Prisma.ProductUpdateInput = {
         ...(data.name && { name: data.name }),
         ...(data.description && { description: data.description }),
-        ...(data.categoryId && { categoryId: data.categoryId }),
+        ...(data.categoryId && {
+          category: { connect: { id: data.categoryId } },
+        }),
         ...(data.images && { images: data.images }),
-        ...(data.isNew !== undefined && { isNew: data.isNew }),
+        ...(typeof data.isNew === "boolean" && { isNew: data.isNew }),
       };
 
+      // Handle variants update
       if (data.variants) {
-        updateData.variants = {
-          ...(data.variants.create && {
-            create: data.variants.create.map((variant) => ({
-              ...variant,
-              price: new Prisma.Decimal(variant.price),
-            })),
-          }),
-          ...(data.variants.update && {
-            update: data.variants.update.map((variant) => ({
+        const variants = data.variants;
+
+        // Handle variants marked for deletion
+        if (Array.isArray(variants.delete) && variants.delete.length > 0) {
+          const variantsToDelete = existingProduct.variants.filter((v) =>
+            variants.delete?.includes(v.id)
+          );
+
+          // Check if any variants to be deleted have matching sizes in create
+          const deleteSizes = variantsToDelete.map((v) => v.size);
+          const createSizes = variants.create?.map((v) => v.size) || [];
+          const matchingSizes = deleteSizes.filter((size) =>
+            createSizes.includes(size)
+          );
+
+          if (matchingSizes.length > 0) {
+            // Convert delete+create to update for matching sizes
+            const updatedVariants = variantsToDelete
+              .filter((v) => matchingSizes.includes(v.size))
+              .map((v) => {
+                const newData = variants.create?.find((c) => c.size === v.size);
+                return {
+                  id: v.id,
+                  size: v.size,
+                  price: newData?.price || 0,
+                  stock: newData?.stock || 0,
+                };
+              });
+
+            variants.update = [...(variants.update || []), ...updatedVariants];
+            variants.create = variants.create?.filter(
+              (v) => !matchingSizes.includes(v.size)
+            );
+            variants.delete = variants.delete.filter(
+              (id) =>
+                !variantsToDelete.some(
+                  (v) => v.id === id && matchingSizes.includes(v.size)
+                )
+            );
+          }
+
+          // For variants with orders, set stock to 0 instead of deleting
+          const variantsWithOrders = variantsToDelete.filter(
+            (v) => v.orderItems.length > 0
+          );
+          if (variantsWithOrders.length > 0) {
+            const deactivateVariants = variantsWithOrders.map((v) => ({
+              id: v.id,
+              size: v.size,
+              price: Number(v.price),
+              stock: 0,
+            }));
+            variants.update = [
+              ...(variants.update || []),
+              ...deactivateVariants,
+            ];
+            variants.delete = variants.delete.filter(
+              (id) => !variantsWithOrders.some((v) => v.id === id)
+            );
+          }
+
+          // Delete variants that have no orders
+          if (variants.delete.length > 0) {
+            await prisma.productVariant.deleteMany({
+              where: {
+                id: { in: variants.delete },
+                productId: id,
+              },
+            });
+          }
+        }
+
+        // Get fresh list of variants after deletion
+        const existingVariants = await prisma.productVariant.findMany({
+          where: {
+            productId: id,
+            id: { notIn: variants.update?.map((v) => v.id) || [] },
+          },
+        });
+
+        // Check for duplicate sizes
+        const existingSizes = existingVariants.map((v) => v.size);
+        const newSizes = variants.create?.map((v) => v.size) || [];
+        const updatedSizes = variants.update?.map((v) => v.size) || [];
+        const allSizes = [...newSizes, ...updatedSizes, ...existingSizes];
+        const uniqueSizes = new Set(allSizes);
+
+        if (allSizes.length !== uniqueSizes.size) {
+          throw new Error(
+            "Duplicate sizes are not allowed for the same product"
+          );
+        }
+
+        // Handle updates
+        if (Array.isArray(variants.update) && variants.update.length > 0) {
+          for (const variant of variants.update) {
+            await prisma.productVariant.update({
               where: { id: variant.id },
               data: {
-                ...variant,
+                size: variant.size,
                 price: new Prisma.Decimal(variant.price),
+                stock: variant.stock,
               },
+            });
+          }
+        }
+
+        // Create new variants
+        if (Array.isArray(variants.create) && variants.create.length > 0) {
+          await prisma.productVariant.createMany({
+            data: variants.create.map((variant) => ({
+              productId: id,
+              size: variant.size,
+              price: new Prisma.Decimal(variant.price),
+              stock: variant.stock,
             })),
-          }),
-          ...(data.variants.delete && {
-            delete: data.variants.delete.map((id) => ({ id })),
-          }),
-        };
+          });
+        }
       }
 
+      // Update the product and return with all relations
       const product = await prisma.product.update({
         where: { id },
         data: updateData,
@@ -210,7 +329,13 @@ export const productsService = {
         })),
       };
     } catch (error) {
-      console.error("Error updating product:", error);
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === "P2002") {
+          throw new Error(
+            "A variant with this size already exists for this product"
+          );
+        }
+      }
       throw error;
     }
   },
