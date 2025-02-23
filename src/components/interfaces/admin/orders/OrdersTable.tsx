@@ -160,6 +160,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
               selectedKeys={[statusFilter]}
               className="max-w-xs"
               onChange={(e) => onStatusFilterChange(e.target.value)}
+              disallowEmptySelection
             >
               <SelectItem key="all" value="all">
                 All Status
@@ -194,6 +195,7 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
             className="w-32"
             selectedKeys={[rowsPerPage.toString()]}
             onChange={onRowsPerPageChange}
+            disallowEmptySelection
           >
             {rowsPerPageOptions.map((value) => (
               <SelectItem key={value} textValue={value.toString()}>

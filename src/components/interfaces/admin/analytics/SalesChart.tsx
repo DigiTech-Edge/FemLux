@@ -39,6 +39,7 @@ export default function SalesChart({ data }: SalesChartProps) {
           selectedKeys={[timeRange]}
           onChange={(e) => setTimeRange(e.target.value)}
           className="w-40"
+          disallowEmptySelection
         >
           {timeRanges.map((range) => (
             <SelectItem key={range.value} value={range.value}>

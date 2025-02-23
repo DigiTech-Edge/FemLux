@@ -466,6 +466,7 @@ export default function ProductFormModal({
                       label:
                         "text-sm font-medium text-gray-700 dark:text-gray-300",
                     }}
+                    disallowEmptySelection
                   >
                     {categories.map((category) => (
                       <SelectItem key={category.id} textValue={category.name}>

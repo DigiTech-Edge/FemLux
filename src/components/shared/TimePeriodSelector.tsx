@@ -36,6 +36,7 @@ export default function TimePeriodSelector({
       className={className}
       defaultSelectedKeys={[value]}
       aria-label="Select time period"
+      disallowEmptySelection
     >
       {periods.map((period) => (
         <SelectItem key={period.value} value={period.value}>

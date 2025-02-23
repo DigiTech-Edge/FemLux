@@ -249,6 +249,7 @@ export default function ProductsTable({
             className="max-w-xs"
             selectedKeys={[selectedCategory]}
             onChange={(e) => setSelectedCategory(e.target.value)}
+            disallowEmptySelection
           >
             {[{ id: "all", name: "All Categories" }, ...categories].map(
               (category) => (
@@ -264,6 +265,7 @@ export default function ProductsTable({
             className="max-w-xs"
             selectedKeys={[statusFilter]}
             onChange={(e) => setStatusFilter(e.target.value)}
+            disallowEmptySelection
           >
             <SelectItem key="all" value="all">
               All Status
@@ -292,6 +294,7 @@ export default function ProductsTable({
                 className="w-32"
                 selectedKeys={[rowsPerPage.toString()]}
                 onChange={(e) => setRowsPerPage(Number(e.target.value))}
+                disallowEmptySelection
               >
                 {rowsPerPageOptions.map((value) => (
                   <SelectItem key={value} textValue={value.toString()}>

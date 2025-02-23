@@ -50,7 +50,7 @@ const statusColorMap = {
 
 export default function CustomersTable({ customers }: CustomersTableProps) {
   const [filterValue, setFilterValue] = React.useState("");
-  const [statusFilter, setStatusFilter] = React.useState("all");
+  const [roleFilter, setRoleFilter] = React.useState("all");
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [selectedRowsPerPage, setSelectedRowsPerPage] = React.useState(
     new Set(["10"])
@@ -77,14 +77,12 @@ export default function CustomersTable({ customers }: CustomersTableProps) {
       );
     }
 
-    if (statusFilter !== "all") {
-      filtered = filtered.filter(
-        (customer) => customer.status === statusFilter
-      );
+    if (roleFilter !== "all") {
+      filtered = filtered.filter((customer) => customer.role === roleFilter);
     }
 
     return filtered;
-  }, [customers, filterValue, statusFilter]);
+  }, [customers, filterValue, roleFilter]);
 
   const pages = Math.ceil(filteredCustomers.length / rowsPerPage);
   const items = React.useMemo(() => {
@@ -253,13 +251,25 @@ export default function CustomersTable({ customers }: CustomersTableProps) {
             <Select
               className="w-full sm:w-[140px]"
               size="sm"
-              placeholder="Status"
-              selectedKeys={[statusFilter]}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              placeholder="Role"
+              selectedKeys={[roleFilter]}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              startContent={<Shield className="h-4 w-4 text-default-400" />}
+              disallowEmptySelection
             >
-              <SelectItem key="all">All Status</SelectItem>
-              <SelectItem key="active">Active</SelectItem>
-              <SelectItem key="inactive">Inactive</SelectItem>
+              <SelectItem key="all">All Roles</SelectItem>
+              <SelectItem
+                key="admin"
+                startContent={<Shield className="h-4 w-4 text-success" />}
+              >
+                Admin
+              </SelectItem>
+              <SelectItem
+                key="user"
+                startContent={<Shield className="h-4 w-4" />}
+              >
+                User
+              </SelectItem>
             </Select>
           </div>
         </div>
@@ -285,6 +295,7 @@ export default function CustomersTable({ customers }: CustomersTableProps) {
                   }}
                   className="w-20"
                   aria-label="Rows per page"
+                  disallowEmptySelection
                 >
                   {rowsPerPageOptions.map((value) => (
                     <SelectItem
