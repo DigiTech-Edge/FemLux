@@ -9,6 +9,8 @@ import EmptyCart from "@/components/interfaces/cart/EmptyCart";
 import { useCartStore } from "@/store/cart";
 import { ShoppingBag } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default function CartPage() {
   const { items, updateQuantity, switchVariant, removeItem } = useCartStore();
 

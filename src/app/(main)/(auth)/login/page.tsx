@@ -1,8 +1,10 @@
-import React from 'react'
-import LoginForm from '@/components/interfaces/auth/LoginForm'
+import React from "react";
+import LoginForm from "@/components/interfaces/auth/LoginForm";
+
+export const dynamic = "force-dynamic";
 
 const LoginPage = () => {
-  return <LoginForm />
-}
+  return <LoginForm />;
+};
 
-export default LoginPage
+export default LoginPage;

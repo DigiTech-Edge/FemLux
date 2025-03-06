@@ -3,6 +3,8 @@ import FavoritesHeader from "@/components/interfaces/favourites/FavoritesHeader"
 import FavoritesList from "@/components/interfaces/favourites/FavoritesList";
 import FavoritesStats from "@/components/interfaces/favourites/FavoritesStats";
 
+export const dynamic = "force-dynamic";
+
 export default async function FavoritesPage() {
   const { items, stats } = await getUserFavorites();
 

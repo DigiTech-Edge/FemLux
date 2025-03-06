@@ -7,6 +7,8 @@ import { OrderStatusData, Analytics, TimeRange } from "@/types/analytics";
 import { useAnalyticsStore } from "@/store/analytics.store";
 import { Spinner } from "@nextui-org/react";
 
+export const dynamic = "force-dynamic";
+
 export default function AnalyticsPage() {
   const { timePeriod } = useAnalyticsStore();
   const [analytics, setAnalytics] = useState<Analytics | null>(null);

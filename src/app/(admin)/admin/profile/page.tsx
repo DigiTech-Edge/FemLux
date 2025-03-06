@@ -5,6 +5,8 @@ import { fetchProfile } from "@/services/actions/profile.actions";
 import { fetchBanners } from "@/services/actions/banner.actions";
 import { Spinner } from "@nextui-org/react";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProfilePage() {
   const [profileData, banners] = await Promise.all([
     fetchProfile(),

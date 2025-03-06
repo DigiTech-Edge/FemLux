@@ -9,6 +9,8 @@ import { CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
 import Image from "next/image";
 
+export const dynamic = "force-dynamic";
+
 export default function VerifyPaymentPage() {
   const [verificationState, setVerificationState] = useState<
     "verifying" | "payment_verified" | "order_placed" | "failed"

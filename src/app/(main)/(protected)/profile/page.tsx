@@ -4,6 +4,8 @@ import { fetchUserOrders } from "@/services/actions/orders.actions";
 import React, { Suspense } from "react";
 import { Spinner } from "@nextui-org/react";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProfilePage({
   searchParams,
 }: {
@@ -22,9 +24,13 @@ export default async function ProfilePage({
 
   return (
     <main className="min-h-screen pb-20">
-      <Suspense fallback={<div className="flex justify-center items-center h-screen">
+      <Suspense
+        fallback={
+          <div className="flex justify-center items-center h-screen">
             <Spinner />
-          </div>}>
+          </div>
+        }
+      >
         <ProfileClient tab={tab} profile={profile} orders={orders} />
       </Suspense>
     </main>

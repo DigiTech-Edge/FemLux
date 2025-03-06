@@ -2,6 +2,8 @@ import { getProductById } from "@/services/actions/product.actions";
 import ProductDetails from "@/components/interfaces/shop/ProductDetails";
 import { notFound } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProductPage({
   params,
 }: {

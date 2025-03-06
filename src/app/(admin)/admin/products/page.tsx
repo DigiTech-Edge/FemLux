@@ -4,6 +4,8 @@ import ProductManagementClient from "@/components/interfaces/admin/categories/Pr
 import { Spinner } from "@nextui-org/react";
 import { Suspense } from "react";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProductsPage() {
   const initialProducts = await getAllProducts();
   const initialCategories = await getCategories();

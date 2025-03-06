@@ -4,6 +4,8 @@ import { getOrders, getOrderStats } from "@/services/actions/orders.actions";
 import { Suspense } from "react";
 import { Spinner } from "@nextui-org/react";
 
+export const dynamic = "force-dynamic";
+
 export default async function OrdersPage() {
   const ordersResponse = await getOrders();
   const statsResponse = await getOrderStats();

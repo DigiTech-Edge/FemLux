@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   description: "Get in touch with FemLux for any questions or support.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function ContactPage() {
   return (
     <div className="container mx-auto px-4 py-16 max-w-4xl">

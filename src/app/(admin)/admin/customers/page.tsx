@@ -5,6 +5,8 @@ import {
   fetchCustomerStats,
 } from "@/services/actions/customers.actions";
 
+export const dynamic = "force-dynamic";
+
 export default async function CustomersPage() {
   const [customers, stats] = await Promise.all([
     fetchCustomers(),

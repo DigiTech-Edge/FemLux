@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   description: "Please verify your email address to continue",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function VerifyEmailPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-pink-50">

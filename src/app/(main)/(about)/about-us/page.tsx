@@ -6,6 +6,8 @@ export const metadata: Metadata = {
     "FemLux - Your trusted online destination for premium female hygiene products.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function AboutUsPage() {
   return (
     <div className="container mx-auto px-4 py-16 max-w-4xl">

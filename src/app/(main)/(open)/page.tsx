@@ -12,6 +12,8 @@ import {
 } from "@/services/actions/product.actions";
 import { fetchBanners } from "@/services/actions/banner.actions";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   // Fetch active banners
   const banners = await fetchBanners(true);
