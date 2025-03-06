@@ -5,9 +5,11 @@ import { Toaster } from "react-hot-toast";
 import { Check, XCircle } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "FemLux",
+  title: "FemLux By MC",
   description:
-    "Empowering women through fashion and beauty. Your one-stop destination for all things feminine and fabulous.",
+    "Your trusted destination for premium female hygiene and personal care products in Ghana. Quality essentials delivered with care and discretion.",
+  keywords:
+    "female hygiene, personal care, women's health, premium products, Ghana, online shopping",
 };
 
 export default function RootLayout({

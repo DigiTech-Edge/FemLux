@@ -114,8 +114,10 @@ export default function ProductCard({
             <Carousel
               showControls
               showIndicators
+              loop
               slideWidth="100%"
               className="w-full"
+              variant="product"
             >
               {product.images.map((image, idx) => (
                 <div key={idx} className="relative w-full flex-[0_0_100%]">
@@ -126,7 +128,7 @@ export default function ProductCard({
                       fill
                       priority={idx === 0}
                       className="object-cover"
-                      sizes="100vw"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
                   </div>
                 </div>
@@ -135,7 +137,7 @@ export default function ProductCard({
 
             {/* New Tag */}
             {product.isNew && (
-              <div className="absolute top-2 left-2 bg-primary text-white px-2 py-1 text-xs font-semibold rounded">
+              <div className="absolute top-2 left-2 bg-primary text-white px-2 py-1 text-xs font-semibold rounded z-20">
                 NEW
               </div>
             )}
@@ -144,7 +146,7 @@ export default function ProductCard({
             {isFavoriteView ? (
               additionalActions
             ) : (
-              <div className="absolute top-2 right-2 z-10 flex flex-col gap-2">
+              <div className="absolute top-2 right-2 z-20 flex flex-col gap-2">
                 <Button
                   isIconOnly
                   size="sm"
@@ -164,7 +166,7 @@ export default function ProductCard({
             )}
 
             {/* Cart Button - Show only in non-favorite view */}
-            <div className="absolute top-12 right-2 z-10">
+            <div className="absolute top-12 right-2 z-20">
               <Button
                 isIconOnly
                 variant="flat"
@@ -176,6 +178,32 @@ export default function ProductCard({
                 <ShoppingCart className="w-4 h-4 text-primary" />
               </Button>
             </div>
+
+            <style jsx global>{`
+              .product-carousel .inner-carousel .embla__button {
+                width: 28px !important;
+                height: 28px !important;
+                opacity: 0;
+                transition: opacity 0.3s;
+              }
+
+              .product-carousel:hover .inner-carousel .embla__button {
+                opacity: 1;
+              }
+
+              .product-carousel .inner-carousel .embla__button svg {
+                width: 16px;
+                height: 16px;
+              }
+
+              .product-carousel .inner-carousel .embla__button--prev {
+                left: 4px;
+              }
+
+              .product-carousel .inner-carousel .embla__button--next {
+                right: 4px;
+              }
+            `}</style>
           </div>
         </CardHeader>
 
