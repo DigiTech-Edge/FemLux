@@ -10,7 +10,6 @@ import {
   ShoppingCart,
   Star,
   StarHalf,
-  Truck,
 } from "lucide-react";
 import { cn } from "@/helpers/utils";
 import { ProductWithRelations } from "@/types/product";
@@ -298,10 +297,6 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
 
               <Divider />
 
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Truck className="w-4 h-4" />
-                <span>Free shipping on orders over $50</span>
-              </div>
 
               {/* Description */}
               <div className="space-y-4">
